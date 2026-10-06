@@ -299,3 +299,27 @@ final class ContentTests: XCTestCase {
         XCTAssertEqual(loaded.preferences.level, .builder)
     }
 }
+
+final class PlacementTests: XCTestCase {
+    func testLevelFollowsKnownWords() {
+        let test = PlacementTest()
+        XCTAssertEqual(test.recommendedLevel(known: []), .beginner)
+        let beginner = Set(PlacementTest.rounds[0].termIds.prefix(4))
+        XCTAssertEqual(test.recommendedLevel(known: beginner), .builder)
+        let builder = beginner.union(PlacementTest.rounds[1].termIds.prefix(5))
+        XCTAssertEqual(test.recommendedLevel(known: builder), .research)
+    }
+
+    func testWeeklyGoalMapsToDailyGoal() {
+        XCTAssertEqual(Preferences.dailyGoal(forWeeklyWords: 10), 2)
+        XCTAssertEqual(Preferences.dailyGoal(forWeeklyWords: 30), 5)
+        XCTAssertEqual(Preferences.dailyGoal(forWeeklyWords: 50), 8)
+    }
+
+    func testStreakSaverUsesName() {
+        let plan = NotificationPlanner(calendar: Fixtures.calendar).plan(.init(
+            settings: ReminderSettings(isEnabled: true), words: [], level: .beginner,
+            now: Fixtures.date("2026-10-06T12:00:00Z"), savedToday: 0, dailyGoal: 5, streak: 3, days: 1, name: "Om"))
+        XCTAssertEqual(plan.first { $0.kind == .streakSaver }?.title, "Om, keep your 3-day streak alive 🔥")
+    }
+}

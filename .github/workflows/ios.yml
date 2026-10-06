@@ -71,7 +71,7 @@ jobs:
         if: github.event_name == 'push'
         continue-on-error: true
         run: |
-          mkdir -p docs/screenshots
+          rm -rf docs/screenshots && mkdir -p docs/screenshots
           for f in screenshots/*.png; do
             sips --resampleWidth 450 "$f" --out "docs/screenshots/$(basename "$f")" >/dev/null
           done

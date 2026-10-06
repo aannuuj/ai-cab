@@ -2,6 +2,23 @@ import Foundation
 import Observation
 import AICabCore
 
+/// Everything collected during onboarding.
+struct OnboardingAnswers {
+    var name: String?
+    var ageRange: AgeRange?
+    var gender: Gender?
+    var role: Role?
+    var familiarity: Familiarity?
+    var weakSpots: Set<WeakSpot> = []
+    var habitHelpers: Set<HabitHelper> = []
+    var weeklyWords: Int?
+    var topicIds: [String] = []
+    var theme: FeedTheme = .charcoal
+    var appIcon: String?
+    var knownTermIds: Set<String> = []
+    var placementLevel: Level?
+}
+
 struct HistoryItem: Identifiable {
     let term: Term
     let date: Date
@@ -51,8 +68,6 @@ final class AppModel {
     var overlayNudge: Nudge?
     /// Bumped to fire the goal celebration.
     private(set) var celebration = 0
-    /// Whether the current onboarding step uses the dark style (drives status bar colour).
-    var onboardingIsDark = false
     /// Feed position to jump to (deep links, "learn this topic").
     var feedScrollTarget: String?
 
@@ -515,17 +530,31 @@ final class AppModel {
         return applied.isEnabled
     }
 
-    func completeOnboarding(familiarity: Familiarity?, motivation: Motivation?, role: Role?, topicIds: [String],
-                            theme: FeedTheme, appIcon: String?) {
+    func completeOnboarding(_ answers: OnboardingAnswers) {
+        let date = now()
         mutate { s in
-            s.preferences.familiarity = familiarity
-            s.preferences.motivation = motivation
-            s.preferences.role = role
-            s.preferences.feedTheme = theme.isPremium && !isPro ? .cream : theme
-            s.preferences.appIcon = appIcon
-            if let familiarity { s.preferences.level = familiarity.suggestedLevel }
-            s.preferences.topicIds = topicIds
-            s.preferences.hasOnboarded = true
+            var p = s.preferences
+            p.name = answers.name
+            p.ageRange = answers.ageRange
+            p.gender = answers.gender
+            p.role = answers.role
+            p.familiarity = answers.familiarity
+            p.weakSpots = Array(answers.weakSpots)
+            p.habitHelpers = Array(answers.habitHelpers)
+            p.level = answers.placementLevel ?? answers.familiarity?.suggestedLevel ?? .beginner
+            if let weekly = answers.weeklyWords { p.dailyGoal = Preferences.dailyGoal(forWeeklyWords: weekly) }
+            p.topicIds = answers.topicIds
+            p.feedTheme = answers.theme.isPremium && !isPro ? .cream : answers.theme
+            p.appIcon = answers.appIcon
+            p.hasOnboarded = true
+            s.preferences = p
+            // Words they already know start as seen, so the feed leads with new ones.
+            for id in answers.knownTermIds {
+                s.update(id) { progress in
+                    progress.seenCount = max(progress.seenCount, 1)
+                    progress.lastSeenAt = date
+                }
+            }
         }
         persistNow()
         regenerateFeed()
@@ -645,7 +674,8 @@ final class AppModel {
             now: now(),
             savedToday: savedToday,
             dailyGoal: dailyGoal,
-            streak: streak
+            streak: streak,
+            name: state.preferences.name
         ))
         if state.preferences.trialReminderEnabled, let trialEnd = purchases.trialEndDate,
            let reminder = planner.trialReminder(trialEnds: trialEnd, now: now()) {

@@ -47,9 +47,11 @@ public struct NotificationPlanner: Sendable {
         public var dailyGoal: Int
         public var streak: Int
         public var days: Int
+        /// First name for friendlier copy.
+        public var name: String?
 
         public init(settings: ReminderSettings, words: [Term], level: Level, now: Date,
-                    savedToday: Int, dailyGoal: Int, streak: Int, days: Int = 7) {
+                    savedToday: Int, dailyGoal: Int, streak: Int, days: Int = 7, name: String? = nil) {
             self.settings = settings
             self.words = words
             self.level = level
@@ -58,6 +60,7 @@ public struct NotificationPlanner: Sendable {
             self.dailyGoal = dailyGoal
             self.streak = streak
             self.days = days
+            self.name = name
         }
     }
 
@@ -94,7 +97,8 @@ public struct NotificationPlanner: Sendable {
             if day == 0 && context.savedToday >= context.dailyGoal { continue }
             let remaining = day == 0 ? max(context.dailyGoal - context.savedToday, 1) : context.dailyGoal
             let streakAtRisk = day == 0 ? context.streak : context.streak + (context.savedToday >= context.dailyGoal ? 1 : 0)
-            let title = streakAtRisk > 0 ? "Keep your \(streakAtRisk)-day streak alive 🔥" : "Your daily words are waiting"
+            let lead = context.name.map { "\($0), k" } ?? "K"
+            let title = streakAtRisk > 0 ? "\(lead)eep your \(streakAtRisk)-day streak alive 🔥" : "Your daily words are waiting"
             let noun = remaining == 1 ? "word" : "words"
             result.append(PlannedNotification(
                 id: "streak.\(DayKey.string(for: fire, calendar: calendar))",

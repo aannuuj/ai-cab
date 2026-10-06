@@ -222,6 +222,68 @@ public enum Role: String, Codable, CaseIterable, Identifiable, Sendable {
     }
 }
 
+public enum AgeRange: String, Codable, CaseIterable, Identifiable, Sendable {
+    case teen = "13-17", young = "18-24", adult = "25-34", mid = "35-44", senior = "45-54", older = "55+"
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .older: "55+"
+        default: rawValue.replacingOccurrences(of: "-", with: " to ")
+        }
+    }
+}
+
+public enum Gender: String, Codable, CaseIterable, Identifiable, Sendable {
+    case female, male, other, unspecified
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .female: "Female"
+        case .male: "Male"
+        case .other: "Other"
+        case .unspecified: "Prefer not to say"
+        }
+    }
+}
+
+/// "What would help make learning a daily habit?"
+public enum HabitHelper: String, Codable, CaseIterable, Identifiable, Sendable {
+    case progress, quizzes, reminders, widget
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .progress: "Tracking my progress"
+        case .quizzes: "Quizzes and games"
+        case .reminders: "Regular reminders"
+        case .widget: "A home or lock screen widget"
+        }
+    }
+}
+
+/// "Where does AI jargon trip you up?" — maps to starting topics.
+public enum WeakSpot: String, Codable, CaseIterable, Identifiable, Sendable {
+    case news, meetings, building, papers, confident
+    public var id: String { rawValue }
+    public var title: String {
+        switch self {
+        case .news: "Reading AI news"
+        case .meetings: "In meetings at work"
+        case .building: "Building with AI tools"
+        case .papers: "Reading research papers"
+        case .confident: "I always feel confident"
+        }
+    }
+    public var topicIds: [String] {
+        switch self {
+        case .news: ["ai-headlines", "how-models-learn", "policy"]
+        case .meetings: ["business", "agent-era", "prompting"]
+        case .building: ["llm-engineering", "rag", "evals"]
+        case .papers: ["research-math", "training", "interpretability"]
+        case .confident: ["reasoning-models", "agent-era"]
+        }
+    }
+}
+
 public struct Preferences: Codable, Sendable {
     public var level: Level = .beginner
     /// Topics that feed the Words tab. Empty = everything accessible.
@@ -236,8 +298,19 @@ public struct Preferences: Codable, Sendable {
     public var role: Role?
     /// Alternate app icon name; nil = default icon.
     public var appIcon: String?
+    // Optional, on-device only onboarding answers. Optional so older saved state still decodes.
+    public var name: String?
+    public var ageRange: AgeRange?
+    public var gender: Gender?
+    public var habitHelpers: [HabitHelper]?
+    public var weakSpots: [WeakSpot]?
 
     public init() {}
+
+    /// Weekly target from onboarding → words saved per day.
+    public static func dailyGoal(forWeeklyWords weekly: Int) -> Int {
+        max(1, Int((Double(weekly) / 7).rounded(.up)))
+    }
 
     public static let dailyGoalRange = 1...20
 }

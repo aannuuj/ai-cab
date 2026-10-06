@@ -32,7 +32,7 @@ struct WordsFeedView: View {
             header
         }
         .overlay {
-            GoalCelebration(isPresented: $celebrating, streak: model.streak, goal: model.dailyGoal)
+            GoalCelebration(isPresented: $celebrating, streak: model.streak, goal: model.dailyGoal, name: model.preferences.name)
         }
         .onAppear {
             model.ensureFeed()
@@ -248,6 +248,7 @@ struct GoalCelebration: View {
     @Binding var isPresented: Bool
     let streak: Int
     let goal: Int
+    var name: String?
     @State private var burst = 0
 
     var body: some View {
@@ -264,7 +265,7 @@ struct GoalCelebration: View {
                             .foregroundStyle(Palette.ink)
                             .symbolEffect(.bounce, value: burst)
                     }
-                    Text("Daily goal complete")
+                    Text(name.map { "Nice work, \($0)" } ?? "Daily goal complete")
                         .font(.serifTitle)
                         .foregroundStyle(Palette.textPrimary)
                     HStack(spacing: 6) {

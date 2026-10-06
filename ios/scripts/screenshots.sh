@@ -19,10 +19,18 @@ xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --
 xcrun simctl install "$UDID" "$APP"
 BUNDLE=com.aicab.app
 
-for screen in onboarding tailor streak themes icons words topics journey practice profile paywall widget term share; do
+shoot() {
+  local name="$1"; shift
   xcrun simctl terminate "$UDID" "$BUNDLE" >/dev/null 2>&1 || true
-  xcrun simctl launch "$UDID" "$BUNDLE" -screenshot "$screen" >/dev/null
+  xcrun simctl launch "$UDID" "$BUNDLE" "$@" >/dev/null
   sleep 6
-  xcrun simctl io "$UDID" screenshot "$OUT/$screen.png" >/dev/null
-  echo "captured $screen"
+  xcrun simctl io "$UDID" screenshot "$OUT/$name.png" >/dev/null
+  echo "captured $name"
+}
+
+for step in welcome tailor name age weekly streak habits reminders icon theme insight familiarity weakSpots knownBuilder placement topics; do
+  shoot "onboarding-$step" -screenshot onboarding -onboardingStep "$step"
+done
+for screen in words topics journey practice profile paywall widget term share; do
+  shoot "$screen" -screenshot "$screen"
 done

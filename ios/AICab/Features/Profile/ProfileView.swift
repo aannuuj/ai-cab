@@ -40,7 +40,7 @@ struct ProfileView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Palette.charcoal.ignoresSafeArea())
-            .navigationTitle("Profile")
+            .navigationTitle(model.preferences.name.map { "Hi, \($0)" } ?? "Profile")
             .navigationDestination(for: LibraryRoute.self) { LibraryDestination(route: $0) }
             .navigationDestination(for: String.self) { TermDetailView(termID: $0) }
             .sheet(isPresented: $editingTopics) { TopicPickerSheet() }
