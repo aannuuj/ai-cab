@@ -1,6 +1,6 @@
 # AI-Cab
 
-Learn the language of AI in one minute a day. A native SwiftUI iOS app with a swipeable word feed, three definition depths, a chapter-based Journey, spaced-repetition practice, Home and Lock Screen widgets, reminders, and a weekly content pipeline.
+Learn the language of AI in one minute a day. A native SwiftUI iOS app with four tabs (Today, Explore, Train, You): a swipeable term feed with three definition depths, a unit-based Path and Drills with timed modes and spaced repetition, Home and Lock Screen widgets, reminders and an AlarmKit alarm, and a weekly content pipeline.
 
 <p>
 <img src="docs/screenshots/onboarding-welcome.png" width="160"> <img src="docs/screenshots/words.png" width="160"> <img src="docs/screenshots/topics.png" width="160"> <img src="docs/screenshots/journey.png" width="160"> <img src="docs/screenshots/practice.png" width="160">

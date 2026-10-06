@@ -17,7 +17,7 @@ struct LevelTestView: View {
     var body: some View {
         Group {
             if let test {
-                QuizSessionView(title: "Level test") {
+                QuizSessionView(title: "Level check") {
                     test.questions
                 } onFinish: { _, _ in
                     tracker.level = model.applyLevelTest(correctIds: tracker.correctIds, rounds: test.rounds)
@@ -28,7 +28,7 @@ struct LevelTestView: View {
                     let note = level.isPremium && !model.isPro
                         ? "Research definitions are part of Pro, so you'll see Builder depth until you upgrade."
                         : "Your Words feed now explains terms at this depth. Change it anytime from the dial."
-                    return ("You're at \(level.title) level", note)
+                    return ("Your depth: \(level.title)", note)
                 }
             } else {
                 Palette.charcoal.ignoresSafeArea()

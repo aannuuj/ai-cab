@@ -5,15 +5,18 @@ import AICabCore
 import AICabDesign
 
 enum ProfileRoute: Hashable {
-    case settings, stats, reminders, voices, themes, appIcon, alarm
+    case stats, reminders, voices, themes, appIcon, alarm
     case widgets(lockScreen: Bool)
 }
 
-/// Go Premium, a level test and "Customize the app" tiles; the gear opens full settings.
+/// "You": progress at a glance, then grouped settings rows.
 struct ProfileView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
+    @Environment(\.requestReview) private var requestReview
     @State private var editingTopics = false
     @State private var takingTest = false
+    @State private var managingSubscription = false
     @State private var path = NavigationPath(ProfileView.screenshotPath)
 
     private static var screenshotPath: [ProfileRoute] {
@@ -25,80 +28,50 @@ struct ProfileView: View {
         }
     }
 
-    private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
-
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 22) {
                     if !model.isPro {
-                        UnlockBanner(title: "Go Premium",
-                                     message: "Access all topics, Research depth, every chapter, theme and game.") {
-                            model.sheet = .paywall(.settings)
+                        UnlockBanner { model.sheet = .paywall(.settings) }
+                    }
+                    NavigationLink(value: ProfileRoute.stats) {
+                        StreakCard(streak: model.streak, days: model.week)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens your stats")
+
+                    SettingsGroup {
+                        SettingsRow("Level check", symbol: "graduationcap.fill", tint: Palette.teal, detail: model.level.title) {
+                            takingTest = true
                         }
                     }
-                    testRow
 
-                    Text("Customize the app")
-                        .font(.serifTitle2)
-                        .foregroundStyle(Palette.textPrimary)
-                        .padding(.top, 8)
-                        .accessibilityAddTraits(.isHeader)
+                    personalizeGroup
 
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        NavigationLink(value: ProfileRoute.stats) {
-                            ProfileTile(title: "Stats", symbol: "chart.bar.fill", palette: .teal,
-                                        detail: model.streak > 0 ? "\(model.streak)-day streak" : "\(model.state.learnedCount) words saved")
-                        }
-                        Button { editingTopics = true } label: {
-                            ProfileTile(title: "Topics you follow", symbol: "square.stack.3d.up.fill", palette: .cream,
-                                        detail: model.preferences.topicIds.isEmpty ? "All topics" : "\(model.preferences.topicIds.count) topics")
-                        }
-                        NavigationLink(value: ProfileRoute.reminders) {
-                            ProfileTile(title: "Reminders", symbol: "bell.badge.fill", palette: .teal,
-                                        detail: model.preferences.reminders.isEnabled ? "\(model.preferences.reminders.perDay)x a day" : "Off")
-                        }
-                        NavigationLink(value: ProfileRoute.voices) {
-                            ProfileTile(title: "Voices", symbol: "waveform", palette: .cream, detail: voiceName)
-                        }
-                        NavigationLink(value: ProfileRoute.widgets(lockScreen: false)) {
-                            ProfileTile(title: "Home Screen widgets", symbol: "apps.iphone", palette: .teal, detail: nil)
-                        }
-                        NavigationLink(value: ProfileRoute.widgets(lockScreen: true)) {
-                            ProfileTile(title: "Lock Screen widgets", symbol: "lock.iphone", palette: .cream, detail: nil)
-                        }
-                        if PracticeAlarm.isSupported {
-                            NavigationLink(value: ProfileRoute.alarm) {
-                                ProfileTile(title: "Alarm", symbol: "alarm.fill", palette: .coral, detail: alarmDetail)
-                            }
-                        }
-                        NavigationLink(value: ProfileRoute.themes) {
-                            ProfileTile(title: "Themes", symbol: "textformat", palette: .coral, detail: model.preferences.feedTheme.title)
-                        }
-                        NavigationLink(value: ProfileRoute.appIcon) {
-                            ProfileTile(title: "App icon", symbol: "app.gift.fill", palette: .olive,
-                                        detail: AppIconOption.all.first { $0.iconName == model.preferences.appIcon }?.title ?? "Classic")
-                        }
-                    }
-                    .buttonStyle(TactileButtonStyle(fill: Palette.surface, radius: Metrics.tileRadius))
+                    trackGroup
+
+                    learningGroup
+
+                    libraryGroup
+
+                    membershipGroup
+
+                    aboutGroup
+
+                    Text("AI-Cab \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0") · content v\(model.content.version)")
+                        .font(.footnote)
+                        .foregroundStyle(Palette.textTertiary)
+                        .frame(maxWidth: .infinity)
                 }
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.bottom, 120)
             }
             .scrollIndicators(.hidden)
             .background(Palette.charcoal.ignoresSafeArea())
-            .navigationTitle(model.preferences.name.map { "Hi, \($0)" } ?? "Profile")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(value: ProfileRoute.settings) {
-                        Image(systemName: "gearshape")
-                    }
-                    .accessibilityLabel("Settings")
-                }
-            }
+            .navigationTitle(model.preferences.name.map { "Hi, \($0)" } ?? "You")
             .navigationDestination(for: ProfileRoute.self) { route in
                 switch route {
-                case .settings: SettingsView()
                 case .stats: StatsView()
                 case .reminders: RemindersScreen()
                 case .voices: VoicesView()
@@ -107,7 +80,7 @@ struct ProfileView: View {
                 case .alarm: AlarmView()
                 case .widgets(let lockScreen):
                     WidgetInstallView(mode: .settings, startOnLockScreen: lockScreen)
-                        .navigationTitle(lockScreen ? "Lock Screen widgets" : "Home Screen widgets")
+                        .navigationTitle(lockScreen ? "Lock Screen widget" : "Home Screen widget")
                         .navigationBarTitleDisplayMode(.inline)
                 }
             }
@@ -117,28 +90,125 @@ struct ProfileView: View {
             .fullScreenCover(isPresented: $takingTest) {
                 NavigationStack { LevelTestView() }
             }
+            .manageSubscriptionsSheet(isPresented: $managingSubscription)
         }
     }
 
-    private var testRow: some View {
-        Button { takingTest = true } label: {
-            HStack(spacing: 16) {
-                IsoObject(symbol: "graduationcap.fill", palette: .teal, size: 64)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Take a test")
-                        .font(.headline)
-                        .foregroundStyle(Palette.textPrimary)
-                    Text("to see your current level · \(model.level.title) now")
-                        .font(.subheadline)
-                        .foregroundStyle(Palette.textSecondary)
-                        .multilineTextAlignment(.leading)
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Palette.textTertiary)
-            }
-            .padding(16)
+    private var personalizeGroup: some View {
+        SettingsGroup("Make it yours") {
+            SettingsLink("Themes", symbol: "paintpalette.fill", tint: Palette.coral,
+                         detail: model.preferences.feedTheme.title, value: ProfileRoute.themes)
+            RowDivider()
+            SettingsLink("App icon", symbol: "app.gift.fill", tint: Palette.oliveSoft,
+                         detail: AppIconOption.all.first { $0.iconName == model.preferences.appIcon }?.title ?? "Classic",
+                         value: ProfileRoute.appIcon)
+            RowDivider()
+            SettingsLink("Voices", symbol: "speaker.wave.2.fill", tint: Palette.teal, detail: voiceName, value: ProfileRoute.voices)
         }
-        .buttonStyle(TactileButtonStyle(fill: Palette.surface, radius: 26))
+    }
+
+    private var trackGroup: some View {
+        SettingsGroup("Stay on track") {
+            SettingsLink("Reminders", symbol: "bell.fill", tint: Palette.gold,
+                         detail: model.preferences.reminders.isEnabled ? "\(model.preferences.reminders.perDay)x a day" : "Off",
+                         value: ProfileRoute.reminders)
+            if PracticeAlarm.isSupported {
+                RowDivider()
+                SettingsLink("Alarm", symbol: "alarm.fill", tint: Palette.coral, detail: alarmDetail, value: ProfileRoute.alarm)
+            }
+            RowDivider()
+            SettingsLink("Home Screen widget", symbol: "apps.iphone", tint: Palette.teal, value: ProfileRoute.widgets(lockScreen: false))
+            RowDivider()
+            SettingsLink("Lock Screen widget", symbol: "lock.iphone", tint: Palette.cream, value: ProfileRoute.widgets(lockScreen: true))
+        }
+    }
+
+    private var learningGroup: some View {
+        SettingsGroup("Learning") {
+            Menu {
+                Picker("Definition depth", selection: Binding(get: { model.preferences.level }, set: { model.setLevel($0) })) {
+                    ForEach(Level.allCases) { level in
+                        Text(level.isPremium && !model.isPro ? "\(level.title) (Pro)" : level.title).tag(level)
+                    }
+                }
+            } label: {
+                SettingsRowLabel("Definition depth", symbol: "dial.medium", tint: Palette.teal, detail: model.level.title, accessory: "chevron.up.chevron.down")
+            }
+            RowDivider()
+            HStack {
+                SettingsRowLabel("Daily goal", symbol: "target", tint: Palette.coral, detail: nil, accessory: nil)
+                Stepper("\(model.dailyGoal) terms", value: Binding(get: { model.dailyGoal }, set: { model.setDailyGoal($0) }),
+                        in: Preferences.dailyGoalRange)
+                    .fixedSize()
+                    .foregroundStyle(Palette.textSecondary)
+                    .padding(.trailing, 14)
+            }
+            RowDivider()
+            SettingsRow("Feed topics", symbol: "square.stack.3d.up.fill", tint: Palette.gold,
+                        detail: model.preferences.topicIds.isEmpty ? "All" : "\(model.preferences.topicIds.count)") {
+                editingTopics = true
+            }
+        }
+    }
+
+    private var libraryGroup: some View {
+        SettingsGroup("Library") {
+            SettingsLink("Your deck", symbol: "bookmark.fill", tint: Palette.teal, detail: "\(model.state.learnedCount)", value: LibraryRoute.saved)
+            RowDivider()
+            SettingsLink("Hearted", symbol: "heart.fill", tint: Palette.coral, detail: "\(model.favorites.count)", value: LibraryRoute.favorites)
+            RowDivider()
+            SettingsLink("Recently read", symbol: "clock.fill", tint: Palette.gold, detail: "\(model.history.count)", value: LibraryRoute.history)
+            RowDivider()
+            SettingsLink("Collections", symbol: "folder.fill", tint: Palette.oliveSoft, detail: "\(model.state.collections.count)", value: LibraryRoute.collections)
+        }
+    }
+
+    private var membershipGroup: some View {
+        SettingsGroup("Membership") {
+            if model.isPro {
+                SettingsRowLabel("AI-Cab Pro is active", symbol: "crown.fill", tint: Palette.gold, detail: nil, accessory: nil)
+                if let trialEnd = model.purchases.trialEndDate {
+                    RowDivider()
+                    Toggle(isOn: Binding(get: { model.preferences.trialReminderEnabled },
+                                         set: { value in
+                                             model.setTrialReminder(value)
+                                             Task { await model.rescheduleNotifications() }
+                                         })) {
+                        SettingsRowLabel("Remind me before the trial ends", symbol: "calendar.badge.clock", tint: Palette.teal,
+                                         detail: trialEnd.formatted(date: .abbreviated, time: .omitted), accessory: nil)
+                    }
+                    .tint(Palette.teal)
+                    .padding(.trailing, 14)
+                }
+                RowDivider()
+                SettingsRow("Manage subscription", symbol: "creditcard.fill", tint: Palette.textSecondary) { managingSubscription = true }
+            } else {
+                SettingsRow("See AI-Cab Pro", symbol: "crown.fill", tint: Palette.gold) { model.sheet = .paywall(.settings) }
+            }
+            RowDivider()
+            SettingsRow("Restore purchases", symbol: "arrow.clockwise", tint: Palette.textSecondary) {
+                Task { await model.purchases.restore() }
+            }
+        }
+    }
+
+    private var aboutGroup: some View {
+        SettingsGroup("AI-Cab") {
+            SettingsRow("Send feedback", symbol: "bubble.left.fill", tint: Palette.teal) { model.sheet = .feedback }
+            RowDivider()
+            SettingsRow("Rate AI-Cab", symbol: "star.fill", tint: Palette.gold) { requestReview() }
+            if let id = model.config.appStoreID, let url = URL(string: "https://apps.apple.com/app/id\(id)") {
+                RowDivider()
+                ShareLink(item: url, message: Text("I'm learning the language of AI with AI-Cab")) {
+                    SettingsRowLabel("Share AI-Cab", symbol: "square.and.arrow.up.fill", tint: Palette.coral, detail: nil, accessory: "chevron.right")
+                }
+                .buttonStyle(.plain)
+            }
+            RowDivider()
+            SettingsRow("Privacy policy", symbol: "hand.raised.fill", tint: Palette.textSecondary) { openURL(model.config.privacyURL) }
+            RowDivider()
+            SettingsRow("Terms of use", symbol: "doc.text.fill", tint: Palette.textSecondary) { openURL(model.config.termsURL) }
+        }
     }
 
     private var voiceName: String {
@@ -149,6 +219,137 @@ struct ProfileView: View {
         guard let minute = model.alarmMinute else { return "Off" }
         let date = Calendar.current.date(bySettingHour: minute / 60, minute: minute % 60, second: 0, of: .now) ?? .now
         return date.formatted(date: .omitted, time: .shortened)
+    }
+}
+
+// MARK: - Grouped rows
+
+/// Rounded card holding a column of rows, with an optional caption above.
+struct SettingsGroup<Content: View>: View {
+    let title: String?
+    let content: Content
+
+    init(_ title: String? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let title {
+                Text(title.uppercased())
+                    .font(.footnote.weight(.semibold))
+                    .tracking(1.1)
+                    .foregroundStyle(Palette.textSecondary)
+                    .padding(.leading, 6)
+                    .accessibilityAddTraits(.isHeader)
+            }
+            VStack(spacing: 0) { content }
+                .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Palette.surface))
+                .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Palette.outline, lineWidth: 2))
+                .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Palette.outline).offset(y: Metrics.hardShadow))
+        }
+    }
+}
+
+struct RowDivider: View {
+    var body: some View {
+        Rectangle().fill(Color.white.opacity(0.07)).frame(height: 1).padding(.leading, 62)
+    }
+}
+
+/// Icon chip, title, optional detail and accessory.
+struct SettingsRowLabel: View {
+    let title: String
+    let symbol: String
+    let tint: Color
+    let detail: String?
+    let accessory: String?
+
+    init(_ title: String, symbol: String, tint: Color, detail: String?, accessory: String?) {
+        self.title = title
+        self.symbol = symbol
+        self.tint = tint
+        self.detail = detail
+        self.accessory = accessory
+    }
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Palette.ink)
+                .frame(width: 32, height: 32)
+                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tint))
+            Text(title)
+                .font(.body)
+                .foregroundStyle(Palette.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+            Spacer(minLength: 8)
+            if let detail {
+                Text(detail).foregroundStyle(Palette.textSecondary).lineLimit(1)
+            }
+            if let accessory {
+                Image(systemName: accessory).font(.footnote.weight(.semibold)).foregroundStyle(Palette.textTertiary)
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 56)
+        .contentShape(Rectangle())
+    }
+}
+
+struct SettingsRow: View {
+    let title: String
+    let symbol: String
+    let tint: Color
+    var detail: String?
+    let action: () -> Void
+
+    init(_ title: String, symbol: String, tint: Color, detail: String? = nil, action: @escaping () -> Void) {
+        self.title = title
+        self.symbol = symbol
+        self.tint = tint
+        self.detail = detail
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            SettingsRowLabel(title, symbol: symbol, tint: tint, detail: detail, accessory: "chevron.right")
+        }
+        .buttonStyle(RowPressStyle())
+    }
+}
+
+struct SettingsLink<Value: Hashable>: View {
+    let title: String
+    let symbol: String
+    let tint: Color
+    var detail: String?
+    let value: Value
+
+    init(_ title: String, symbol: String, tint: Color, detail: String? = nil, value: Value) {
+        self.title = title
+        self.symbol = symbol
+        self.tint = tint
+        self.detail = detail
+        self.value = value
+    }
+
+    var body: some View {
+        NavigationLink(value: value) {
+            SettingsRowLabel(title, symbol: symbol, tint: tint, detail: detail, accessory: "chevron.right")
+        }
+        .buttonStyle(RowPressStyle())
+    }
+}
+
+private struct RowPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(Color.white.opacity(configuration.isPressed ? 0.06 : 0))
     }
 }
 
@@ -169,7 +370,7 @@ struct StatsView: View {
                 HStack(spacing: 12) {
                     stat("\(model.history.count)", "Words read", "eye.fill")
                     stat("\(model.state.journey.completed.count)", "Lessons done", "map.fill")
-                    stat("\(model.challengeBest(.sprint))", "Sprint best", "stopwatch.fill")
+                    stat("\(model.challengeBest(.blitz))", "Blitz best", "stopwatch.fill")
                 }
             }
             .padding(Metrics.gutter)
@@ -273,146 +474,6 @@ struct AlarmView: View {
     }
 }
 
-/// Everything else: library, Pro, learning, reminders, appearance, about.
-struct SettingsView: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.openURL) private var openURL
-    @Environment(\.requestReview) private var requestReview
-    @State private var editingTopics = false
-    @State private var showingWidgetGuide = false
-    @State private var managingSubscription = false
-
-    var body: some View {
-        List {
-            Section {
-                NavigationLink(value: LibraryRoute.saved) { row("Your deck", "bookmark.fill", Palette.teal, detail: "\(model.state.learnedCount)") }
-                NavigationLink(value: LibraryRoute.favorites) { row("Favorites", "heart.fill", Palette.coral, detail: "\(model.favorites.count)") }
-                NavigationLink(value: LibraryRoute.history) { row("History", "clock.fill", Palette.gold, detail: "\(model.history.count)") }
-                NavigationLink(value: LibraryRoute.collections) { row("Collections", "folder.fill", Palette.oliveSoft, detail: "\(model.state.collections.count)") }
-            }
-            proSection
-            learningSection
-            RemindersSection()
-            appearanceSection
-            aboutSection
-        }
-        .scrollContentBackground(.hidden)
-        .background(Palette.charcoal.ignoresSafeArea())
-        .navigationTitle("Settings")
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $editingTopics) { TopicPickerSheet() }
-        .sheet(isPresented: $showingWidgetGuide) { WidgetInstallView(mode: .settings) }
-        .manageSubscriptionsSheet(isPresented: $managingSubscription)
-    }
-
-    private func row(_ title: String, _ symbol: String, _ tint: Color, detail: String? = nil) -> some View {
-        HStack {
-            Label {
-                Text(title).foregroundStyle(Palette.textPrimary)
-            } icon: {
-                Image(systemName: symbol).foregroundStyle(tint)
-            }
-            Spacer()
-            if let detail { Text(detail).foregroundStyle(Palette.textSecondary) }
-        }
-    }
-
-    @ViewBuilder
-    private var proSection: some View {
-        Section {
-            if model.isPro {
-                row("AI-Cab Pro is active", "crown.fill", Palette.gold)
-                if let trialEnd = model.purchases.trialEndDate {
-                    Toggle(isOn: Binding(get: { model.preferences.trialReminderEnabled },
-                                         set: { value in
-                                             model.setTrialReminder(value)
-                                             Task { await model.rescheduleNotifications() }
-                                         })) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Remind me before my trial ends")
-                            Text("Trial ends \(trialEnd.formatted(date: .abbreviated, time: .omitted))")
-                                .font(.caption).foregroundStyle(Palette.textSecondary)
-                        }
-                    }
-                    .tint(Palette.teal)
-                }
-                Button { managingSubscription = true } label: { row("Manage subscription", "creditcard", Palette.textSecondary) }
-            } else {
-                Button { model.sheet = .paywall(.settings) } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Go Pro").font(.headline).foregroundStyle(Palette.ink)
-                            Text("All topics, Research depth, every chapter and theme.")
-                                .font(.subheadline).foregroundStyle(Palette.ink.opacity(0.75))
-                        }
-                        Spacer()
-                        Image(systemName: "crown.fill").font(.title2).foregroundStyle(Palette.ink)
-                    }
-                }
-                .listRowBackground(Palette.teal)
-            }
-            Button { Task { await model.purchases.restore() } } label: { row("Restore purchases", "arrow.clockwise", Palette.textSecondary) }
-        }
-    }
-
-    private var learningSection: some View {
-        Section("Learning") {
-            Picker(selection: Binding(get: { model.preferences.level }, set: { model.setLevel($0) })) {
-                ForEach(Level.allCases) { level in
-                    Text(level.isPremium && !model.isPro ? "\(level.title) (Pro)" : level.title).tag(level)
-                }
-            } label: {
-                row("Definition depth", "dial.medium", Palette.teal)
-            }
-            Stepper(value: Binding(get: { model.dailyGoal }, set: { model.setDailyGoal($0) }), in: Preferences.dailyGoalRange) {
-                HStack {
-                    row("Daily goal", "target", Palette.coral)
-                    Text("\(model.dailyGoal) words").foregroundStyle(Palette.textSecondary)
-                }
-            }
-            Button { editingTopics = true } label: {
-                row("Topics in your feed", "square.grid.2x2", Palette.gold,
-                    detail: model.preferences.topicIds.isEmpty ? "All" : "\(model.preferences.topicIds.count)")
-            }
-        }
-    }
-
-    private var appearanceSection: some View {
-        Section("Appearance") {
-            NavigationLink(value: ProfileRoute.themes) {
-                row("Word feed theme", "textformat", Palette.coral, detail: model.preferences.feedTheme.title)
-            }
-            NavigationLink(value: ProfileRoute.appIcon) {
-                row("App icon", "app.gift.fill", Palette.oliveSoft)
-            }
-            Button { showingWidgetGuide = true } label: {
-                row("Add a widget", "rectangle.3.group", Palette.teal)
-            }
-        }
-    }
-
-    private var aboutSection: some View {
-        Section("About") {
-            Button { requestReview() } label: { row("Rate AI-Cab", "star.fill", Palette.gold) }
-            Button { model.sheet = .feedback } label: { row("Send feedback", "envelope.fill", Palette.teal) }
-            if let id = model.config.appStoreID, let url = URL(string: "https://apps.apple.com/app/id\(id)") {
-                ShareLink(item: url, message: Text("I'm learning the language of AI with AI-Cab")) {
-                    row("Share AI-Cab", "square.and.arrow.up", Palette.coral)
-                }
-            }
-            Button { openURL(model.config.privacyURL) } label: { row("Privacy policy", "hand.raised.fill", Palette.textSecondary) }
-            Button { openURL(model.config.termsURL) } label: { row("Terms of use", "doc.text.fill", Palette.textSecondary) }
-            HStack {
-                Text("Version").foregroundStyle(Palette.textSecondary)
-                Spacer()
-                Text("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0") · content v\(model.content.version)")
-                    .foregroundStyle(Palette.textTertiary)
-            }
-            .font(.footnote)
-        }
-    }
-}
-
 /// Reminder settings with a permission-aware toggle.
 private struct RemindersSection: View {
     @Environment(AppModel.self) private var model
@@ -471,38 +532,6 @@ private struct RemindersSection: View {
     }
 }
 
-
-/// Illustrated profile tile: art on top, title bottom-left.
-private struct ProfileTile: View {
-    let title: String
-    let symbol: String
-    let palette: ArtPalette
-    let detail: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            IsoObject(symbol: symbol, palette: palette, size: 92)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 4)
-            Spacer(minLength: 0)
-            Text(title)
-                .font(.system(.headline, weight: .bold))
-                .foregroundStyle(Palette.textPrimary)
-                .multilineTextAlignment(.leading)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-            if let detail {
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(Palette.textSecondary)
-                    .lineLimit(1)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 190, alignment: .topLeading)
-        .accessibilityElement(children: .combine)
-    }
-}
 
 struct RemindersScreen: View {
     var body: some View {
@@ -620,13 +649,13 @@ struct ThemesView: View {
     @State private var filter: ThemeCategory?
     @State private var creating = false
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 14), count: 2)
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 if !model.isPro {
-                    UnlockBanner(title: "Unlock all themes", message: "Browse themes and pick the one that fits your vibe.") {
+                    UnlockBanner(title: "Every theme with Pro", message: "Scenes, typefaces and your own colours for the Today feed.") {
                         model.sheet = .paywall(.shareTheme)
                     }
                 }
@@ -651,7 +680,7 @@ struct ThemesView: View {
     private var chips: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 10) {
-                Button { creating = true } label: { Chip("Create", systemImage: "plus") }
+                Button { creating = true } label: { Chip("New", systemImage: "plus") }
                 Button { filter = nil } label: { Chip("All", isSelected: filter == nil) }
                 ForEach(ThemeCategory.galleryOrder) { category in
                     Button { filter = category } label: { Chip(category.title, isSelected: filter == category) }
@@ -700,39 +729,54 @@ struct ThemePreviewTile: View {
     var body: some View {
         let colors = FeedColors.forTheme(theme, custom: custom)
         Button(action: action) {
-            ZStack {
-                FeedBackground(theme: theme, custom: custom)
-                Text("Aa")
-                    .font(colors.font.display(size: 34))
-                    .foregroundStyle(colors.primary)
-                VStack {
-                    HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                ZStack {
+                    FeedBackground(theme: theme, custom: custom)
+                    VStack(spacing: 6) {
+                        Text("agent")
+                            .font(colors.font.display(size: 30))
+                            .foregroundStyle(colors.primary)
+                        Capsule().fill(colors.secondary.opacity(0.5)).frame(width: 64, height: 4)
+                        Capsule().fill(colors.secondary.opacity(0.35)).frame(width: 44, height: 4)
+                    }
+                    VStack {
+                        HStack {
+                            Spacer()
+                            if showFreeBadge {
+                                Text("FREE")
+                                    .font(.caption2.weight(.heavy))
+                                    .tracking(1)
+                                    .foregroundStyle(Palette.ink)
+                                    .padding(.horizontal, 8).padding(.vertical, 3)
+                                    .background(Capsule().fill(Palette.teal))
+                            } else if locked {
+                                Image(systemName: "lock.fill").font(.caption).foregroundStyle(colors.secondary)
+                            }
+                        }
                         Spacer()
-                        if showFreeBadge {
-                            Text("Free")
-                                .font(.caption2.weight(.semibold))
+                        if selected && theme == .custom {
+                            Label("Edit", systemImage: "slider.horizontal.3")
+                                .font(.caption.weight(.semibold))
                                 .foregroundStyle(Palette.ink)
-                                .padding(.horizontal, 10).padding(.vertical, 4)
-                                .background(Capsule().fill(.white))
-                        } else if locked {
-                            Image(systemName: "lock.fill").font(.caption).foregroundStyle(colors.secondary)
+                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(Capsule().fill(Palette.teal))
                         }
                     }
-                    Spacer()
-                    if selected {
-                        Text(theme == .custom ? "Edit" : "Selected")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(Palette.ink)
-                            .padding(.horizontal, 12).padding(.vertical, 5)
-                            .background(Capsule().fill(.white))
-                    }
+                    .padding(10)
                 }
-                .padding(10)
+                .aspectRatio(0.82, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(selected ? Palette.teal : Palette.outline, lineWidth: selected ? 3 : 2))
+                HStack(spacing: 6) {
+                    if selected { Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.teal) }
+                    Text(theme.title)
+                        .font(.subheadline.weight(selected ? .semibold : .regular))
+                        .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
+                        .lineLimit(1)
+                }
+                .padding(.leading, 4)
             }
-            .aspectRatio(0.68, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(selected ? Palette.teal : Color.white.opacity(0.1), lineWidth: selected ? 3 : 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(theme.title) theme\(locked ? ", Pro" : "")")

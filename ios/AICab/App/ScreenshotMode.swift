@@ -50,7 +50,7 @@ enum ScreenshotMode {
             state.journey.completed.insert(JourneyProgress.key(chapter: 1, lesson: lesson))
         }
         state.collections = [UserCollection(name: "Agent design review", termIds: ["agent", "mcp", "rag"])]
-        state.challengeBests = ["sprint": 14, "rush": 9]
+        state.challengeBests = ["blitz": 14, "survival": 9]
         if screen != .coach { state.preferences.seenTips = ["save5"] }
         return state
     }

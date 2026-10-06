@@ -52,7 +52,7 @@ struct JourneyView: View {
                                     HStack(spacing: 10) {
                                         Image(systemName: (visibleChapter ?? 0) > current.chapter.number ? "chevron.up" : "chevron.down")
                                             .foregroundStyle(Palette.coral)
-                                        Text("Back to chapter \(current.chapter.number)")
+                                        Text("Back to unit \(current.chapter.number)")
                                             .font(.headline)
                                             .foregroundStyle(Palette.textPrimary)
                                     }
@@ -87,10 +87,10 @@ struct JourneyView: View {
 
     private var header: some View {
         VStack(spacing: 10) {
-            Text("Journey")
+            Text("Path")
                 .font(.serifLargeTitle)
                 .foregroundStyle(Palette.textPrimary)
-            Text("Ten chapters from \u{201C}what's a token?\u{201D} to frontier research.")
+            Text("Ten units from \u{201C}what's a token?\u{201D} to frontier research.")
                 .font(.subheadline)
                 .foregroundStyle(Palette.textSecondary)
                 .multilineTextAlignment(.center)
@@ -122,7 +122,7 @@ private struct ChapterSection: View {
         let unlocked = model.isUnlocked(chapter)
         let current = model.journeyCurrent
         VStack(spacing: 12) {
-            Eyebrow("Chapter \(chapter.number)")
+            Eyebrow("Unit \(chapter.number)")
             Text(chapter.title)
                 .font(.serifTitle)
                 .foregroundStyle(Palette.textPrimary)
@@ -246,7 +246,7 @@ private struct PlayCard: View {
     var body: some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("CHAPTER \(chapter.number) · GAME \(gameNumber)")
+                Text("UNIT \(chapter.number) · STEP \(gameNumber)")
                     .font(.caption2.weight(.bold))
                     .tracking(1.4)
                     .foregroundStyle(Palette.teal)
@@ -261,7 +261,7 @@ private struct PlayCard: View {
             }
             Spacer(minLength: 0)
             Button(action: play) {
-                Label("Play", systemImage: "play.fill")
+                Label("Go", systemImage: "play.fill")
                     .font(.headline)
                     .foregroundStyle(Palette.ink)
                     .padding(.horizontal, 20)
@@ -283,7 +283,7 @@ private struct CurrentMarker: View {
     @State private var bob = false
 
     var body: some View {
-        Text("START")
+        Text("YOU'RE HERE")
             .font(.caption.weight(.heavy))
             .tracking(1.5)
             .foregroundStyle(Palette.ink)

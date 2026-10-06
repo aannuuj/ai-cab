@@ -253,13 +253,13 @@ private struct SaveToastView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text("Saved to \(Text(toast.destination).bold())")
+            Text("Added to \(Text(toast.destination).bold())")
                 .font(.subheadline)
                 .foregroundStyle(Palette.textPrimary)
                 .lineLimit(1)
             Spacer(minLength: 0)
             Button(action: change) {
-                Text("Change")
+                Text("Move")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Palette.ink)
                     .padding(.horizontal, 16)
@@ -290,15 +290,15 @@ private struct SaveCoachSheet: View {
                     .offset(x: 58, y: -38)
             }
             .padding(.top, 26)
-            Text("Get words that match your interests")
+            Text("Teach your feed what you care about")
                 .font(.serifTitle2)
                 .foregroundStyle(Palette.textPrimary)
                 .multilineTextAlignment(.center)
-            Text("Personalize your feed by saving at least 5 words with \(Image(systemName: "bookmark.fill"))")
+            Text("Bookmark 5 terms with \(Image(systemName: "bookmark.fill")) and AI-Cab tunes what comes next.")
                 .font(.body)
                 .foregroundStyle(Palette.textSecondary)
                 .multilineTextAlignment(.center)
-            Button("Got it!", action: done)
+            Button("Sounds good", action: done)
                 .buttonStyle(PrimaryButtonStyle(.teal))
                 .padding(.top, 4)
         }
@@ -344,7 +344,7 @@ struct SaveDestinationSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(Palette.charcoal)
-            .navigationTitle("Save to")
+            .navigationTitle("Add new saves to")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }

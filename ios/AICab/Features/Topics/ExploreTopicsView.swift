@@ -26,8 +26,8 @@ struct ExploreTopicsView: View {
             }
             .scrollIndicators(.hidden)
             .background(Palette.charcoal.ignoresSafeArea())
-            .navigationTitle("Explore topics")
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search 300+ AI words")
+            .navigationTitle("Explore")
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search 300+ AI terms")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Edit") { editingTopics = true }
@@ -50,17 +50,17 @@ struct ExploreTopicsView: View {
             }
 
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
-                LibraryTile(title: "Favorites", symbol: "heart.fill", palette: .teal, count: model.favorites.count, route: .favorites)
+                LibraryTile(title: "Hearted", symbol: "heart.fill", palette: .teal, count: model.favorites.count, route: .favorites)
                 LibraryTile(title: "Collections", symbol: "folder.fill", palette: .cream, count: model.state.collections.count, route: .collections)
-                LibraryTile(title: "Your own words", symbol: "pencil.line", palette: .coral, count: model.state.customTerms.count, route: .ownWords)
-                LibraryTile(title: "History", symbol: "clock.fill", palette: .olive, count: model.history.count, route: .history)
+                LibraryTile(title: "My terms", symbol: "pencil.line", palette: .coral, count: model.state.customTerms.count, route: .ownWords)
+                LibraryTile(title: "Recently read", symbol: "clock.fill", palette: .olive, count: model.history.count, route: .history)
             }
 
             ForEach(TopicSection.allCases, id: \.self) { section in
                 topicSection(section.title, topics: model.topics(in: section))
             }
 
-            topicSection("By level", topics: model.levelTopics)
+            topicSection("By difficulty", topics: model.levelTopics)
 
             if !model.isPro {
                 PremiumFooter { model.sheet = .paywall(.banner) }
@@ -107,14 +107,14 @@ private struct PremiumFooter: View {
                 .frame(width: 68, height: 68)
                 .background(Circle().fill(Palette.surface))
                 .overlay(Circle().strokeBorder(Palette.outline, lineWidth: 2))
-            Text("Go Premium")
+            Text("Every topic, one upgrade")
                 .font(.serifTitle2)
                 .foregroundStyle(Palette.textPrimary)
-            Text("Unlock all topics, Research definitions and every Journey chapter.")
+            Text("Research definitions, every Path unit, all drills and themes.")
                 .font(.subheadline)
                 .foregroundStyle(Palette.textSecondary)
                 .multilineTextAlignment(.center)
-            Button("Unlock all topics", action: action)
+            Button("See AI-Cab Pro", action: action)
                 .buttonStyle(PrimaryButtonStyle(.teal))
         }
         .frame(maxWidth: .infinity)
@@ -124,8 +124,8 @@ private struct PremiumFooter: View {
 
 /// Teal "Unlock everything" banner.
 struct UnlockBanner: View {
-    var title = "Unlock everything"
-    var message = "Every topic, Research-level definitions, all Journey chapters and themes."
+    var title = "Go deeper with Pro"
+    var message = "Every topic, Research-level definitions, all Path units and themes."
     let action: () -> Void
 
     var body: some View {

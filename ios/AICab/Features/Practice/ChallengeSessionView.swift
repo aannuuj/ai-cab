@@ -2,7 +2,7 @@ import SwiftUI
 import AICabCore
 import AICabDesign
 
-/// Sprint / Rush / Perfection: endless quick-fire questions with a clock or lives.
+/// Blitz / Survival / Flawless: endless quick-fire questions with a clock or lives.
 struct ChallengeSessionView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss

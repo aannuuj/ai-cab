@@ -14,24 +14,24 @@ struct PracticeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     if !model.isPro {
-                        UnlockBanner(message: "Access all games, challenges, topics and themes.") { model.sheet = .paywall(.banner) }
+                        UnlockBanner(message: "Every drill, timed mode and topic, plus Research depth.") { model.sheet = .paywall(.banner) }
                     }
                     levelTestCard
                     deckSummary
                     dailyCard
 
-                    sectionHeader("For you")
-                    PracticeRow(title: "Review due words",
+                    sectionHeader("Due for you")
+                    PracticeRow(title: "Spaced review",
                                 subtitle: model.dueReviews.isEmpty ? "All caught up. Come back tomorrow." : "\(model.dueReviews.count) words are ready to refresh",
                                 symbol: "arrow.triangle.2.circlepath", palette: .coral,
                                 badge: model.dueReviews.isEmpty ? nil : "\(model.dueReviews.count)",
                                 disabled: model.dueReviews.isEmpty) { session = .review }
-                    PracticeRow(title: "Your history", subtitle: model.history.count < 4 ? "Read a few words first" : "Quiz the last words you read",
+                    PracticeRow(title: "Recently read", subtitle: model.history.count < 4 ? "Read a few terms first" : "Quiz the terms you just read",
                                 symbol: "clock.arrow.circlepath", palette: .olive, disabled: model.history.count < 4) { session = .history }
-                    PracticeRow(title: "Practice favorites", subtitle: model.favorites.count < 4 ? "Favorite at least 4 words to unlock" : "\(model.favorites.count) favorites",
+                    PracticeRow(title: "Hearted terms", subtitle: model.favorites.count < 4 ? "Heart 4 terms to unlock" : "\(model.favorites.count) favorites",
                                 symbol: "heart", palette: .teal, disabled: model.favorites.count < 4) { session = .favorites }
 
-                    sectionHeader("Challenges")
+                    sectionHeader("Timed modes")
                     HStack(spacing: 12) {
                         ForEach(ChallengeMode.allCases) { mode in
                             ChallengeTile(mode: mode, best: model.challengeBest(mode), locked: model.isLocked(mode)) {
@@ -40,19 +40,19 @@ struct PracticeView: View {
                         }
                     }
 
-                    sectionHeader("Games")
+                    sectionHeader("Drills")
                     shuffleCard
                     LazyVGrid(columns: twoColumns, spacing: 14) {
-                        GameTile(title: "Match pairs", symbol: "puzzlepiece.extension.fill", palette: .olive) { session = .match }
+                        GameTile(title: "Pair up", symbol: "puzzlepiece.extension.fill", palette: .olive) { session = .match }
                         ForEach(PracticeGame.singles) { game in
                             GameTile(title: game.title, symbol: game.symbol, palette: game.palette) { session = .game(game) }
                         }
                     }
 
-                    sectionHeader("Study")
+                    sectionHeader("Recall")
                     flashCardsCard
 
-                    sectionHeader("Categories")
+                    sectionHeader("By topic")
                     ForEach(model.topics.prefix(8)) { topic in
                         CategoryRow(topic: topic, locked: model.isLocked(topic)) {
                             if model.isLocked(topic) { model.sheet = .paywall(.lockedTopic) } else { session = .topic(topic.id) }
@@ -64,7 +64,7 @@ struct PracticeView: View {
             }
             .scrollIndicators(.hidden)
             .background(Palette.charcoal.ignoresSafeArea())
-            .navigationTitle("Practice")
+            .navigationTitle("Drills")
             .toolbar {
                 if !model.isPro {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -94,14 +94,14 @@ struct PracticeView: View {
         Button { session = .levelTest } label: {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("What's your level?")
+                    Text("Level check")
                         .font(.serifTitle3)
                         .foregroundStyle(Palette.textPrimary)
-                    Text("9 quick questions set your definition depth")
+                    Text("9 questions, about 2 minutes. We set your definition depth from the result.")
                         .font(.subheadline)
                         .foregroundStyle(Palette.textSecondary)
                         .multilineTextAlignment(.leading)
-                    Text("Take free test")
+                    Text("Start")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Palette.ink)
                         .padding(.horizontal, 14)
@@ -172,10 +172,10 @@ struct PracticeView: View {
         Button { session = .game(.shuffle) } label: {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Try Game shuffle")
+                    Text("Mixed drill")
                         .font(.serifTitle3)
                         .foregroundStyle(Palette.textPrimary)
-                    Text("A mix of all games")
+                    Text("Every drill type in one run")
                         .font(.subheadline)
                         .foregroundStyle(Palette.textSecondary)
                     Text("Start")
@@ -203,10 +203,10 @@ struct PracticeView: View {
         Button { session = .flashCards } label: {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Flash cards")
+                    Text("Recall cards")
                         .font(.serifTitle3)
                         .foregroundStyle(Palette.textPrimary)
-                    Text("The best way to practice and learn words")
+                    Text("Flip, rate yourself, and spaced repetition handles the rest")
                         .font(.subheadline)
                         .foregroundStyle(Palette.textSecondary)
                         .multilineTextAlignment(.leading)
@@ -229,12 +229,12 @@ struct PracticeView: View {
         case .review:
             QuizSessionView(title: "Review") { model.quiz(for: model.dueReviews, count: min(10, model.dueReviews.count)) } onFinish: { _, _ in }
         case .history:
-            QuizSessionView(title: "Your history") { model.quiz(for: Array(model.history.prefix(30).map(\.term)), count: 10) } onFinish: { _, _ in }
+            QuizSessionView(title: "Recently read") { model.quiz(for: Array(model.history.prefix(30).map(\.term)), count: 10) } onFinish: { _, _ in }
         case .favorites:
-            QuizSessionView(title: "Favorites") { model.quiz(for: model.favorites, count: min(10, model.favorites.count)) } onFinish: { _, _ in }
+            QuizSessionView(title: "Hearted terms") { model.quiz(for: model.favorites, count: min(10, model.favorites.count)) } onFinish: { _, _ in }
         case .match:
             let pool = model.savedTerms.count >= 4 ? model.savedTerms : model.quizPool()
-            MatchGameView(title: "Match pairs", pairs: QuizGenerator(level: .beginner).matchPairs(for: pool.shuffled(), count: 5)) { _, _ in }
+            MatchGameView(title: "Pair up", pairs: QuizGenerator(level: .beginner).matchPairs(for: pool.shuffled(), count: 5)) { _, _ in }
         case .game(let game):
             QuizSessionView(title: game.title) { model.gameQuestions(kinds: game.kinds) } onFinish: { _, _ in }
         case .challenge(let mode):
@@ -252,7 +252,7 @@ struct PracticeView: View {
     private func openScreenshotSession() {
         guard session == nil else { return }
         switch ScreenshotMode.current {
-        case .challenge: session = .challenge(.sprint)
+        case .challenge: session = .challenge(.blitz)
         case .flashcards: session = .flashCards
         case .levelTest: session = .levelTest
         default: break
@@ -291,10 +291,10 @@ enum PracticeGame: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .shuffle: "Game shuffle"
-        case .meaning: "Meaning match"
-        case .gap: "Fill in the gap"
-        case .guess: "Guess the word"
+        case .shuffle: "Mixed drill"
+        case .meaning: "Define it"
+        case .gap: "Complete it"
+        case .guess: "Name it"
         case .acronym: "Expand it"
         }
     }
@@ -356,7 +356,7 @@ private struct GameTile: View {
     }
 }
 
-/// Sprint / Rush / Perfection tile with the personal best.
+/// Blitz / Survival / Flawless tile with the personal best.
 private struct ChallengeTile: View {
     let mode: ChallengeMode
     let best: Int
@@ -392,17 +392,17 @@ private struct ChallengeTile: View {
 
     private var symbol: String {
         switch mode {
-        case .sprint: "stopwatch.fill"
-        case .rush: "heart.fill"
-        case .perfection: "seal.fill"
+        case .blitz: "stopwatch.fill"
+        case .survival: "heart.fill"
+        case .flawless: "seal.fill"
         }
     }
 
     private var tint: Color {
         switch mode {
-        case .sprint: Palette.teal
-        case .rush: Palette.coral
-        case .perfection: Palette.gold
+        case .blitz: Palette.teal
+        case .survival: Palette.coral
+        case .flawless: Palette.gold
         }
     }
 }

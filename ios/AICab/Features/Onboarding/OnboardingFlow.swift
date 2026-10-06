@@ -156,7 +156,7 @@ struct OnboardingFlow: View {
                 Spacer()
                 LaurelStat(value: "3", caption: "depth levels", laurel: true)
                 Spacer()
-                LaurelStat(value: "\(model.chapters.count)", caption: "chapters")
+                LaurelStat(value: "\(model.chapters.count)", caption: "units")
             }
             .padding(.horizontal, 8)
             Button("Get started") { advance() }

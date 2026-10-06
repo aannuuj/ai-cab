@@ -54,18 +54,18 @@ struct ShareSheetView: View {
             }
 
             HStack(alignment: .top, spacing: 0) {
-                RoundAction(title: "Edit theme", symbol: "paintbrush.pointed", isOn: editingTheme) {
+                RoundAction(title: "Style", symbol: "paintbrush.pointed", isOn: editingTheme) {
                     withAnimation(.snappy) { editingTheme.toggle() }
                 }
-                RoundAction(title: savedToPhotos ? "Saved" : "Save image", symbol: savedToPhotos ? "checkmark" : "arrow.down.to.line") {
+                RoundAction(title: savedToPhotos ? "Saved" : "Save", symbol: savedToPhotos ? "checkmark" : "arrow.down.to.line") {
                     saveToPhotos()
                 }
                 collectionMenu
-                RoundAction(title: copied ? "Copied" : "Copy text", symbol: copied ? "checkmark" : "doc.on.doc") {
+                RoundAction(title: copied ? "Copied" : "Copy", symbol: copied ? "checkmark" : "doc.on.doc") {
                     UIPasteboard.general.string = shareMessage
                     copied = true
                 }
-                RoundAction(title: showWatermark ? "Hide watermark" : "Show watermark",
+                RoundAction(title: showWatermark ? "No logo" : "Show logo",
                             symbol: showWatermark ? "drop" : "drop.fill", locked: !model.isPro, isOn: !showWatermark) {
                     if model.isPro { showWatermark.toggle() } else { model.sheet = .paywall(.shareTheme) }
                 }
@@ -89,7 +89,7 @@ struct ShareSheetView: View {
                     let image = Image(uiImage: preview)
                     ShareLink(item: image, subject: Text(term.term), message: Text(shareMessage),
                               preview: SharePreview(term.term, image: image)) {
-                        ShareTarget.label(title: "Share via", symbol: "square.and.arrow.up", colors: [Palette.surfaceRaised, Palette.surface])
+                        ShareTarget.label(title: "More", symbol: "square.and.arrow.up", colors: [Palette.surfaceRaised, Palette.surface])
                     }
                     .buttonStyle(.plain)
                     .frame(maxWidth: .infinity)
@@ -142,7 +142,7 @@ struct ShareSheetView: View {
             Divider()
             Button("New collection…", systemImage: "plus") { creatingCollection = true }
         } label: {
-            RoundAction.label(title: "Add to collection", symbol: inAny ? "folder.fill" : "folder.badge.plus", locked: false, isOn: inAny)
+            RoundAction.label(title: "Collect", symbol: inAny ? "folder.fill" : "folder.badge.plus", locked: false, isOn: inAny)
         }
         .frame(maxWidth: .infinity)
     }

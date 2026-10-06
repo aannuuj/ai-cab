@@ -181,11 +181,11 @@ public enum ThemeCategory: String, CaseIterable, Identifiable, Sendable {
 
     public var title: String {
         switch self {
-        case .popular: "Most popular"
-        case .calm: "Calm"
-        case .seasonal: "Seasonal"
-        case .highVisibility: "High visibility"
-        case .illustration: "Illustration"
+        case .popular: "Staff picks"
+        case .calm: "Quiet"
+        case .seasonal: "This season"
+        case .highVisibility: "High contrast"
+        case .illustration: "Drawn"
         case .custom: "Yours"
         }
     }

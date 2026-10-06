@@ -8,23 +8,23 @@ public enum LessonKind: String, CaseIterable, Codable, Identifiable, Sendable {
 
     public var title: String {
         switch self {
-        case .learn: "Learn the words"
+        case .learn: "Meet the terms"
         case .use: "Use it"
         case .match: "Match"
         case .recall: "Recall"
         case .compare: "This vs that"
-        case .test: "Chapter test"
+        case .test: "Checkpoint"
         }
     }
 
     public var subtitle: String {
         switch self {
-        case .learn: "Meet this chapter's new terms"
+        case .learn: "Meet this unit's new terms"
         case .use: "Pick the word that fits the sentence"
         case .match: "Pair each term with its meaning"
         case .recall: "Name the term from its definition"
         case .compare: "Tell look-alike concepts apart"
-        case .test: "Score 80% to unlock the next chapter"
+        case .test: "Score 80% to open the next unit"
         }
     }
 

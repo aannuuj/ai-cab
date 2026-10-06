@@ -1,7 +1,30 @@
 import Foundation
 
 enum AppTab: String, Hashable, CaseIterable {
-    case words, topics, journey, practice, profile
+    case today, explore, train, you
+
+    /// Older link hosts (widgets and notifications already on devices) keep working.
+    init?(host: String) {
+        switch host {
+        case "words": self = .today
+        case "topics": self = .explore
+        case "journey", "practice": self = .train
+        case "profile": self = .you
+        default: self.init(rawValue: host)
+        }
+    }
+}
+
+/// The two halves of the Train tab.
+enum TrainMode: String, Hashable, CaseIterable {
+    case path, drills
+
+    var title: String {
+        switch self {
+        case .path: "Path"
+        case .drills: "Drills"
+        }
+    }
 }
 
 /// Where a paywall was opened from — used for copy and analytics.
@@ -34,6 +57,7 @@ enum AppSheet: Identifiable {
 enum DeepLink: Equatable {
     case term(String)
     case tab(AppTab)
+    case train(TrainMode)
     case paywall
 
     init?(url: URL) {
@@ -47,8 +71,10 @@ enum DeepLink: Equatable {
         case "paywall":
             self = .paywall
         default:
-            guard let tab = AppTab(rawValue: host) else { return nil }
+            guard let tab = AppTab(host: host) else { return nil }
             self = .tab(tab)
+            if host == "journey" { self = .train(.path) }
+            if host == "practice" { self = .train(.drills) }
         }
     }
 }

@@ -63,11 +63,11 @@ struct FlashCardsView: View {
                 done
             } else {
                 ContentUnavailableView("No cards yet", systemImage: "rectangle.on.rectangle.angled",
-                                       description: Text("Save a few words from the Words tab, then come back."))
+                                       description: Text("Bookmark a few terms in Today, then come back."))
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: index)
-        .navigationTitle("Flash cards")
+        .navigationTitle("Recall cards")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -83,7 +83,7 @@ struct FlashCardsView: View {
         VStack(spacing: 18) {
             Spacer()
             IsoObject(symbol: "rectangle.on.rectangle.angled", palette: .teal, size: 120)
-            Text("Deck done")
+            Text("All cards rated")
                 .font(.serifTitle)
                 .foregroundStyle(Palette.textPrimary)
             Text("\(known) known · \(learning) still learning.\nWords you're still learning come back in your reviews.")

@@ -53,7 +53,7 @@ struct FavoritesView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        LibraryList(title: "Favorites", isEmpty: model.favorites.isEmpty, emptyTitle: "No favorites yet",
+        LibraryList(title: "Hearted", isEmpty: model.favorites.isEmpty, emptyTitle: "Nothing hearted yet",
                     emptySymbol: "heart", emptyMessage: "Tap the heart, or double-tap a word, to keep it here.") {
             ForEach(model.favorites) { TermRow(term: $0) }
         }
@@ -78,7 +78,7 @@ struct HistoryView: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        LibraryList(title: "History", isEmpty: model.history.isEmpty, emptyTitle: "Nothing yet",
+        LibraryList(title: "Recently read", isEmpty: model.history.isEmpty, emptyTitle: "Nothing yet",
                     emptySymbol: "clock", emptyMessage: "Words you've seen will show up here.") {
             ForEach(model.history.prefix(200)) { item in
                 TermRow(term: item.term, trailing: item.date.formatted(.relative(presentation: .named)))
@@ -150,7 +150,7 @@ struct CollectionDetailView: View {
                     model.quiz(for: terms, count: min(10, terms.count))
                 } onFinish: { _, _ in }
             } label: {
-                Label("Practice this collection", systemImage: "play.fill")
+                Label("Drill this collection", systemImage: "play.fill")
                     .font(.headline)
                     .foregroundStyle(Palette.ink)
                     .frame(maxWidth: .infinity, minHeight: 52)
@@ -207,7 +207,7 @@ struct OwnWordsView: View {
     @State private var adding = false
 
     var body: some View {
-        LibraryList(title: "Your own words", isEmpty: model.state.customTerms.isEmpty, emptyTitle: "Add a word you heard",
+        LibraryList(title: "My terms", isEmpty: model.state.customTerms.isEmpty, emptyTitle: "Add a word you heard",
                     emptySymbol: "pencil.line", emptyMessage: "Heard a term in a meeting or a podcast? Add it and it joins your feed and reviews.") {
             ForEach(model.state.customTerms) { term in
                 TermRow(term: term)

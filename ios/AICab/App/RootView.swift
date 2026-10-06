@@ -45,7 +45,7 @@ struct RootView: View {
 
     /// Light status bar content only while reading on a light feed theme.
     private var colorScheme: ColorScheme {
-        let lightFeed = model.preferences.hasOnboarded && model.selectedTab == .words && model.sheet == nil
+        let lightFeed = model.preferences.hasOnboarded && model.selectedTab == .today && model.sheet == nil
             && FeedColors.isLight(model.preferences.feedTheme, custom: model.preferences.customTheme)
         if !model.preferences.hasOnboarded { return .dark }
         return lightFeed ? .light : .dark
@@ -58,20 +58,17 @@ struct MainTabView: View {
     var body: some View {
         @Bindable var model = model
         TabView(selection: $model.selectedTab) {
-            Tab("Words", systemImage: "house", value: AppTab.words) {
+            Tab("Today", systemImage: "text.book.closed", value: AppTab.today) {
                 WordsFeedView()
             }
-            Tab("Topics", systemImage: "square.grid.2x2", value: AppTab.topics) {
+            Tab("Explore", systemImage: "safari", value: AppTab.explore) {
                 ExploreTopicsView()
             }
-            Tab("Journey", systemImage: "map", value: AppTab.journey) {
-                JourneyView()
+            Tab("Train", systemImage: "dumbbell", value: AppTab.train) {
+                TrainView()
             }
             .badge(model.showJourneyBadge ? Text("New") : nil)
-            Tab("Practice", systemImage: "graduationcap", value: AppTab.practice) {
-                PracticeView()
-            }
-            Tab("Profile", systemImage: "person", value: AppTab.profile) {
+            Tab("You", systemImage: "person.crop.circle", value: AppTab.you) {
                 ProfileView()
             }
         }
@@ -88,5 +85,31 @@ private struct TabBarMinimize: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+/// Path (units of short steps) and Drills (quizzes, timed modes, recall cards) under one tab.
+struct TrainView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        ZStack {
+            switch model.trainMode {
+            case .path: JourneyView()
+            case .drills: PracticeView()
+            }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            Picker("Train", selection: $model.trainMode) {
+                ForEach(TrainMode.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 260)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(Palette.charcoal)
+        }
+        .sensoryFeedback(.selection, trigger: model.trainMode)
     }
 }

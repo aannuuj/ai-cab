@@ -326,7 +326,7 @@ final class PlacementTests: XCTestCase {
 
 final class ChallengeTests: XCTestCase {
     func testRushEndsAfterThreeMisses() {
-        var run = ChallengeRun(mode: .rush)
+        var run = ChallengeRun(mode: .survival)
         run.record(correct: true)
         run.record(correct: false)
         run.record(correct: false)
@@ -339,7 +339,7 @@ final class ChallengeTests: XCTestCase {
     }
 
     func testPerfectionEndsOnFirstMiss() {
-        var run = ChallengeRun(mode: .perfection)
+        var run = ChallengeRun(mode: .flawless)
         for _ in 0..<5 { run.record(correct: true) }
         run.record(correct: false)
         XCTAssertTrue(run.isOver(elapsed: 0))
@@ -347,7 +347,7 @@ final class ChallengeTests: XCTestCase {
     }
 
     func testSprintEndsOnTheClockNotMisses() {
-        var run = ChallengeRun(mode: .sprint)
+        var run = ChallengeRun(mode: .blitz)
         for _ in 0..<10 { run.record(correct: false) }
         XCTAssertNil(run.livesLeft)
         XCTAssertFalse(run.isOver(elapsed: 59))

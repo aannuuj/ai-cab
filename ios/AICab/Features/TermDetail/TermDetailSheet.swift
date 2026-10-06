@@ -57,7 +57,7 @@ struct TermDetailView: View {
                     Button {
                         model.sheet = .paywall(.banner)
                     } label: {
-                        Label("Unlock everything", systemImage: "crown.fill")
+                        Label("Get the full entry with Pro", systemImage: "crown.fill")
                     }
                     .buttonStyle(PrimaryButtonStyle(.teal))
                     .padding(.top, 4)
@@ -195,7 +195,7 @@ struct TermDetailView: View {
         let sentences = [term.example].compactMap { $0 }
         if !sentences.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-                Label("Examples", systemImage: "text.quote")
+                Label("In use", systemImage: "text.quote")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Palette.teal)
                 ForEach(Array(sentences.enumerated()), id: \.offset) { index, sentence in

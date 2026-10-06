@@ -209,16 +209,17 @@ struct NudgeOverlay: View {
                 IsoLessonTile(symbol: "trophy.fill", state: .available, size: 96)
             }
             Eyebrow("New", color: Palette.teal)
-            Text("Your AI Journey")
+            Text("Your learning Path")
                 .font(.serifTitle)
                 .foregroundStyle(Palette.textPrimary)
-            Text("Ten chapters, six bite-sized lessons each. Learn, match, compare look-alikes, then pass the test.")
+            Text("Ten units, six short steps each. Meet the terms, use them, tell look-alikes apart, then pass the checkpoint.")
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Palette.textSecondary)
-            Button("Start chapter 1") {
+            Button("Start unit 1") {
                 model.resolve(.journey, .accepted)
-                model.selectedTab = .journey
+                model.selectedTab = .train
+                model.trainMode = .path
             }
             .buttonStyle(PrimaryButtonStyle(.teal))
             Button("Later") { model.resolve(.journey, .dismissed) }

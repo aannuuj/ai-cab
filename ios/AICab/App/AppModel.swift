@@ -69,7 +69,8 @@ final class AppModel {
     private(set) var notificationStatus: NotificationAuthorization = .notDetermined
     private(set) var hasWidgetInstalled = true
 
-    var selectedTab: AppTab = .words
+    var selectedTab: AppTab = .today
+    var trainMode: TrainMode = .path
     var sheet: AppSheet?
     /// Overlay-style nudges (review card, Journey intro). Sheet-style nudges go through `sheet`.
     var overlayNudge: Nudge?
@@ -156,10 +157,12 @@ final class AppModel {
         }
         switch screen {
         case .onboarding, .words, .tailor, .streak, .themes, .icons: break
-        case .topics: model.selectedTab = .topics
-        case .journey: model.selectedTab = .journey
-        case .practice, .quiz: model.selectedTab = .practice
-        case .profile: model.selectedTab = .profile
+        case .topics: model.selectedTab = .explore
+        case .journey: model.selectedTab = .train
+        case .practice, .quiz:
+            model.selectedTab = .train
+            model.trainMode = .drills
+        case .profile: model.selectedTab = .you
         case .paywall: model.sheet = .paywall(.crown)
         case .widget: model.sheet = .widgetInstall
         case .term: model.sheet = .term("rag")
@@ -167,8 +170,11 @@ final class AppModel {
         case .toast: model.saveToast = SaveToast(termID: "context-engineering", destination: "Agent design review")
         case .coach, .challenge, .flashcards, .levelTest, .voices, .gallery, .stats: break
         }
-        if [.challenge, .flashcards, .levelTest].contains(screen) { model.selectedTab = .practice }
-        if [.voices, .gallery, .stats].contains(screen) { model.selectedTab = .profile }
+        if [.challenge, .flashcards, .levelTest].contains(screen) {
+            model.selectedTab = .train
+            model.trainMode = .drills
+        }
+        if [.voices, .gallery, .stats].contains(screen) { model.selectedTab = .you }
         return model
     }
 
@@ -216,7 +222,7 @@ final class AppModel {
                                                        .intermediate: ("hammer.fill", .teal),
                                                        .pro: ("atom", .coral)]
         return Difficulty.allCases.enumerated().map { index, difficulty in
-            Topic(id: Self.levelTopicPrefix + difficulty.rawValue, title: difficulty.title, eyebrow: "By level",
+            Topic(id: Self.levelTopicPrefix + difficulty.rawValue, title: difficulty.title, eyebrow: "By difficulty",
                   section: .foundations, symbol: art[difficulty]?.0 ?? "circle", palette: art[difficulty]?.1 ?? .teal,
                   isPremium: false, order: 1000 + index)
         }
@@ -362,7 +368,7 @@ final class AppModel {
         if !feed.contains(where: { $0.id == termID }) {
             feed.insert(term, at: 0)
         }
-        selectedTab = .words
+        selectedTab = .today
         feedScrollTarget = termID
     }
 
@@ -375,7 +381,7 @@ final class AppModel {
         let all = terms(in: topic).filter { !isLocked($0) }
         let words = all.filter { !isSaved($0.id) }.shuffled(using: &rng)
         feed = Array((words.isEmpty ? all : words).prefix(30))
-        selectedTab = .words
+        selectedTab = .today
         feedScrollTarget = feed.first?.id
     }
 
@@ -823,6 +829,9 @@ final class AppModel {
         switch link {
         case .term(let id): show(termID: id)
         case .tab(let tab): selectedTab = tab
+        case .train(let mode):
+            selectedTab = .train
+            trainMode = mode
         case .paywall: sheet = .paywall(.crown)
         }
     }

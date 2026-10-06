@@ -50,7 +50,7 @@ struct QuizSessionView: View {
                 EmptyView()
             } else {
                 ContentUnavailableView("Not enough words yet", systemImage: "text.book.closed",
-                                       description: Text("Save a few words from the Words tab, then come back."))
+                                       description: Text("Bookmark a few terms in Today, then come back."))
             }
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.85), value: index)
@@ -225,7 +225,7 @@ struct ResultView: View {
 
     private var message: String {
         if let passMark, !passed {
-            return "You need \(Int(passMark * 100))% to unlock the next chapter. Missed words are queued for review."
+            return "You need \(Int(passMark * 100))% to open the next unit. Missed terms come back in your reviews."
         }
         return "Missed words come back in your reviews so they stick."
     }

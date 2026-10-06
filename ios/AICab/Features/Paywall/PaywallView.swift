@@ -92,7 +92,7 @@ struct PaywallView: View {
         return [
             .init(symbol: "checkmark", title: "Install the app", subtitle: "Set it up to match your goals", isDone: true),
             .init(symbol: "lock.open", title: "Today: Free trial starts",
-                  subtitle: "Every topic, Research depth, all 10 chapters and themes, free for \(days) days."),
+                  subtitle: "Every topic, Research depth, all 10 Path units and themes, free for \(days) days."),
             .init(symbol: "bell", title: "\(reminder.formatted(style)): Trial reminder", subtitle: "We'll let you know it's ending soon."),
             .init(symbol: "crown", title: "\(member.formatted(style)): Become a member", subtitle: "Your trial converts unless you cancel.", isFinal: true),
         ]
@@ -102,7 +102,7 @@ struct PaywallView: View {
         VStack(alignment: .leading, spacing: 18) {
             benefit("square.grid.2x2.fill", "All 20 topics", "Agents, RAG, evals, chips, interpretability and more")
             benefit("dial.high.fill", "Research-depth definitions", "The maths and the papers behind every term")
-            benefit("map.fill", "All 10 Journey chapters", "From tokens to frontier research")
+            benefit("map.fill", "All 10 Path units", "From tokens to frontier research")
             benefit("paintpalette.fill", "Themes & clean shares", "Feed themes, card styles, no watermark")
             benefit("sparkles", "AI-drafted words", "Add any term you hear; we write the definitions")
         }
