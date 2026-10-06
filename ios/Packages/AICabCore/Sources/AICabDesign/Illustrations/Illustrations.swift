@@ -331,3 +331,111 @@ public struct ConfettiBurst: View {
         }
     }
 }
+
+/// Two-tone flame with a day count, for the streak commitment screen.
+public struct StreakFlame: View {
+    let count: Int
+    let size: CGFloat
+    @State private var flicker = false
+
+    public init(count: Int, size: CGFloat = 180) {
+        self.count = count
+        self.size = size
+    }
+
+    public var body: some View {
+        ZStack {
+            Image(systemName: "flame.fill")
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(Palette.oliveSoft)
+                .frame(width: size, height: size)
+                .scaleEffect(x: 1, y: flicker ? 1.03 : 0.98, anchor: .bottom)
+            Image(systemName: "flame.fill")
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(Color(hex: 0xD5CDA6))
+                .frame(width: size * 0.5, height: size * 0.5)
+                .offset(y: size * 0.18)
+                .scaleEffect(x: 1, y: flicker ? 0.97 : 1.03, anchor: .bottom)
+            Text("\(count)")
+                .font(.system(size: size * 0.3, weight: .bold, design: .rounded))
+                .foregroundStyle(Palette.olive)
+                .offset(y: size * 0.22)
+                .contentTransition(.numericText())
+        }
+        .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: flicker)
+        .onAppear { flicker = true }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(count) day streak")
+    }
+}
+
+/// Isometric stairs climbing to a trophy, on a halftone floor ("Tailor your recommendations").
+public struct StairsIllustration: View {
+    @State private var rise = false
+
+    public init() {}
+
+    public var body: some View {
+        ZStack {
+            // Floor.
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Palette.coral)
+                .overlay(Halftone(color: Palette.outline.opacity(0.45), spacing: 7, dot: 2.4)
+                    .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous)))
+                .frame(width: 300, height: 120)
+                .modifier(Isometric())
+                .offset(x: 20, y: 80)
+            // Steps.
+            ForEach(0..<4, id: \.self) { step in
+                IsoBlock(height: CGFloat(step + 1) * 26 * (rise ? 1 : 0.4), top: step == 3 ? Palette.teal : Palette.cream)
+                    .offset(x: -70 + CGFloat(step) * 52, y: 60 - CGFloat(step) * 30)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(Double(step) * 0.08), value: rise)
+            }
+            // Trophy on the top step.
+            Image(systemName: "trophy.fill")
+                .font(.system(size: 64, weight: .bold))
+                .foregroundStyle(Palette.outline, Palette.teal)
+                .symbolRenderingMode(.palette)
+                .offset(x: 86, y: rise ? -110 : -40)
+                .opacity(rise ? 1 : 0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.35), value: rise)
+            // Speech bubble.
+            IsoObject(symbol: "text.bubble.fill", palette: .teal, size: 70)
+                .offset(x: -110, y: -120)
+        }
+        .frame(width: 320, height: 330)
+        .onAppear { rise = true }
+        .accessibilityHidden(true)
+    }
+}
+
+/// A single isometric block with a visible front face.
+private struct IsoBlock: View {
+    let height: CGFloat
+    let top: Color
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+        ZStack(alignment: .top) {
+            // Side (extruded body).
+            shape.fill(Palette.outline)
+                .frame(width: 66, height: 66)
+                .modifier(Isometric())
+                .offset(y: height)
+            Rectangle().fill(Palette.outline)
+                .frame(width: 92, height: height)
+                .offset(y: 19)
+            Rectangle().fill(Palette.tealDeep.opacity(0.9))
+                .frame(width: 44, height: height)
+                .offset(x: -24, y: 19)
+            // Top face.
+            shape.fill(top)
+                .overlay(shape.strokeBorder(Palette.outline, lineWidth: 2.5))
+                .frame(width: 66, height: 66)
+                .modifier(Isometric())
+        }
+        .frame(width: 96, height: 60 + height, alignment: .top)
+    }
+}

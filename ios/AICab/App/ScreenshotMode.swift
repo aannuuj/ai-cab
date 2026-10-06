@@ -6,6 +6,7 @@ import AICabCore
 enum ScreenshotMode {
     enum Screen: String {
         case onboarding, words, topics, journey, practice, profile, paywall, widget, term, share, quiz
+        case tailor, streak, themes, icons
     }
 
     static let current: Screen? = {
@@ -16,7 +17,7 @@ enum ScreenshotMode {
 
     static func seededState(for screen: Screen, content: ContentPack, now: Date = Date(), calendar: Calendar = .current) -> UserState {
         var state = UserState(now: now)
-        guard screen != .onboarding else { return state }
+        guard ![.onboarding, .tailor, .streak, .themes, .icons].contains(screen) else { return state }
         state.preferences.hasOnboarded = true
         state.preferences.level = .builder
         state.preferences.familiarity = .user

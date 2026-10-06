@@ -125,7 +125,7 @@ final class AppModel {
             model.feed = [rag]
         }
         switch screen {
-        case .onboarding, .words: break
+        case .onboarding, .words, .tailor, .streak, .themes, .icons: break
         case .topics: model.selectedTab = .topics
         case .journey: model.selectedTab = .journey
         case .practice, .quiz: model.selectedTab = .practice
@@ -486,6 +486,11 @@ final class AppModel {
         mutate { $0.preferences.feedTheme = theme }
     }
 
+    func setAppIcon(_ name: String?) {
+        mutate { $0.preferences.appIcon = name }
+        Task { await AppIconService.apply(name) }
+    }
+
     func setTrialReminder(_ enabled: Bool) {
         mutate { $0.preferences.trialReminderEnabled = enabled }
     }
@@ -508,10 +513,14 @@ final class AppModel {
         return applied.isEnabled
     }
 
-    func completeOnboarding(familiarity: Familiarity?, motivation: Motivation?, topicIds: [String]) {
+    func completeOnboarding(familiarity: Familiarity?, motivation: Motivation?, role: Role?, topicIds: [String],
+                            theme: FeedTheme, appIcon: String?) {
         mutate { s in
             s.preferences.familiarity = familiarity
             s.preferences.motivation = motivation
+            s.preferences.role = role
+            s.preferences.feedTheme = theme.isPremium && !isPro ? .cream : theme
+            s.preferences.appIcon = appIcon
             if let familiarity { s.preferences.level = familiarity.suggestedLevel }
             s.preferences.topicIds = topicIds
             s.preferences.hasOnboarded = true
