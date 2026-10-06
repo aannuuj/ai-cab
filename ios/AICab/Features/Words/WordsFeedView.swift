@@ -38,7 +38,6 @@ struct WordsFeedView: View {
             model.ensureFeed()
             if currentID == nil, let first = model.feed.first {
                 currentID = first.id
-                model.didShow(first)
             }
         }
         .onChange(of: currentID) { _, id in

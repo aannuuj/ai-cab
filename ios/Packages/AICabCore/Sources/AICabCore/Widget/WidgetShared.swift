@@ -136,6 +136,13 @@ public struct WidgetStore: Sendable {
         try? inboxFile.write(inbox)
     }
 
+    /// Queues an action from outside the app process (e.g. a notification action).
+    public func enqueue(_ item: WidgetInboxItem) {
+        var inbox = inboxFile.read() ?? []
+        inbox.append(item)
+        try? inboxFile.write(inbox)
+    }
+
     /// Returns pending widget actions and clears the inbox.
     public func drainInbox() -> [WidgetInboxItem] {
         let items = inboxFile.read() ?? []

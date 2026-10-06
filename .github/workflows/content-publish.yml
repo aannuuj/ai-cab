@@ -4,7 +4,7 @@ name: Publish content
 # One-time setup: Settings → Pages → Source: "GitHub Actions".
 on:
   push:
-    branches: [main, master, "claude/ai-vocab-app-plan-tfuoqz"]
+    branches: [main, master]
     paths: ["content/**", "pipeline/build_content.py", "site/**", ".github/workflows/content-publish.yml"]
   workflow_dispatch:
 

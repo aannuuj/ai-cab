@@ -37,7 +37,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     @MainActor weak var model: AppModel? {
         didSet { flushPending() }
     }
-    @MainActor private var pending: [(link: DeepLink, save: Bool)] = []
+    @MainActor private var pending: [DeepLink] = []
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self
@@ -51,22 +51,21 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let info = response.notification.request.content.userInfo
         guard let string = info["deepLink"] as? String, let url = URL(string: string), let link = DeepLink(url: url) else { return }
-        let save = response.actionIdentifier == UserNotificationScheduler.saveAction
+        if response.actionIdentifier == UserNotificationScheduler.saveAction, case .term(let id) = link {
+            // Persist first, so the save survives even if no UI scene ever connects.
+            WidgetStore().enqueue(WidgetInboxItem(termId: id, action: .save, date: Date()))
+            await MainActor.run { model?.applyExternalSaves() }
+            return
+        }
         await MainActor.run {
-            pending.append((link, save))
+            pending.append(link)
             flushPending()
         }
     }
 
     @MainActor private func flushPending() {
         guard let model else { return }
-        for item in pending {
-            if item.save, case .term(let id) = item.link, let term = model.term(id) {
-                if !model.isSaved(id) { model.toggleSave(term) }
-            } else {
-                model.handle(item.link)
-            }
-        }
+        for link in pending { model.handle(link) }
         pending.removeAll()
     }
 }

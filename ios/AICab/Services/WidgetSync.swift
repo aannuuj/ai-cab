@@ -6,6 +6,7 @@ import AICabCore
 protocol WidgetSyncing: Sendable {
     func publish(_ snapshot: WidgetSnapshot)
     func drainInbox() -> [WidgetInboxItem]
+    func enqueue(_ item: WidgetInboxItem)
     func installedWidgetCount() async -> Int
 }
 
@@ -19,6 +20,10 @@ struct WidgetKitSync: WidgetSyncing {
 
     func drainInbox() -> [WidgetInboxItem] {
         store.drainInbox()
+    }
+
+    func enqueue(_ item: WidgetInboxItem) {
+        store.enqueue(item)
     }
 
     func installedWidgetCount() async -> Int {

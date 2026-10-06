@@ -1,6 +1,6 @@
 # AI-Cab — AI Vocabulary App: Product & Build Plan
 
-> Status: **plan only** — nothing here is built yet.
+> Status: **v1 implemented**. Phases 1–3 are built (see README.md). Open items: App Store Connect setup, illustrator-quality artwork, real-device QA.
 > Inspiration: *Vocabulary — Learn words daily* (Monkey Taps), App Store id1084540807.
 > Reference screenshots: `design/reference/vocabulary/01–10`.
 > Goal: a calm, swipeable daily feed that teaches the language of AI (LLMs, agents, robotics, policy) at three depth levels, with widgets, notifications and a chapter "Journey" doing the habit work.

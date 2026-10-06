@@ -381,6 +381,13 @@ final class AppModel {
         }
     }
 
+    /// Applies saves queued outside the UI (notification actions) if the app is already running.
+    func applyExternalSaves() {
+        guard didStart else { return }
+        mergeWidgetInbox()
+        syncWidgets()
+    }
+
     private func mergeWidgetInbox() {
         for item in widgets.drainInbox() {
             setSaved(item.action == .save, termID: item.termId, at: item.date)
