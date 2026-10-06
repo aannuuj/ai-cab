@@ -173,12 +173,16 @@ public struct AppMark: View {
 
     public var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: size * 0.26, style: .continuous).fill(Palette.charcoal)
-            Text("Ai")
-                .font(.system(size: size * 0.48, weight: .bold, design: .serif))
-                .foregroundStyle(Palette.teal)
-                .offset(y: -size * 0.02)
-            Circle().fill(Palette.coral).frame(width: size * 0.13).offset(x: size * 0.25, y: -size * 0.22)
+            RoundedRectangle(cornerRadius: size * 0.26, style: .continuous).fill(Palette.teal)
+            RoundedRectangle(cornerRadius: size * 0.26, style: .continuous).strokeBorder(Palette.outline, lineWidth: max(size * 0.04, 1))
+            Text("A\u{0131}")
+                .font(.system(size: size * 0.5, weight: .bold, design: .serif))
+                .foregroundStyle(Palette.ink)
+                .offset(y: size * 0.03)
+            Circle().fill(Palette.coral)
+                .overlay(Circle().strokeBorder(Palette.outline, lineWidth: max(size * 0.02, 0.5)))
+                .frame(width: size * 0.13)
+                .offset(x: size * 0.17, y: -size * 0.17)
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)

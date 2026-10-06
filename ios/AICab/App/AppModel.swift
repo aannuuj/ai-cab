@@ -2,6 +2,12 @@ import Foundation
 import Observation
 import AICabCore
 
+struct HistoryItem: Identifiable {
+    let term: Term
+    let date: Date
+    var id: String { term.id }
+}
+
 /// Composition root and single source of truth for the UI.
 ///
 /// Views read derived state from here and call intent methods; all `UserState` writes go through
@@ -140,11 +146,11 @@ final class AppModel {
     var dueReviews: [Term] { SpacedRepetition.dueIds(in: state, now: now()).compactMap(term) }
 
     /// Most recent first, one entry per term.
-    var history: [(term: Term, date: Date)] {
+    var history: [HistoryItem] {
         var seen = Set<String>()
         return state.history.reversed().compactMap { entry in
             guard seen.insert(entry.termId).inserted, let found = self.term(entry.termId) else { return nil }
-            return (found, entry.date)
+            return HistoryItem(term: found, date: entry.date)
         }
     }
 
@@ -432,6 +438,10 @@ final class AppModel {
     }
 
     func setFeedTheme(_ theme: FeedTheme) {
+        if theme.isPremium && !isPro {
+            sheet = .paywall(.shareTheme)
+            return
+        }
         mutate { $0.preferences.feedTheme = theme }
     }
 

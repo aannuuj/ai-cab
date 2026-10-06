@@ -103,9 +103,22 @@ public struct ReminderSettings: Codable, Hashable, Sendable {
 }
 
 public enum FeedTheme: String, Codable, CaseIterable, Identifiable, Sendable {
-    case cream, charcoal
+    case cream, charcoal, sage, tide, ember
+
     public var id: String { rawValue }
-    public var title: String { self == .cream ? "Paper" : "Night" }
+
+    public var title: String {
+        switch self {
+        case .cream: "Paper"
+        case .charcoal: "Night"
+        case .sage: "Library"
+        case .tide: "Tide"
+        case .ember: "Ember"
+        }
+    }
+
+    /// Paper and Night are free; the rest come with Pro.
+    public var isPremium: Bool { self != .cream && self != .charcoal }
 }
 
 /// Onboarding self-assessment ("How familiar are you with AI?").

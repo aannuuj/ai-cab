@@ -1,0 +1,72 @@
+{
+  "identifier" : "A1C4B000",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "49.99",
+      "familyShareable" : true,
+      "internalID" : "A1C4B001",
+      "localizations" : [
+        { "description" : "Unlock everything in AI-Cab, forever.", "displayName" : "Lifetime", "locale" : "en_US" }
+      ],
+      "productID" : "com.aicab.pro.lifetime",
+      "referenceName" : "Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "A1C4B010",
+      "localizations" : [],
+      "name" : "AI-Cab Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "24.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "A1C4B011",
+          "introductoryOffer" : {
+            "internalID" : "A1C4B012",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            { "description" : "Every topic, Research depth, all chapters and themes.", "displayName" : "Yearly", "locale" : "en_US" }
+          ],
+          "productID" : "com.aicab.pro.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pro Yearly",
+          "subscriptionGroupID" : "A1C4B010",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "4.99",
+          "familyShareable" : true,
+          "groupNumber" : 2,
+          "internalID" : "A1C4B013",
+          "localizations" : [
+            { "description" : "Every topic, Research depth, all chapters and themes.", "displayName" : "Monthly", "locale" : "en_US" }
+          ],
+          "productID" : "com.aicab.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "A1C4B010",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : { "major" : 4, "minor" : 0 }
+}

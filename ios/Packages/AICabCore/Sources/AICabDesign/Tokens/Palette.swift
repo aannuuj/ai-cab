@@ -66,6 +66,20 @@ public struct FeedColors: Sendable {
         case .charcoal:
             FeedColors(background: Palette.charcoalDeep, primary: Palette.textPrimary, secondary: Palette.textSecondary,
                        pill: Palette.surface, pillStroke: Color.white.opacity(0.08), chrome: Palette.textPrimary)
+        case .sage:
+            FeedColors(background: Color(hex: 0x3F4630), primary: Palette.cream, secondary: Color(hex: 0xC9CDB4),
+                       pill: Color(hex: 0x525A40), pillStroke: Color.white.opacity(0.1), chrome: Palette.cream)
+        case .tide:
+            FeedColors(background: Color(hex: 0xBFDCD8), primary: Palette.ink, secondary: Color(hex: 0x3F5A57),
+                       pill: Palette.ivory, pillStroke: Palette.ink.opacity(0.12), chrome: Palette.ink)
+        case .ember:
+            FeedColors(background: Color(hex: 0x2B1E1B), primary: Color(hex: 0xF7E3D7), secondary: Color(hex: 0xC9A596),
+                       pill: Color(hex: 0x3E2B26), pillStroke: Palette.coral.opacity(0.25), chrome: Color(hex: 0xF7E3D7))
         }
+    }
+
+    /// Light themes get dark status bar content.
+    public static func isLight(_ theme: FeedTheme) -> Bool {
+        theme == .cream || theme == .tide
     }
 }

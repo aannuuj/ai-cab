@@ -1,0 +1,298 @@
+import SwiftUI
+import AICabCore
+import AICabDesign
+
+/// The home feed: one AI term per full-screen page, swiped vertically.
+struct WordsFeedView: View {
+    @Environment(AppModel.self) private var model
+    @State private var currentID: String?
+    @State private var celebrating = false
+
+    private var colors: FeedColors { .forTheme(model.preferences.feedTheme) }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            colors.background.ignoresSafeArea()
+
+            ScrollView(.vertical) {
+                LazyVStack(spacing: 0) {
+                    ForEach(model.feed) { term in
+                        TermPage(term: term, colors: colors)
+                            .containerRelativeFrame([.horizontal, .vertical])
+                            .id(term.id)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollIndicators(.hidden)
+            .scrollPosition(id: $currentID)
+            .ignoresSafeArea()
+
+            header
+        }
+        .overlay {
+            GoalCelebration(isPresented: $celebrating, streak: model.streak, goal: model.dailyGoal)
+        }
+        .onAppear {
+            model.ensureFeed()
+            if currentID == nil, let first = model.feed.first {
+                currentID = first.id
+                model.didShow(first)
+            }
+        }
+        .onChange(of: currentID) { _, id in
+            guard let id, let term = model.feed.first(where: { $0.id == id }) else { return }
+            model.didShow(term)
+        }
+        .onChange(of: model.feedScrollTarget) { _, target in
+            guard let target else { return }
+            withAnimation(.snappy) { currentID = target }
+            model.feedScrollTarget = nil
+        }
+        .onChange(of: model.celebration) {
+            celebrating = true
+        }
+        .sensoryFeedback(.selection, trigger: currentID)
+    }
+
+    private var header: some View {
+        HStack(alignment: .center) {
+            LevelMenu(colors: colors)
+            Spacer()
+            DailyGoalPill(saved: model.savedToday, goal: model.dailyGoal, tint: colors.chrome)
+            Spacer()
+            GlassIconButton(model.isPro ? "crown.fill" : "crown", size: 50, tint: colors.chrome,
+                            badge: !model.isPro, accessibilityLabel: model.isPro ? "AI-Cab Pro" : "Unlock Pro") {
+                if !model.isPro { model.sheet = .paywall(.crown) }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+    }
+}
+
+/// Glass pill to switch definition depth.
+private struct LevelMenu: View {
+    @Environment(AppModel.self) private var model
+    let colors: FeedColors
+
+    var body: some View {
+        Menu {
+            ForEach(Level.allCases) { level in
+                Button {
+                    model.setLevel(level)
+                } label: {
+                    Label {
+                        Text(level.title)
+                        Text(level.blurb)
+                    } icon: {
+                        if level == model.level {
+                            Image(systemName: "checkmark")
+                        } else if level.isPremium && !model.isPro {
+                            Image(systemName: "lock")
+                        }
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: levelSymbol)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(colors.chrome)
+                .frame(width: 50, height: 50)
+                .glassCircle()
+        }
+        .accessibilityLabel("Definition level: \(model.level.title)")
+    }
+
+    private var levelSymbol: String {
+        switch model.level {
+        case .beginner: "dial.low"
+        case .builder: "dial.medium"
+        case .research: "dial.high"
+        }
+    }
+}
+
+/// One full-screen word.
+struct TermPage: View {
+    @Environment(AppModel.self) private var model
+    let term: Term
+    let colors: FeedColors
+    @State private var heartBurst = 0
+
+    var body: some View {
+        let level = model.level
+        let favorite = model.isFavorite(term.id)
+        let saved = model.isSaved(term.id)
+
+        VStack(spacing: 0) {
+            Spacer(minLength: 110)
+
+            VStack(spacing: 22) {
+                VStack(spacing: 8) {
+                    if term.isNew(relativeTo: .now) || term.isCustom {
+                        Text(term.isCustom ? "YOUR WORD" : "NEW THIS WEEK")
+                            .font(.caption2.weight(.bold))
+                            .tracking(1.5)
+                            .foregroundStyle(Palette.ink)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(Palette.teal))
+                    }
+                    Text(term.term)
+                        .font(.wordDisplay)
+                        .foregroundStyle(colors.primary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.5)
+                        .accessibilityAddTraits(.isHeader)
+                    if let expansion = term.expansion {
+                        Text(expansion)
+                            .font(.system(.headline, design: .serif).italic())
+                            .foregroundStyle(colors.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+
+                PronunciationPill(ipa: term.ipa, colors: colors, isSpeaking: model.speech.speakingID == term.id) {
+                    model.speech.speak(term.expansion.map { "\(term.term). \($0)" } ?? term.term, id: term.id)
+                }
+
+                Text("(\(term.pos)) \(term.definition(at: level))")
+                    .font(.definition)
+                    .foregroundStyle(colors.primary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .contentTransition(.opacity)
+                    .animation(.easeInOut, value: level)
+
+                if let example = term.example {
+                    Text("\u{201C}\(example)\u{201D}")
+                        .font(.system(.body, design: .serif).italic())
+                        .foregroundStyle(colors.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.horizontal, 30)
+
+            Spacer(minLength: 24)
+
+            HStack {
+                actionButton("info.circle", label: "Details") { model.sheet = .term(term.id) }
+                actionButton("square.and.arrow.up", label: "Share") { model.sheet = .share(term.id) }
+                actionButton(favorite ? "heart.fill" : "heart", label: favorite ? "Unfavorite" : "Favorite",
+                             tint: favorite ? Palette.coral : colors.chrome) {
+                    model.toggleFavorite(term)
+                }
+                .symbolEffect(.bounce, value: favorite)
+                actionButton(saved ? "bookmark.fill" : "bookmark", label: saved ? "Remove from deck" : "Save to deck",
+                             tint: saved ? Palette.tealDeep : colors.chrome) {
+                    model.toggleSave(term)
+                }
+                .symbolEffect(.bounce, value: saved)
+            }
+            .padding(.horizontal, 26)
+            .sensoryFeedback(.impact(weight: .light), trigger: favorite)
+            .sensoryFeedback(.success, trigger: saved) { _, isSaved in isSaved }
+
+            Spacer().frame(height: 132)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) {
+            if !favorite { model.toggleFavorite(term) }
+            heartBurst += 1
+        }
+        .overlay { HeartBurst(trigger: heartBurst) }
+        .accessibilityAction(named: "Save to deck") { model.toggleSave(term) }
+    }
+
+    private func actionButton(_ symbol: String, label: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 28, weight: .regular))
+                .foregroundStyle(tint ?? colors.chrome)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .contentShape(Rectangle())
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+}
+
+/// Big heart that pops on double-tap.
+private struct HeartBurst: View {
+    let trigger: Int
+    @State private var visible = false
+
+    var body: some View {
+        Image(systemName: "heart.fill")
+            .font(.system(size: 110))
+            .foregroundStyle(Palette.coral)
+            .shadow(color: .black.opacity(0.2), radius: 12, y: 6)
+            .scaleEffect(visible ? 1 : 0.4)
+            .opacity(visible ? 1 : 0)
+            .allowsHitTesting(false)
+            .onChange(of: trigger) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.55)) { visible = true }
+                withAnimation(.easeOut(duration: 0.35).delay(0.6)) { visible = false }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
+/// Celebration shown when today's goal is met.
+struct GoalCelebration: View {
+    @Binding var isPresented: Bool
+    let streak: Int
+    let goal: Int
+    @State private var burst = 0
+
+    var body: some View {
+        ZStack {
+            if isPresented {
+                Color.black.opacity(0.35).ignoresSafeArea()
+                    .onTapGesture { isPresented = false }
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle().fill(Palette.teal).frame(width: 96, height: 96)
+                            .overlay(Circle().strokeBorder(Palette.outline, lineWidth: 2))
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 46))
+                            .foregroundStyle(Palette.ink)
+                            .symbolEffect(.bounce, value: burst)
+                    }
+                    Text("Daily goal complete")
+                        .font(.serifTitle)
+                        .foregroundStyle(Palette.textPrimary)
+                    HStack(spacing: 6) {
+                        Image(systemName: "flame.fill").foregroundStyle(Palette.coral)
+                        Text(streak == 1 ? "Your streak starts today" : "\(streak)-day streak")
+                    }
+                    .font(.headline)
+                    .foregroundStyle(Palette.textSecondary)
+                    Text("\(goal) new AI words in your deck. See you tomorrow.")
+                        .font(.subheadline)
+                        .foregroundStyle(Palette.textSecondary)
+                        .multilineTextAlignment(.center)
+                    Button("Keep going") { isPresented = false }
+                        .buttonStyle(PrimaryButtonStyle(.teal))
+                        .padding(.top, 6)
+                }
+                .padding(28)
+                .tactileCard(fill: Palette.charcoal)
+                .padding(.horizontal, 28)
+                .transition(.scale(scale: 0.85).combined(with: .opacity))
+            }
+            ConfettiBurst(trigger: burst)
+        }
+        .animation(.spring(response: 0.45, dampingFraction: 0.75), value: isPresented)
+        .onChange(of: isPresented) { _, shown in
+            if shown { burst += 1 }
+        }
+        .sensoryFeedback(.success, trigger: burst)
+    }
+}
