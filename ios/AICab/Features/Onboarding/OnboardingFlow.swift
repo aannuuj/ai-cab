@@ -2,39 +2,58 @@ import SwiftUI
 import AICabCore
 import AICabDesign
 
-/// First-run flow: welcome → familiarity → goal → topics → daily reminders → widget → trial.
+/// First-run flow:
+/// welcome → tailor → role → familiarity → goal → topics → streak → reminders → theme → icon → widget → trial.
 struct OnboardingFlow: View {
     @Environment(AppModel.self) private var model
 
     enum Step: Int, CaseIterable {
-        case welcome, familiarity, motivation, topics, reminders, widget, paywall
+        case welcome, tailor, role, familiarity, motivation, topics, streak, reminders, theme, icon, widget, paywall
+
+        /// Dark "tactile" steps vs. light cream question steps (mirrors the reference flow).
+        var isDark: Bool { [.tailor, .theme, .icon, .widget, .paywall].contains(self) }
+        var showsProgress: Bool { rawValue >= Step.role.rawValue && rawValue <= Step.reminders.rawValue }
     }
 
-    @State private var step: Step = .welcome
+    @State private var step: Step = Self.initialStep
+
+    private static var initialStep: Step {
+        switch ScreenshotMode.current {
+        case .tailor: .tailor
+        case .streak: .streak
+        case .themes: .theme
+        case .icons: .icon
+        default: .welcome
+        }
+    }
+    @State private var forward = true
+    @State private var role: Role?
     @State private var familiarity: Familiarity?
     @State private var motivation: Motivation?
     @State private var topicIDs: Set<String> = []
     @State private var reminders = ReminderSettings(isEnabled: true, perDay: 3)
-    @State private var forward = true
+    @State private var theme: FeedTheme = .cream
+    @State private var appIcon: AppIconOption = AppIconOption.all[0]
 
     var body: some View {
         ZStack {
-            background.ignoresSafeArea()
+            (step.isDark ? Palette.charcoal : Palette.cream).ignoresSafeArea()
             VStack(spacing: 0) {
-                if step != .welcome && step.rawValue <= Step.reminders.rawValue {
-                    topBar
-                }
+                if step.showsProgress { topBar }
                 Group {
                     switch step {
                     case .welcome: welcome
+                    case .tailor: tailor
+                    case .role: roleStep
                     case .familiarity: familiarityStep
                     case .motivation: motivationStep
                     case .topics: topicsStep
+                    case .streak: streakStep
                     case .reminders: remindersStep
-                    case .widget:
-                        WidgetInstallView(mode: .onboarding) { go(to: .paywall) }
-                    case .paywall:
-                        PaywallView(source: .onboarding) { finish() }
+                    case .theme: themeStep
+                    case .icon: iconStep
+                    case .widget: WidgetInstallView(mode: .onboarding) { go(to: .paywall) }
+                    case .paywall: PaywallView(source: .onboarding) { finish() }
                     }
                 }
                 .id(step)
@@ -46,14 +65,16 @@ struct OnboardingFlow: View {
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.88), value: step)
         .sensoryFeedback(.selection, trigger: step)
-    }
-
-    private var background: Color {
-        step.rawValue >= Step.widget.rawValue ? Palette.charcoal : Palette.cream
+        .onChange(of: step, initial: true) { _, current in
+            model.onboardingIsDark = current.isDark
+        }
     }
 
     private var topBar: some View {
-        HStack(spacing: 16) {
+        let first = Step.role.rawValue
+        let total = Step.reminders.rawValue - first + 1
+        let done = step.rawValue - first + 1
+        return HStack(spacing: 16) {
             Button {
                 if let previous = Step(rawValue: step.rawValue - 1) { go(to: previous, forward: false) }
             } label: {
@@ -67,11 +88,23 @@ struct OnboardingFlow: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Palette.ink.opacity(0.1))
                     Capsule().fill(Palette.olive)
-                        .frame(width: proxy.size.width * CGFloat(step.rawValue) / CGFloat(Step.reminders.rawValue))
+                        .frame(width: proxy.size.width * CGFloat(done) / CGFloat(total))
                 }
             }
             .frame(height: 6)
-            Spacer().frame(width: 40)
+            Group {
+                if step == .role {
+                    Button("Skip") {
+                        role = nil
+                        go(to: .familiarity)
+                    }
+                    .font(.headline)
+                    .foregroundStyle(Palette.inkSoft)
+                } else {
+                    Color.clear
+                }
+            }
+            .frame(width: 44)
         }
         .padding(.horizontal, Metrics.gutter)
         .padding(.top, 8)
@@ -97,10 +130,42 @@ struct OnboardingFlow: View {
             .foregroundStyle(Palette.ink)
             .padding(.horizontal, 24)
             Spacer()
-            Button("Get started") { go(to: .familiarity) }
+            Button("Get started") { go(to: .tailor) }
                 .buttonStyle(PrimaryButtonStyle(.olive))
                 .padding(.horizontal, Metrics.gutter)
                 .padding(.bottom, 12)
+        }
+    }
+
+    private var tailor: some View {
+        VStack(spacing: 28) {
+            Spacer()
+            StairsIllustration()
+            Text("Tailor your word\nrecommendations")
+                .font(.system(size: 34, weight: .bold, design: .serif))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Palette.textPrimary)
+            Text("Four quick questions so your feed starts at the right level, on the topics you care about.")
+                .font(.body)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Palette.textSecondary)
+                .padding(.horizontal, 12)
+            Spacer()
+            Button("Continue") { go(to: .role) }
+                .buttonStyle(PrimaryButtonStyle(.teal))
+        }
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.bottom, 8)
+    }
+
+    private var roleStep: some View {
+        QuestionStep(title: "What do you do?",
+                     subtitle: "We'll mix in words from your world.",
+                     canContinue: role != nil,
+                     onContinue: { go(to: .familiarity) }) {
+            ForEach(Role.allCases) { option in
+                RadioPill(option.title, symbol: option.symbol, isSelected: role == option) { role = option }
+            }
         }
     }
 
@@ -121,7 +186,8 @@ struct OnboardingFlow: View {
                      canContinue: motivation != nil,
                      onContinue: {
                          if topicIDs.isEmpty, let motivation {
-                             topicIDs = Set(motivation.suggestedTopicIds.filter { id in
+                             let suggested = motivation.suggestedTopicIds + (role?.extraTopicIds ?? [])
+                             topicIDs = Set(suggested.filter { id in
                                  model.topics.first { $0.id == id }.map { !model.isLocked($0) } ?? false
                              })
                          }
@@ -138,7 +204,7 @@ struct OnboardingFlow: View {
                      subtitle: "Choose a few to start. Pro unlocks the rest.",
                      canContinue: true,
                      continueTitle: topicIDs.isEmpty ? "Surprise me" : "Continue",
-                     onContinue: { go(to: .reminders) }) {
+                     onContinue: { go(to: .streak) }) {
             FlowLayout(spacing: 10) {
                 ForEach(model.topics) { topic in
                     let locked = model.isLocked(topic)
@@ -164,6 +230,10 @@ struct OnboardingFlow: View {
                 }
             }
         }
+    }
+
+    private var streakStep: some View {
+        StreakCommitmentStep { go(to: .reminders) }
     }
 
     private var remindersStep: some View {
@@ -200,7 +270,7 @@ struct OnboardingFlow: View {
             Button("Allow and save") {
                 Task {
                     await model.updateReminders(reminders)
-                    go(to: .widget)
+                    go(to: .theme)
                 }
             }
             .buttonStyle(PrimaryButtonStyle(.olive))
@@ -209,7 +279,7 @@ struct OnboardingFlow: View {
                     var off = reminders
                     off.isEnabled = false
                     await model.updateReminders(off)
-                    go(to: .widget)
+                    go(to: .theme)
                 }
             }
             .buttonStyle(QuietButtonStyle(color: Palette.inkSoft))
@@ -218,6 +288,57 @@ struct OnboardingFlow: View {
         .padding(.top, 28)
         .padding(.bottom, 8)
         .animation(.snappy, value: reminders.perDay)
+    }
+
+    private var themeStep: some View {
+        DarkChoiceStep(title: "Which theme would you like to start with?", onContinue: { go(to: .icon) }) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
+                ForEach(FeedTheme.allCases) { option in
+                    let locked = option.isPremium && !model.isPro
+                    Button {
+                        if !locked { theme = option }
+                    } label: {
+                        ThemeTile(theme: option, selected: theme == option, locked: locked)
+                    }
+                    .buttonStyle(.plain)
+                    .sensoryFeedback(.selection, trigger: theme == option)
+                }
+            }
+        }
+    }
+
+    private var iconStep: some View {
+        DarkChoiceStep(title: "Which icon style do you like the most?", onContinue: { go(to: .widget) }) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 18), count: 3), spacing: 18) {
+                ForEach(AppIconOption.all) { option in
+                    Button { appIcon = option } label: {
+                        Image(option.previewAsset)
+                            .resizable()
+                            .aspectRatio(1, contentMode: .fit)
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .padding(6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                                    .strokeBorder(appIcon == option ? Palette.textPrimary : .clear, lineWidth: 3)
+                            )
+                            .overlay(alignment: .topTrailing) {
+                                if appIcon == option {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.title3)
+                                        .foregroundStyle(Palette.ink, Palette.teal)
+                                        .symbolRenderingMode(.palette)
+                                        .offset(x: 4, y: -4)
+                                        .transition(.scale.combined(with: .opacity))
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(option.title) icon")
+                    .accessibilityAddTraits(appIcon == option ? .isSelected : [])
+                }
+            }
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: appIcon)
+        }
     }
 
     // MARK: Helpers
@@ -229,7 +350,15 @@ struct OnboardingFlow: View {
 
     private func finish() {
         let ordered = model.topics.map(\.id).filter(topicIDs.contains)
-        model.completeOnboarding(familiarity: familiarity, motivation: motivation, topicIds: ordered)
+        model.completeOnboarding(familiarity: familiarity, motivation: motivation, role: role, topicIds: ordered,
+                                 theme: theme, appIcon: appIcon.iconName)
+        if appIcon.iconName != nil {
+            Task {
+                // Let the transition settle before iOS shows its "icon changed" alert.
+                try? await Task.sleep(for: .seconds(0.8))
+                await AppIconService.apply(appIcon.iconName)
+            }
+        }
     }
 
     private func minuteBinding(_ keyPath: WritableKeyPath<ReminderSettings, Int>) -> Binding<Date> {
@@ -239,6 +368,152 @@ struct OnboardingFlow: View {
             let c = Calendar.current.dateComponents([.hour, .minute], from: date)
             reminders[keyPath: keyPath] = (c.hour ?? 0) * 60 + (c.minute ?? 0)
         }
+    }
+}
+
+/// "Create a consistent daily learning routine": flame + this week, today checked.
+private struct StreakCommitmentStep: View {
+    let onContinue: () -> Void
+    @State private var checked = false
+
+    private var days: [(label: String, isToday: Bool)] {
+        let calendar = Calendar.current
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return (0..<7).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: Date()) else { return nil }
+            return (formatter.string(from: date), offset == 0)
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Create a consistent daily learning routine")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundStyle(Palette.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Build a streak, one day at a time.")
+                .font(.title3)
+                .foregroundStyle(Palette.inkSoft)
+            Spacer()
+            StreakFlame(count: checked ? 1 : 0, size: 170)
+                .frame(maxWidth: .infinity)
+            HStack(spacing: 0) {
+                ForEach(Array(days.enumerated()), id: \.offset) { _, day in
+                    VStack(spacing: 10) {
+                        Text(day.label)
+                            .font(.system(.subheadline, weight: day.isToday ? .semibold : .regular))
+                            .foregroundStyle(day.isToday ? Palette.ink : Palette.inkSoft)
+                        ZStack {
+                            Circle().strokeBorder(day.isToday && checked ? Palette.oliveSoft : Palette.ink.opacity(0.15), lineWidth: day.isToday && checked ? 5 : 2)
+                            if day.isToday && checked {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundStyle(Palette.olive)
+                                    .transition(.scale.combined(with: .opacity))
+                            }
+                        }
+                        .frame(width: 38, height: 38)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.vertical, 20)
+            .padding(.horizontal, 8)
+            .background(RoundedRectangle(cornerRadius: 32, style: .continuous).fill(Palette.ivory))
+            .padding(.top, 20)
+            Spacer()
+            Text("Saving your daily words keeps the flame going. Miss a day and it starts again.")
+                .font(.footnote)
+                .fixedSize(horizontal: false, vertical: true)
+                .foregroundStyle(Palette.inkSoft)
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+            Button("Continue", action: onContinue)
+                .buttonStyle(PrimaryButtonStyle(.olive))
+        }
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.top, 28)
+        .padding(.bottom, 8)
+        .animation(.spring(response: 0.5, dampingFraction: 0.6), value: checked)
+        .sensoryFeedback(.success, trigger: checked)
+        .task {
+            try? await Task.sleep(for: .seconds(0.6))
+            checked = true
+        }
+    }
+}
+
+/// Dark step with a serif question, a grid of choices and a teal Continue.
+private struct DarkChoiceStep<Content: View>: View {
+    let title: String
+    let onContinue: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Text(title)
+                .font(.system(size: 30, weight: .bold, design: .serif))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Palette.textPrimary)
+                .padding(.top, 36)
+            Spacer(minLength: 0)
+            content()
+            Spacer(minLength: 0)
+            Button("Continue", action: onContinue)
+                .buttonStyle(PrimaryButtonStyle(.teal))
+        }
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.bottom, 8)
+    }
+}
+
+/// Large "Aa" preview tile for a feed theme.
+private struct ThemeTile: View {
+    let theme: FeedTheme
+    let selected: Bool
+    let locked: Bool
+
+    var body: some View {
+        let colors = FeedColors.forTheme(theme)
+        ZStack {
+            RoundedRectangle(cornerRadius: 24, style: .continuous).fill(colors.background)
+            Text("Aa")
+                .font(.system(size: 34, weight: .bold, design: .serif))
+                .foregroundStyle(colors.primary)
+            VStack {
+                HStack {
+                    Spacer()
+                    if selected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(Palette.ink, Palette.lime)
+                            .symbolRenderingMode(.palette)
+                    } else if locked {
+                        Image(systemName: "lock.fill")
+                            .font(.footnote)
+                            .foregroundStyle(colors.secondary)
+                    }
+                }
+                Spacer()
+                Text(theme.title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(colors.secondary)
+            }
+            .padding(10)
+        }
+        .aspectRatio(0.7, contentMode: .fit)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(Palette.outline)
+                .offset(y: Metrics.hardShadow)
+        )
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .strokeBorder(selected ? Palette.lime : Palette.outline, lineWidth: selected ? 3 : 2))
+        .opacity(locked ? 0.7 : 1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(theme.title) theme\(locked ? ", Pro" : "")")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 

@@ -84,6 +84,8 @@ struct TermDetailView: View {
                     .background(Capsule().fill(difficultyColor(term.difficulty)))
                 ForEach(term.topics.compactMap { id in model.topics.first { $0.id == id } }.prefix(2)) { topic in
                     Text(topic.title)
+                        .lineLimit(1)
+                        .fixedSize()
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Palette.textSecondary)
                         .padding(.horizontal, 10).padding(.vertical, 4)

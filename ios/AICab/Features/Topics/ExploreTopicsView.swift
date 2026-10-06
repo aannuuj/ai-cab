@@ -119,28 +119,27 @@ private struct LibraryTile: View {
 
     var body: some View {
         NavigationLink(value: route) {
-            HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
                 Image(systemName: symbol)
-                    .font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(Palette.outline, Palette.art(palette).fill)
-                    .symbolRenderingMode(.palette)
-                    .frame(width: 46, height: 46)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(Palette.outline)
+                    .frame(width: 44, height: 44)
                     .background(Circle().fill(Palette.art(palette).fill))
                     .overlay(Circle().strokeBorder(Palette.outline, lineWidth: 2))
-                VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline) {
                     Text(title)
                         .font(.system(.headline, weight: .semibold))
                         .foregroundStyle(Palette.textPrimary)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.85)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Spacer(minLength: 4)
                     Text("\(count)")
-                        .font(.caption.monospacedDigit())
+                        .font(.subheadline.monospacedDigit())
                         .foregroundStyle(Palette.textSecondary)
                 }
-                Spacer(minLength: 0)
             }
             .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 84, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 104, alignment: .leading)
         }
         .buttonStyle(TactileButtonStyle(fill: Palette.surface, radius: 26))
     }

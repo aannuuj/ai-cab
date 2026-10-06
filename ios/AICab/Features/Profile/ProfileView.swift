@@ -157,6 +157,30 @@ struct ProfileView: View {
                 }
                 .scrollIndicators(.hidden)
             }
+            VStack(alignment: .leading, spacing: 12) {
+                Text("App icon").foregroundStyle(Palette.textPrimary)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 12) {
+                        ForEach(AppIconOption.all) { option in
+                            let selected = model.preferences.appIcon == option.iconName
+                            Button { model.setAppIcon(option.iconName) } label: {
+                                Image(option.previewAsset)
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    .padding(3)
+                                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .strokeBorder(selected ? Palette.teal : .clear, lineWidth: 2.5))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("\(option.title) icon")
+                            .accessibilityAddTraits(selected ? .isSelected : [])
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .scrollIndicators(.hidden)
+            }
             Button { showingWidgetGuide = true } label: {
                 row("Add a widget", "rectangle.3.group", Palette.teal)
             }

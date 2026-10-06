@@ -304,6 +304,12 @@ Saved in `design/reference/vocabulary/`:
 | 08-onboarding-welcome | Welcome |
 | 09-onboarding-level | Self-assessment |
 | 10-onboarding-daily-goal | Notification goal setup |
+| 16-onboarding-streak | Streak commitment (flame + week) |
+| 17/18 | Daily goal / level (light versions) |
+| 19-onboarding-icon-style | Alternate app icon picker |
+| 20-onboarding-theme | Feed theme picker |
+| 21/22 | Gender / age (replaced by "What do you do?"; age not collected) |
+| 23-onboarding-tailor | "Tailor your word recommendations" interstitial |
 
 Also referenced in chat but **not yet in the folder** (please commit them to this folder; images attached mid-message didn't reach disk): Words feed in cream style B (`11-words-feed-light`), Progress with streak (`12-progress-streak`), widget education (`13-widget-install`), trial-timeline paywall (`15-paywall-trial`).
 

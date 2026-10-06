@@ -181,6 +181,47 @@ public enum Motivation: String, Codable, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// Onboarding "What do you do?" — personalises starting level and topics.
+public enum Role: String, Codable, CaseIterable, Identifiable, Sendable {
+    case student, engineer, product, designer, researcher, other
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .student: "Student"
+        case .engineer: "Software engineer"
+        case .product: "Product manager or founder"
+        case .designer: "Designer or marketer"
+        case .researcher: "Researcher or data scientist"
+        case .other: "Something else"
+        }
+    }
+
+    public var symbol: String {
+        switch self {
+        case .student: "graduationcap"
+        case .engineer: "chevron.left.forwardslash.chevron.right"
+        case .product: "chart.line.uptrend.xyaxis"
+        case .designer: "paintbrush.pointed"
+        case .researcher: "flask"
+        case .other: "sparkles"
+        }
+    }
+
+    /// Topics added to the motivation's suggestions.
+    public var extraTopicIds: [String] {
+        switch self {
+        case .student: ["how-models-learn"]
+        case .engineer: ["llm-engineering", "agent-era"]
+        case .product: ["business", "evals"]
+        case .designer: ["prompting", "multimodal"]
+        case .researcher: ["research-math", "training"]
+        case .other: []
+        }
+    }
+}
+
 public struct Preferences: Codable, Sendable {
     public var level: Level = .beginner
     /// Topics that feed the Words tab. Empty = everything accessible.
@@ -192,6 +233,9 @@ public struct Preferences: Codable, Sendable {
     public var motivation: Motivation?
     public var hasOnboarded: Bool = false
     public var trialReminderEnabled: Bool = true
+    public var role: Role?
+    /// Alternate app icon name; nil = default icon.
+    public var appIcon: String?
 
     public init() {}
 
