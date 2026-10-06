@@ -33,7 +33,9 @@ The screenshots show two generations of the reference app:
 
 Onboarding (08–10) uses a third, **light** look: cream background `#F1EFE8`, near-white option pills, dark olive `#4B5230` full-width CTA, soft painted illustration.
 
-**Recommendation:** use **Style B (tactile)** for the main app. It's more distinctive, the outlined tiles suit "learning blocks", and teal reads more "tech" than olive. Keep Style A's calm full-screen **word card** layout for the feed, and use the **light cream onboarding** as a gentle first impression before the dark app.
+In Style B the **Words feed itself is light**: cream background, centered black serif word, white IPA pill, sans definition. So the full style B system is: **cream for reading** (feed, onboarding) and **charcoal for browsing and playing** (Topics, Journey, paywall, widget setup), tied together by serif headlines and the teal accent.
+
+**Recommendation:** use **Style B** across the app: a cream feed for comfortable reading, charcoal for everything else, outlined tactile tiles, serif headlines, teal + coral accents. It's more distinctive, the outlined tiles suit "learning blocks", and teal reads more "tech" than olive. Offer a dark feed theme (Style A look) as a setting.
 
 ### 1.2 Design tokens (proposed)
 
@@ -59,13 +61,29 @@ Onboarding (08–10) uses a third, **light** look: cream background `#F1EFE8`, n
 3. *(add)* **Goal** — "Why are you here?" (follow the news · keep up at work · build AI products · career switch) → seeds topics.
 4. *(add)* **Topics** — multi-select tiles.
 5. **Daily goal / notifications** — live **notification preview card** (app icon, "AI-Cab", "*RAG (n.) – letting an AI look things up before answering*", "Now"), then rows: **How many** (−/3x/+ stepper), **Start at** 10:00 AM, **End at** 10:00 PM, CTA **"Allow and save"** → triggers the system permission prompt *after* the user has seen the value.
-6. *(add)* **Widget education** — animated mock of the Lock Screen widget + "how to add".
-7. *(add)* **Soft paywall** — skippable trial offer.
+6. **Widget education**: see "Widget education (13)" below.
+7. **Trial paywall**: see "Paywall: trial timeline (15)" below; skippable.
 
-**Words feed (03; "Learn" in style A)**
-- Full-screen vertical pager, one term per page: **word** → **pronunciation pill** (IPA + speaker) → hairline → **part of speech + definition** → faint example sentence.
-- Action row: **Share · Favorite · Info**. Top-right premium button.
+**Words feed (03 style A; 11 style B)**
+- Full-screen vertical pager, one term per page. Style B layout is **centered**: big serif **word** → white **IPA pill** with speaker → `(n.)` + definition in sans → faint example sentence.
+- **Daily goal pill** at top center: bookmark icon + "0/5" + progress bar. Saving (bookmarking) words fills today's goal of 5, which drives the streak.
+- Top-right round **crown** (premium) button with a small teal notification dot.
+- Action row (4 outline icons): **Info · Share · Favorite (heart) · Save (bookmark)**.
+- Tab bar shows a teal **"New"** badge on Journey to advertise the new feature.
+- Celebration overlay on the first save: a streak counter plus badge bubbles dropping from the top.
 - AI-Cab addition: **level switch** (Beginner / Builder / Research) to swap the definition in place.
+
+**Widget education (13)**: charcoal, serif title "Add a widget to your Home Screen", one-line how-to, an outlined phone mock with a **teal widget** showing a word (serif) + `(v.) definition`, empty app-icon outlines below, teal outlined CTA **"Install widget"** (opens a step-by-step sheet or GIF; iOS can't add widgets programmatically) + "Remind me later". Show it in onboarding and again after day 2.
+
+**Progress (12, style A)**: large title; 2 tiles **Favorites**, **History**; row **"Take a test"** →; **streak card**: flame + "1 day streak", a hairline, then 7 day circles (Tue…Mon) with a check on completed days. In AI-Cab this is the **Profile** tab's top section.
+
+**Paywall: trial timeline (15)**: charcoal, serif title "Enjoy your free trial", vertical **timeline** with 4 circle nodes joined by a green line:
+1. ~~Install the app~~ (done, struck through): "Set it up to match your goals"
+2. **Today: free trial starts**: "full access, free for your first 3 days"
+3. **Oct 08: trial reminder**: "to let you know it's ending soon"
+4. **Oct 09: become a member** (filled crown node): "your trial ends unless canceled"
+
+Then a **"Reminder before trial ends"** toggle (schedules a local notification 24h before), a teal outlined CTA **"Try for ₹0.00"**, price line "₹166.58/month, billed yearly as ₹1,999/year", and footer links **Restore · Terms & Conditions · Privacy Policy**. Dates are computed from today plus the trial length. This honest-trial pattern converts well and lowers refund requests, so copy it closely.
 
 **Topics → "Explore topics" (07, with 04–05 as earlier variant)**
 - Serif large title, **Edit** button, **Search** field.
@@ -92,19 +110,19 @@ Onboarding (08–10) uses a third, **light** look: cream background `#F1EFE8`, n
 
 **Practice tab** — daily 3-question quiz + review of SRS-due words + "practice favorites / a collection".
 
-**Profile tab** — streak, words learned, mastered vs learning, chapter progress, settings (level, topics, reminders, widget theme, app icon, restore purchases, feedback).
+**Profile tab**: the Progress layout (12): streak card with week dots, Favorites/History tiles, "Take a test". Below it: words learned, mastered vs learning, chapter progress, and settings (level, topics, reminders, feed theme, widget theme, app icon, restore purchases, feedback).
 
 **Review prompt (01)** — dimmed backdrop, card: "Loving the app?" → **Love it!** (→ `requestReview`), **Not really** (→ feedback form), **Remind me later**. Trigger at a positive moment (chapter complete, after a share/favorite, ≥3 active days).
 
 **Share sheet (02)** — rendered share card (word, divider, definition, "AI-Cab" badge) + chips **Watermark** (pro), **Save to Photos**, **Themes** (pro) + targets Instagram, Stories, X, Messenger, Facebook, system share. Built with `ImageRenderer`.
 
-**Not yet referenced (design ourselves):** paywall, widgets, term info sheet, Practice tab, Profile, collections detail, search results.
+**Not yet referenced (design ourselves):** the actual widgets in all sizes, term info sheet, Practice tab, a Journey lesson in progress, collections detail, search results.
 
 ### 1.4 Component inventory
 
 Foundation: `OutlinedCard` (outline + hard shadow, pressed state) · `PillButton` (primary/secondary/onboarding) · `RadioPill` · `StepperRow` · `TimeRow` · `SearchField` · `FloatingTabBar` (5 tabs) · `LockBadge` · `SectionHeader` (serif) · `Eyebrow` (letter-spaced caps)
 
-Feature: `TermCard` · `PronunciationPill` · `LevelSegment` · `IconActionRow` · `UnlockBanner` · `LibraryTile` · `TopicCard` (large illustrated) · `JourneyTile` (isometric, 3 states) · `JourneyPath` · `NotificationPreview` · `ModalCard` · `ShareCardView` · `ActionChip` · `TopicIllustration`
+Feature: `TermCard` · `DailyGoalPill` · `StreakCard` (week dots) · `TrialTimeline` · `PhoneMock` (widget education) · `PronunciationPill` · `LevelSegment` · `IconActionRow` · `UnlockBanner` · `LibraryTile` · `TopicCard` (large illustrated) · `JourneyTile` (isometric, 3 states) · `JourneyPath` · `NotificationPreview` · `ModalCard` · `ShareCardView` · `ActionChip` · `TopicIllustration`
 
 ---
 
@@ -221,8 +239,9 @@ Target: 10–20 new terms/week, ≤15 min review.
 ## 4. Monetization
 
 - **Free**: Foundations + Trending topics, Beginner & Builder levels, chapters 1–3, 1 widget style, 3 notifications/day, share with watermark.
-- **Pro** (annual w/ 7-day trial · monthly · lifetime): all topics & chapters, Research level, themes, watermark off, unlimited practice, collections, "your own words" AI definitions, more notifications/day, widget themes.
-- Paywall entry points: onboarding (soft), Unlock banner, locked topic/chapter tap, Research level tap, premium button on feed, share-sheet Watermark/Themes.
+- **Pro** (annual with a 3-day trial as the default plan, like the reference: ₹1,999/yr ≈ ₹166/mo; set USD and other prices per App Store tier · monthly · lifetime): all topics & chapters, Research level, themes, watermark off, unlimited practice, collections, "your own words" AI definitions, more notifications/day, widget themes.
+- Paywall design: the trial-timeline screen (§1.3), plus a "Reminder before trial ends" toggle that schedules a local notification.
+- Paywall entry points: onboarding (soft), crown button on the feed, Unlock banner, locked topic/chapter tap, Research level tap, premium button on feed, share-sheet Watermark/Themes.
 - No ads (the reference mentions "remove ads"; skipping ads keeps the calm feel).
 
 ---
@@ -235,9 +254,9 @@ Target: 10–20 new terms/week, ≤15 min review.
 | Week | Work |
 |---|---|
 | **0** (2–3 days) | Figma: tokens (§1.2), components (§1.4), onboarding, Words, Topics, Journey, widgets. 6 topic illustrations in the outlined isometric style. Content style guide. Finalize 250-term `seed.json` + chapters 1–3. |
-| **1** | Xcode project, DesignSystem module (OutlinedCard, PillButton, tab bar…), SwiftData models, seed import. **Words feed**: pager, level switch, TTS, favorite, info sheet. |
-| **2** | **Onboarding** (welcome → familiarity → goal → topics → daily goal with notification preview → widget education). Local **notification scheduler**. **Explore topics** (search, library tiles: Favorites + History, topic sections, Edit selection) wired into FeedEngine. |
-| **3** | **Widgets** (Lock Screen inline/rectangular, Home small/medium) via App Group snapshot. **Share sheet** (render card, Save to Photos, Instagram Stories, system share). Basic **Profile** (streak, learned count, settings). Accessibility pass (Dynamic Type, VoiceOver). |
+| **1** | Xcode project, DesignSystem module (OutlinedCard, PillButton, tab bar…), SwiftData models, seed import. **Words feed** (cream theme): pager, level switch, TTS, favorite, save, **daily goal pill (0/5)**, info sheet. |
+| **2** | **Onboarding** (welcome → familiarity → goal → topics → daily goal with notification preview → widget education screen with phone mock). Local **notification scheduler**. **Explore topics** (search, library tiles: Favorites + History, topic sections, Edit selection) wired into FeedEngine. |
+| **3** | **Widgets** (Lock Screen inline/rectangular, Home small/medium) via App Group snapshot. **Share sheet** (render card, Save to Photos, Instagram Stories, system share). Basic **Profile** (streak card with week dots, Favorites/History tiles, settings). Accessibility pass (Dynamic Type, VoiceOver). |
 
 **Exit criteria:** fresh install → onboarding → swipe 250 terms offline at 60fps; notifications arrive within the chosen window; widget rotates hourly without opening the app; internal TestFlight.
 
@@ -258,7 +277,7 @@ Target: 10–20 new terms/week, ≤15 min review.
 | Week | Work |
 |---|---|
 | **7** | **Journey tab**: isometric `JourneyPath`/`JourneyTile` with locked / current / done states, chapter header, "^ Chapter N" jump pill, decorations. **JourneyEngine** + all 6 lesson types (learn, use, match, recall, compare "X vs Y", chapter test). Chapters 1–10 authored (pipeline proposes, human curates). |
-| **8** | **StoreKit 2** paywall + entitlements, **Unlock banner**, padlocks on topics/chapters, Research-level gate, share **Themes** + watermark toggle, widget themes, alternate app icons. **Review pre-prompt** at positive moments. Profile v2 (chapter progress, mastered vs learning). |
+| **8** | **StoreKit 2** trial-timeline paywall (dynamic dates, trial-reminder toggle, Restore/Terms/Privacy) + entitlements, crown button, "New" tab badge, first-save celebration, **Unlock banner**, padlocks on topics/chapters, Research-level gate, share **Themes** + watermark toggle, widget themes, alternate app icons. **Review pre-prompt** at positive moments. Profile v2 (chapter progress, mastered vs learning). |
 | **9** | Polish (haptics, tile press animations, empty states), performance, crash-free QA, privacy manifest, App Store screenshots/preview video, ASO keywords (AI terms, AI glossary, learn AI), launch posts built from share cards. **Submit v1.0.** |
 
 **Exit criteria:** Journey chapters 1–10 playable; purchase/restore works in sandbox; App Store approval.
@@ -286,7 +305,9 @@ Saved in `design/reference/vocabulary/`:
 | 09-onboarding-level | Self-assessment |
 | 10-onboarding-daily-goal | Notification goal setup |
 
-**Still missing:** paywall, widgets (lock/home), term info sheet, Practice tab, Profile, a Journey lesson in progress, collection detail. Add more by attaching in chat or committing to that folder.
+Also referenced in chat but **not yet in the folder** (please commit them to this folder; images attached mid-message didn't reach disk): Words feed in cream style B (`11-words-feed-light`), Progress with streak (`12-progress-streak`), widget education (`13-widget-install`), trial-timeline paywall (`15-paywall-trial`).
+
+**Still missing:** the actual widgets in all sizes, term info sheet, Practice tab, a Journey lesson in progress, collection detail.
 
 ---
 
