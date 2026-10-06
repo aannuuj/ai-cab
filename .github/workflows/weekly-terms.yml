@@ -1,0 +1,58 @@
+name: Weekly new terms
+
+# Finds trending AI terms, drafts entries with Claude, and opens a PR for human review.
+# Requires the repository secret ANTHROPIC_API_KEY.
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # Mondays 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      terms:
+        description: "Optional: specific terms to draft, separated by commas"
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r pipeline/requirements.txt
+      - name: Discover candidates
+        if: ${{ !inputs.terms }}
+        working-directory: pipeline
+        run: python discover.py --limit 40
+      - name: Draft entries
+        working-directory: pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TERMS: ${{ inputs.terms }}
+        run: |
+          if [ -n "$TERMS" ]; then
+            IFS=',' read -ra LIST <<< "$TERMS"
+            python generate.py --terms "${LIST[@]}"
+          else
+            python generate.py --max 15
+          fi
+      - name: Validate
+        run: python pipeline/build_content.py --check
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: content/weekly-terms
+          title: "New AI terms for review"
+          commit-message: "Draft new AI terms"
+          body: |
+            Drafted by `pipeline/generate.py` from this week's arXiv, Hugging Face and Hacker News trends.
+
+            Review checklist:
+            - [ ] Each term is real and worth teaching
+            - [ ] Definitions are accurate at all three levels
+            - [ ] Examples read naturally and contain the term
+            - [ ] Bump `content/config.yaml` version before merging so apps download the update
+          add-paths: content/terms/*.yaml

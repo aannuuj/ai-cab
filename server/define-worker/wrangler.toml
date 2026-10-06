@@ -1,0 +1,8 @@
+name = "aicab-define"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Set the key with:  npx wrangler secret put ANTHROPIC_API_KEY
+# Then put the deployed URL in ios/project.yml → AICabDefineURL.
+# Recommended: add a Cloudflare rate-limiting rule (e.g. 20 requests/min per IP).

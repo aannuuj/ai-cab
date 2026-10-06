@@ -91,6 +91,9 @@ final class AppModel {
         let config = AppConfiguration.current
         let cache = ContentCache()
         let bundled = (try? ContentLoader.bundled()) ?? .empty
+        if let screen = ScreenshotMode.current {
+            return screenshot(screen, content: bundled, config: config)
+        }
         let content = ContentLoader.newest(bundled: bundled, cached: cache.load())
         return AppModel(
             content: content,
@@ -105,6 +108,37 @@ final class AppModel {
             drafter: config.defineEndpoint.map { RemoteDefinitionDrafter(endpoint: $0) }
         )
     }
+
+    /// Deterministic, seeded wiring for `-screenshot <screen>` launches.
+    private static func screenshot(_ screen: ScreenshotMode.Screen, content: ContentPack, config: AppConfiguration) -> AppModel {
+        let model = AppModel(
+            content: content,
+            store: InMemoryUserStateStore(state: ScreenshotMode.seededState(for: screen, content: content)),
+            notifications: NoopNotificationScheduler(),
+            widgets: WidgetKitSync(store: WidgetStore()),
+            purchases: PurchaseManager(),
+            speech: SpeechService(),
+            config: config
+        )
+        model.isScreenshotRun = true
+        if let rag = content.terms.first(where: { $0.id == "context-engineering" }) {
+            model.feed = [rag]
+        }
+        switch screen {
+        case .onboarding, .words: break
+        case .topics: model.selectedTab = .topics
+        case .journey: model.selectedTab = .journey
+        case .practice, .quiz: model.selectedTab = .practice
+        case .profile: model.selectedTab = .profile
+        case .paywall: model.sheet = .paywall(.crown)
+        case .widget: model.sheet = .widgetInstall
+        case .term: model.sheet = .term("rag")
+        case .share: model.sheet = .share("rag")
+        }
+        return model
+    }
+
+    @ObservationIgnored private(set) var isScreenshotRun = false
 
     // MARK: - Derived state
 
@@ -530,7 +564,7 @@ final class AppModel {
     // MARK: - Nudges
 
     func evaluateNudges(justCompletedGoal: Bool) {
-        guard sheet == nil, overlayNudge == nil, state.preferences.hasOnboarded else { return }
+        guard !isScreenshotRun, sheet == nil, overlayNudge == nil, state.preferences.hasOnboarded else { return }
         let context = NudgeContext(now: now(), state: state, isPro: isPro, hasWidgetInstalled: hasWidgetInstalled,
                                    justCompletedGoal: justCompletedGoal)
         guard let nudge = nudgeEngine.next(context) else { return }

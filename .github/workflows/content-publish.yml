@@ -1,0 +1,43 @@
+name: Publish content
+
+# Builds the content pack and serves it (plus the privacy page) from GitHub Pages.
+# One-time setup: Settings → Pages → Source: "GitHub Actions".
+on:
+  push:
+    branches: [main, master, "claude/ai-vocab-app-plan-tfuoqz"]
+    paths: ["content/**", "pipeline/build_content.py", "site/**", ".github/workflows/content-publish.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python pipeline/build_content.py
+      - name: Assemble site
+        run: |
+          mkdir -p _site/content
+          cp -r site/* _site/
+          cp dist/content/* _site/content/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

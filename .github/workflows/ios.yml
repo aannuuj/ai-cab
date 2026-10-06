@@ -52,10 +52,19 @@ jobs:
             -scheme AICab \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
+            -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
             -skipPackagePluginValidation \
             2>&1 | tee build.log | grep -E "error:|warning: .*(deprecated|unused)|BUILD (SUCCEEDED|FAILED)" || true
           grep -q "BUILD SUCCEEDED" build.log
+      - name: Capture screenshots
+        working-directory: ios
+        run: scripts/screenshots.sh build/DerivedData/Build/Products/Debug-iphonesimulator/AICab.app ../screenshots
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots
       - name: Upload build log
         if: failure()
         uses: actions/upload-artifact@v4
