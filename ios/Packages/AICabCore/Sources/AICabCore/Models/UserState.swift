@@ -12,6 +12,8 @@ public struct UserState: Codable, Sendable {
     public var activity = ActivityLog()
     public var nudges: NudgeState
     public var dailyQuiz: DailyQuizRecord?
+    /// Best score per challenge mode (raw value). Optional so older saves still decode.
+    public var challengeBests: [String: Int]?
 
     public init(now: Date = Date()) {
         nudges = NudgeState(installedAt: now)
@@ -304,6 +306,11 @@ public struct Preferences: Codable, Sendable {
     public var gender: Gender?
     public var habitHelpers: [HabitHelper]?
     public var weakSpots: [WeakSpot]?
+    /// Pronunciation voice (AVSpeechSynthesisVoice identifier) and rate multiplier.
+    public var voiceIdentifier: String?
+    public var speechRate: Double?
+    /// One-time coach marks already shown.
+    public var seenTips: [String]?
 
     public init() {}
 

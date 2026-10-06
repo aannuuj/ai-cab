@@ -7,6 +7,7 @@ enum ScreenshotMode {
     enum Screen: String {
         case onboarding, words, topics, journey, practice, profile, paywall, widget, term, share, quiz
         case tailor, streak, themes, icons
+        case toast, coach, challenge, flashcards, levelTest, voices
     }
 
     static let current: Screen? = {
@@ -49,6 +50,8 @@ enum ScreenshotMode {
             state.journey.completed.insert(JourneyProgress.key(chapter: 1, lesson: lesson))
         }
         state.collections = [UserCollection(name: "Agent design review", termIds: ["agent", "mcp", "rag"])]
+        state.challengeBests = ["sprint": 14, "rush": 9]
+        if screen != .coach { state.preferences.seenTips = ["save5"] }
         return state
     }
 }

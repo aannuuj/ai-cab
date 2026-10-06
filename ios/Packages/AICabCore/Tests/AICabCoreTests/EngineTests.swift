@@ -323,3 +323,44 @@ final class PlacementTests: XCTestCase {
         XCTAssertEqual(plan.first { $0.kind == .streakSaver }?.title, "Om, keep your 3-day streak alive 🔥")
     }
 }
+
+final class ChallengeTests: XCTestCase {
+    func testRushEndsAfterThreeMisses() {
+        var run = ChallengeRun(mode: .rush)
+        run.record(correct: true)
+        run.record(correct: false)
+        run.record(correct: false)
+        XCTAssertEqual(run.livesLeft, 1)
+        XCTAssertFalse(run.isOver(elapsed: 999))
+        run.record(correct: false)
+        XCTAssertTrue(run.isOver(elapsed: 0))
+        run.record(correct: true)
+        XCTAssertEqual(run.score, 1, "answers after the run ends don't count")
+    }
+
+    func testPerfectionEndsOnFirstMiss() {
+        var run = ChallengeRun(mode: .perfection)
+        for _ in 0..<5 { run.record(correct: true) }
+        run.record(correct: false)
+        XCTAssertTrue(run.isOver(elapsed: 0))
+        XCTAssertEqual(run.bestStreak, 5)
+    }
+
+    func testSprintEndsOnTheClockNotMisses() {
+        var run = ChallengeRun(mode: .sprint)
+        for _ in 0..<10 { run.record(correct: false) }
+        XCTAssertNil(run.livesLeft)
+        XCTAssertFalse(run.isOver(elapsed: 59))
+        XCTAssertEqual(run.timeLeft(elapsed: 45), 15)
+        XCTAssertTrue(run.isOver(elapsed: 60))
+    }
+
+    func testLevelQuizNeedsTwoOfThree() {
+        let test = PlacementTest()
+        let rounds = [PlacementTest.Round(level: .beginner, termIds: ["a", "b", "c"]),
+                      PlacementTest.Round(level: .builder, termIds: ["d", "e", "f"])]
+        XCTAssertEqual(test.recommendedLevel(correctIds: ["a"], quizRounds: rounds), .beginner)
+        XCTAssertEqual(test.recommendedLevel(correctIds: ["a", "b"], quizRounds: rounds), .builder)
+        XCTAssertEqual(test.recommendedLevel(correctIds: ["a", "b", "d", "f"], quizRounds: rounds), .research)
+    }
+}

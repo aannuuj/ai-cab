@@ -11,6 +11,7 @@ struct WidgetInstallView: View {
     @Environment(\.dismiss) private var dismiss
     let mode: Mode
     var onDone: (() -> Void)?
+    var startOnLockScreen = false
 
     @State private var step = 0
     @State private var showingSteps = false
@@ -100,6 +101,7 @@ struct WidgetInstallView: View {
         .animation(.spring(response: 0.45, dampingFraction: 0.85), value: step)
         .animation(.easeInOut, value: lockScreen)
         .onChange(of: lockScreen) { step = 0 }
+        .onAppear { if startOnLockScreen { lockScreen = true } }
     }
 
     private var stepsCard: some View {

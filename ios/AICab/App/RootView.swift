@@ -29,6 +29,8 @@ struct RootView: View {
                 WidgetInstallView(mode: .nudge)
             case .feedback:
                 FeedbackView()
+            case .saveDestination(let id):
+                SaveDestinationSheet(termID: id)
             }
         }
         .overlay {

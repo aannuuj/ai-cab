@@ -3,7 +3,8 @@ import Photos
 import AICabCore
 import AICabDesign
 
-/// Share a word as a styled card: preview, themes, watermark, Save to Photos, Stories and the system sheet.
+/// Share a word as a styled card: preview, round quick actions (theme, save, collection, copy, watermark)
+/// and share targets (Messages, Stories, WhatsApp, the system sheet).
 struct ShareSheetView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -12,11 +13,15 @@ struct ShareSheetView: View {
 
     @State private var theme: ShareCardTheme = .paper
     @State private var showWatermark = true
+    @State private var editingTheme = false
     @State private var savedToPhotos = false
-    @State private var rendered: Image?
+    @State private var copied = false
+    @State private var newCollectionName = ""
+    @State private var creatingCollection = false
 
     var body: some View {
-        VStack(spacing: 22) {
+        let preview = renderUIImage()
+        VStack(spacing: 20) {
             HStack {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark").font(.headline).foregroundStyle(Palette.textPrimary).frame(width: 46, height: 46)
@@ -27,7 +32,7 @@ struct ShareSheetView: View {
             }
 
             Group {
-                if let preview = renderUIImage() {
+                if let preview {
                     Image(uiImage: preview)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -36,80 +41,123 @@ struct ShareSheetView: View {
                         .aspectRatio(4 / 5, contentMode: .fit)
                 }
             }
-                .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 30, style: .continuous).strokeBorder(Color.white.opacity(0.12)))
-                .shadow(color: .black.opacity(0.3), radius: 24, y: 12)
-                .padding(.horizontal, 12)
-                .animation(.easeInOut, value: theme)
+            .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 30, style: .continuous).strokeBorder(Color.white.opacity(0.12)))
+            .shadow(color: .black.opacity(0.3), radius: 24, y: 12)
+            .padding(.horizontal, 28)
+            .animation(.easeInOut, value: theme)
+            .frame(maxHeight: .infinity)
 
-            ScrollView(.horizontal) {
-                HStack(spacing: 10) {
-                    Button {
-                        if model.isPro { showWatermark.toggle() } else { model.sheet = .paywall(.shareTheme) }
-                    } label: {
-                        Chip("Watermark", systemImage: showWatermark ? "eye" : "eye.slash", isSelected: !showWatermark)
-                    }
-                    Button { saveToPhotos() } label: {
-                        Chip(savedToPhotos ? "Saved" : "Save to Photos", systemImage: savedToPhotos ? "checkmark" : "arrow.down.to.line")
-                    }
-                    ForEach(ShareCardTheme.allCases) { option in
-                        Button {
-                            if option.isPremium && !model.isPro { model.sheet = .paywall(.shareTheme) } else { theme = option }
-                        } label: {
-                            Chip(option.title, systemImage: option.isPremium && !model.isPro ? "lock" : "paintpalette", isSelected: theme == option)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, Metrics.gutter)
+            if editingTheme {
+                themePicker
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            .scrollIndicators(.hidden)
-            .padding(.horizontal, -Metrics.gutter)
 
-            HStack(spacing: 22) {
+            HStack(alignment: .top, spacing: 0) {
+                RoundAction(title: "Edit theme", symbol: "paintbrush.pointed", isOn: editingTheme) {
+                    withAnimation(.snappy) { editingTheme.toggle() }
+                }
+                RoundAction(title: savedToPhotos ? "Saved" : "Save image", symbol: savedToPhotos ? "checkmark" : "arrow.down.to.line") {
+                    saveToPhotos()
+                }
+                collectionMenu
+                RoundAction(title: copied ? "Copied" : "Copy text", symbol: copied ? "checkmark" : "doc.on.doc") {
+                    UIPasteboard.general.string = shareMessage
+                    copied = true
+                }
+                RoundAction(title: showWatermark ? "Hide watermark" : "Show watermark",
+                            symbol: showWatermark ? "drop" : "drop.fill", locked: !model.isPro, isOn: !showWatermark) {
+                    if model.isPro { showWatermark.toggle() } else { model.sheet = .paywall(.shareTheme) }
+                }
+            }
+
+            Divider().overlay(Color.white.opacity(0.08))
+
+            HStack(alignment: .top, spacing: 0) {
+                ShareTarget(title: "Messages", symbol: "message.fill", colors: [Color(hex: 0x5BF675), Color(hex: 0x0CBD2A)]) {
+                    open("sms:&body=\(encoded(shareMessage))")
+                }
                 if model.config.facebookAppID != nil {
-                    shareTarget("Stories", symbol: "plus.circle", colors: [Color(hex: 0xF58529), Color(hex: 0xDD2A7B), Color(hex: 0x8134AF)]) {
+                    ShareTarget(title: "Stories", symbol: "camera.circle", colors: [Color(hex: 0xF58529), Color(hex: 0xDD2A7B), Color(hex: 0x8134AF)]) {
                         shareToStories()
                     }
                 }
-                if let image = renderedImage() {
+                ShareTarget(title: "WhatsApp", symbol: "phone.bubble.fill", colors: [Color(hex: 0x5FFC7B), Color(hex: 0x28D146)]) {
+                    open("whatsapp://send?text=\(encoded(shareMessage))")
+                }
+                if let preview {
+                    let image = Image(uiImage: preview)
                     ShareLink(item: image, subject: Text(term.term), message: Text(shareMessage),
                               preview: SharePreview(term.term, image: image)) {
-                        targetLabel("More", symbol: "ellipsis", colors: [Palette.surfaceRaised, Palette.surface])
+                        ShareTarget.label(title: "Share via", symbol: "square.and.arrow.up", colors: [Palette.surfaceRaised, Palette.surface])
                     }
-                }
-                ShareLink(item: shareMessage) {
-                    targetLabel("Text", symbol: "text.bubble", colors: [Palette.teal, Palette.tealDeep])
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity)
                 }
             }
-            .frame(maxWidth: .infinity)
-            Spacer(minLength: 0)
         }
         .padding(Metrics.gutter)
         .background(Palette.charcoalDeep.ignoresSafeArea())
         .presentationDetents([.large])
         .sensoryFeedback(.success, trigger: savedToPhotos)
+        .sensoryFeedback(.success, trigger: copied)
+        .alert("New collection", isPresented: $creatingCollection) {
+            TextField("Name", text: $newCollectionName)
+            Button("Create") {
+                model.createCollection(named: newCollectionName, with: term.id)
+                newCollectionName = ""
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    private var themePicker: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 10) {
+                ForEach(ShareCardTheme.allCases) { option in
+                    Button {
+                        if option.isPremium && !model.isPro { model.sheet = .paywall(.shareTheme) } else { theme = option }
+                    } label: {
+                        Chip(option.title, systemImage: option.isPremium && !model.isPro ? "lock" : nil, isSelected: theme == option)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, Metrics.gutter)
+        }
+        .scrollIndicators(.hidden)
+        .padding(.horizontal, -Metrics.gutter)
+    }
+
+    private var collectionMenu: some View {
+        let inAny = model.state.collections.contains { $0.termIds.contains(term.id) }
+        return Menu {
+            ForEach(model.state.collections) { collection in
+                Button {
+                    model.toggle(term.id, in: collection.id)
+                } label: {
+                    Label(collection.name, systemImage: collection.termIds.contains(term.id) ? "checkmark.circle.fill" : "circle")
+                }
+            }
+            Divider()
+            Button("New collection…", systemImage: "plus") { creatingCollection = true }
+        } label: {
+            RoundAction.label(title: "Add to collection", symbol: inAny ? "folder.fill" : "folder.badge.plus", locked: false, isOn: inAny)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var shareMessage: String {
         "\(term.term) (\(term.pos)): \(term.definition(at: .beginner))\n\nLearning AI words with AI-Cab"
     }
 
-    private func shareTarget(_ title: String, symbol: String, colors: [Color], action: @escaping () -> Void) -> some View {
-        Button(action: action) { targetLabel(title, symbol: symbol, colors: colors) }
-            .buttonStyle(.plain)
+    private func encoded(_ text: String) -> String {
+        text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&=?+"))) ?? ""
     }
 
-    private func targetLabel(_ title: String, symbol: String, colors: [Color]) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: symbol)
-                .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 62, height: 62)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)))
-            Text(title).font(.footnote).foregroundStyle(Palette.textSecondary)
-        }
+    private func open(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        openURL(url)
     }
 
     @MainActor
@@ -120,10 +168,6 @@ struct ShareSheetView: View {
         )
         renderer.scale = 3
         return renderer.uiImage
-    }
-
-    private func renderedImage() -> Image? {
-        renderUIImage().map { Image(uiImage: $0) }
     }
 
     private func saveToPhotos() {
@@ -145,6 +189,75 @@ struct ShareSheetView: View {
             options: [.expirationDate: Date().addingTimeInterval(300)]
         )
         openURL(url)
+    }
+}
+
+/// Round glass quick action with a caption ("Save image", "Copy text"…).
+private struct RoundAction: View {
+    let title: String
+    let symbol: String
+    var locked = false
+    var isOn = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) { Self.label(title: title, symbol: symbol, locked: locked, isOn: isOn) }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+    }
+
+    static func label(title: String, symbol: String, locked: Bool, isOn: Bool) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: symbol)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(isOn ? Palette.ink : Palette.textPrimary)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(width: 56, height: 56)
+                .background(Circle().fill(isOn ? Palette.teal : Palette.surface))
+                .overlay(Circle().strokeBorder(Color.white.opacity(0.1)))
+                .overlay(alignment: .topTrailing) {
+                    if locked {
+                        Image(systemName: "lock.fill").font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Palette.ink)
+                            .frame(width: 20, height: 20)
+                            .background(Circle().fill(Palette.gold))
+                            .offset(x: 2, y: -2)
+                    }
+                }
+            Text(title)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(Palette.textSecondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// App-coloured share destination.
+private struct ShareTarget: View {
+    let title: String
+    let symbol: String
+    let colors: [Color]
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) { Self.label(title: title, symbol: symbol, colors: colors) }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+    }
+
+    static func label(title: String, symbol: String, colors: [Color]) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: symbol)
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 58, height: 58)
+                .background(Circle().fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom)))
+            Text(title).font(.caption2.weight(.medium)).foregroundStyle(Palette.textSecondary)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

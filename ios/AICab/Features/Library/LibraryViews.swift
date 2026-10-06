@@ -167,7 +167,7 @@ struct TopicDetailView: View {
     let topicID: String
 
     var body: some View {
-        if let topic = model.topics.first(where: { $0.id == topicID }) {
+        if let topic = model.topic(topicID) {
             let terms = model.terms(in: topic)
             let saved = terms.filter { model.isSaved($0.id) }.count
             ScrollView {

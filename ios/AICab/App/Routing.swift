@@ -16,6 +16,7 @@ enum AppSheet: Identifiable {
     case paywall(PaywallSource)
     case widgetInstall
     case feedback
+    case saveDestination(String)
 
     var id: String {
         switch self {
@@ -24,6 +25,7 @@ enum AppSheet: Identifiable {
         case .paywall(let source): "paywall.\(source.rawValue)"
         case .widgetInstall: "widget"
         case .feedback: "feedback"
+        case .saveDestination(let id): "destination.\(id)"
         }
     }
 }

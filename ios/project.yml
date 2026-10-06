@@ -54,7 +54,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.aicab.app
             CFBundleURLSchemes: [aicab]
-        LSApplicationQueriesSchemes: [instagram-stories]
+        LSApplicationQueriesSchemes: [instagram-stories, whatsapp]
         NSPhotoLibraryAddUsageDescription: Save word cards to your photo library so you can share them.
         # Static content drops (GitHub Pages / any CDN). Leave empty to use bundled content only.
         AICabContentManifestURL: https://aannuuj.github.io/ai-cab/content/manifest.json

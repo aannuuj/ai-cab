@@ -35,13 +35,28 @@ public struct PlacementTest: Sendable {
     }
 
     /// Highest level whose round the learner mostly knows; the next level up is where learning starts.
-    public func recommendedLevel(known: Set<String>, rounds: [Round] = PlacementTest.rounds) -> Level {
+    public func recommendedLevel(known: Set<String>, rounds: [Round] = PlacementTest.rounds,
+                                 passCount: Int = PlacementTest.passCount) -> Level {
         func passed(_ level: Level) -> Bool {
-            guard let round = rounds.first(where: { $0.level == level }) else { return false }
-            return round.termIds.filter(known.contains).count >= min(Self.passCount, round.termIds.count)
+            guard let round = rounds.first(where: { $0.level == level }), !round.termIds.isEmpty else { return false }
+            return round.termIds.filter(known.contains).count >= min(passCount, round.termIds.count)
         }
         if passed(.builder) { return .research }
         if passed(.beginner) { return .builder }
         return .beginner
+    }
+
+    /// Practice "What's your level?" quiz: a few words from each round, in level order.
+    public static let quizPerRound = 3
+
+    public func quizRounds<R: RandomNumberGenerator>(in terms: [String: Term], using rng: inout R) -> [Round] {
+        rounds(in: terms).map { round in
+            Round(level: round.level, termIds: Array(round.termIds.shuffled(using: &rng).prefix(Self.quizPerRound)))
+        }
+    }
+
+    /// Level from the ids answered correctly in the quiz (2 of 3 passes a round).
+    public func recommendedLevel(correctIds: Set<String>, quizRounds: [Round]) -> Level {
+        recommendedLevel(known: correctIds, rounds: quizRounds, passCount: Self.quizPerRound - 1)
     }
 }

@@ -39,24 +39,34 @@ struct JourneyView: View {
                 }
                 .overlay(alignment: .bottom) {
                     if let current = model.journeyCurrent {
-                        Button {
-                            withAnimation(.snappy) { proxy.scrollTo(current.chapter.number, anchor: .top) }
-                        } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: (visibleChapter ?? 0) > current.chapter.number ? "chevron.up" : "chevron.down")
-                                    .foregroundStyle(Palette.coral)
-                                Text("Chapter \(current.chapter.number)")
-                                    .font(.headline)
-                                    .foregroundStyle(Palette.textPrimary)
+                        Group {
+                            if visibleChapter == nil || visibleChapter == current.chapter.number {
+                                PlayCard(chapter: current.chapter, lesson: current.lesson) {
+                                    open(current.lesson, in: current.chapter)
+                                }
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                            } else {
+                                Button {
+                                    withAnimation(.snappy) { proxy.scrollTo(current.chapter.number, anchor: .top) }
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        Image(systemName: (visibleChapter ?? 0) > current.chapter.number ? "chevron.up" : "chevron.down")
+                                            .foregroundStyle(Palette.coral)
+                                        Text("Back to chapter \(current.chapter.number)")
+                                            .font(.headline)
+                                            .foregroundStyle(Palette.textPrimary)
+                                    }
+                                    .padding(.horizontal, 22)
+                                    .padding(.vertical, 14)
+                                }
+                                .buttonStyle(.plain)
+                                .glassCapsule(interactive: true)
+                                .transition(.opacity)
                             }
-                            .padding(.horizontal, 22)
-                            .padding(.vertical, 14)
                         }
-                        .buttonStyle(.plain)
-                        .glassCapsule(interactive: true)
-                        .padding(.bottom, 96)
-                        .opacity(visibleChapter == current.chapter.number ? 0 : 1)
-                        .animation(.easeInOut, value: visibleChapter)
+                        .padding(.horizontal, Metrics.gutter)
+                        .padding(.bottom, 92)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: visibleChapter)
                     }
                 }
             }
@@ -84,15 +94,6 @@ struct JourneyView: View {
                 .font(.subheadline)
                 .foregroundStyle(Palette.textSecondary)
                 .multilineTextAlignment(.center)
-            if let current = model.journeyCurrent {
-                Button {
-                    open(current.lesson, in: current.chapter)
-                } label: {
-                    Label("Continue: \(current.lesson.title)", systemImage: "play.fill")
-                }
-                .buttonStyle(PrimaryButtonStyle(.teal))
-                .padding(.top, 8)
-            }
         }
         .padding(.horizontal, Metrics.gutter)
     }
@@ -234,7 +235,49 @@ private struct DashedConnector: View {
     }
 }
 
-/// Bouncing "START" bubble above the current tile.
+/// Floating "CHAPTER 2 · GAME 3 / Match / Play" card for the next lesson.
+private struct PlayCard: View {
+    let chapter: Chapter
+    let lesson: LessonKind
+    let play: () -> Void
+
+    private var gameNumber: Int { (LessonKind.allCases.firstIndex(of: lesson) ?? 0) + 1 }
+
+    var body: some View {
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("CHAPTER \(chapter.number) · GAME \(gameNumber)")
+                    .font(.caption2.weight(.bold))
+                    .tracking(1.4)
+                    .foregroundStyle(Palette.teal)
+                Text(lesson.title)
+                    .font(.system(.title3, design: .serif, weight: .bold))
+                    .foregroundStyle(Palette.textPrimary)
+                    .lineLimit(1)
+                Text(lesson.subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(Palette.textSecondary)
+                    .lineLimit(2)
+            }
+            Spacer(minLength: 0)
+            Button(action: play) {
+                Label("Play", systemImage: "play.fill")
+                    .font(.headline)
+                    .foregroundStyle(Palette.ink)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(TactileButtonStyle(fill: Palette.teal, radius: 22))
+                .accessibilityHint("Starts \(lesson.title)")
+        }
+        .padding(.leading, 20)
+        .padding(.trailing, 14)
+        .padding(.vertical, 16)
+        .tactileCard(fill: Palette.surface)
+    }
+}
+
+/// Bouncing "START" speech bubble above the current tile.
 private struct CurrentMarker: View {
     let title: String
     @State private var bob = false
@@ -248,10 +291,27 @@ private struct CurrentMarker: View {
             .padding(.vertical, 6)
             .background(Capsule().fill(Palette.coral))
             .overlay(Capsule().strokeBorder(Palette.outline, lineWidth: 2))
+            .overlay(alignment: .bottom) {
+                BubbleTail()
+                    .fill(Palette.coral)
+                    .overlay(BubbleTail().stroke(Palette.outline, lineWidth: 2))
+                    .frame(width: 14, height: 8)
+                    .offset(y: 7)
+            }
             .offset(y: bob ? -5 : 0)
             .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: bob)
             .onAppear { bob = true }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+    }
+}
+
+private struct BubbleTail: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { p in
+            p.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        }
     }
 }

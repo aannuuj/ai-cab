@@ -11,6 +11,10 @@ struct QuizSessionView: View {
     let source: () -> [QuizQuestion]
     let passMark: Double?
     let onFinish: (Int, Int) -> Void
+    /// Called after each answer (level test uses it to track which words were known).
+    var onAnswer: ((QuizQuestion, Bool) -> Void)?
+    /// Overrides the result headline and message.
+    var summary: ((Int, Int) -> (headline: String, message: String))?
 
     @State private var questions: [QuizQuestion] = []
     @State private var index = 0
@@ -19,18 +23,23 @@ struct QuizSessionView: View {
     @State private var finished = false
     @State private var shake = 0
 
-    init(title: String, passMark: Double? = nil, source: @escaping () -> [QuizQuestion], onFinish: @escaping (Int, Int) -> Void) {
+    init(title: String, passMark: Double? = nil, source: @escaping () -> [QuizQuestion], onFinish: @escaping (Int, Int) -> Void,
+         onAnswer: ((QuizQuestion, Bool) -> Void)? = nil,
+         summary: ((Int, Int) -> (headline: String, message: String))? = nil) {
         self.title = title
         self.passMark = passMark
         self.source = source
         self.onFinish = onFinish
+        self.onAnswer = onAnswer
+        self.summary = summary
     }
 
     var body: some View {
         ZStack {
             Palette.charcoal.ignoresSafeArea()
             if finished {
-                ResultView(correct: correct, total: questions.count, passMark: passMark) { dismiss() }
+                ResultView(correct: correct, total: questions.count, passMark: passMark,
+                           summary: summary?(correct, questions.count)) { dismiss() }
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             } else if let question = questions[safe: index] {
                 questionView(question)
@@ -145,6 +154,7 @@ struct QuizSessionView: View {
             withAnimation(.default) { shake += 1 }
         }
         model.recordAnswer(termID: question.termId, correct: ok)
+        onAnswer?(question, ok)
     }
 
     private func advance() {
@@ -163,6 +173,7 @@ struct ResultView: View {
     let correct: Int
     let total: Int
     let passMark: Double?
+    var summary: (headline: String, message: String)?
     let done: () -> Void
     @State private var burst = 0
 
@@ -184,11 +195,11 @@ struct ResultView: View {
                 .foregroundStyle(Palette.textPrimary)
             }
             .frame(width: 190, height: 190)
-            Text(headline)
+            Text(summary?.headline ?? headline)
                 .font(.serifTitle)
                 .foregroundStyle(Palette.textPrimary)
                 .multilineTextAlignment(.center)
-            Text(message)
+            Text(summary?.message ?? message)
                 .font(.body)
                 .foregroundStyle(Palette.textSecondary)
                 .multilineTextAlignment(.center)

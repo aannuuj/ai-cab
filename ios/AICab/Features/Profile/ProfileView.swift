@@ -1,52 +1,95 @@
 import SwiftUI
 import StoreKit
+import AVFoundation
 import AICabCore
 import AICabDesign
 
-/// Progress (streak, stats, library) on top; settings below.
+enum ProfileRoute: Hashable {
+    case settings, reminders, voices, themes, appIcon
+}
+
+/// Streak and stats on top, then illustrated tiles for the things people tweak most; the gear opens full settings.
 struct ProfileView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.openURL) private var openURL
-    @Environment(\.requestReview) private var requestReview
-    @State private var editingTopics = false
-    @State private var showingWidgetGuide = false
-    @State private var managingSubscription = false
+    @State private var widgetGuide: WidgetGuide?
+
+    enum WidgetGuide: String, Identifiable {
+        case home, lock
+        var id: String { rawValue }
+    }
+
+    private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
+            ScrollView {
+                VStack(spacing: 16) {
                     StreakCard(streak: model.streak, days: model.week)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
-                Section {
                     statsRow
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
-                Section {
-                    NavigationLink(value: LibraryRoute.saved) { row("Your deck", "bookmark.fill", Palette.teal, detail: "\(model.state.learnedCount)") }
-                    NavigationLink(value: LibraryRoute.favorites) { row("Favorites", "heart.fill", Palette.coral, detail: "\(model.favorites.count)") }
-                    NavigationLink(value: LibraryRoute.history) { row("History", "clock.fill", Palette.gold, detail: "\(model.history.count)") }
-                    NavigationLink(value: LibraryRoute.collections) { row("Collections", "folder.fill", Palette.oliveSoft, detail: "\(model.state.collections.count)") }
-                }
+                    LazyVGrid(columns: columns, spacing: 14) {
+                        NavigationLink(value: ProfileRoute.reminders) {
+                            ProfileTile(title: "Reminders", symbol: "bell.badge.fill", palette: .teal,
+                                        detail: model.preferences.reminders.isEnabled ? "\(model.preferences.reminders.perDay)x a day" : "Off")
+                        }
+                        NavigationLink(value: ProfileRoute.voices) {
+                            ProfileTile(title: "Voices", symbol: "waveform", palette: .cream, detail: voiceName)
+                        }
+                        Button { widgetGuide = .home } label: {
+                            ProfileTile(title: "Home Screen widgets", symbol: "apps.iphone", palette: .teal, detail: nil)
+                        }
+                        Button { widgetGuide = .lock } label: {
+                            ProfileTile(title: "Lock Screen widgets", symbol: "lock.iphone", palette: .cream, detail: nil)
+                        }
+                        NavigationLink(value: ProfileRoute.themes) {
+                            ProfileTile(title: "Themes", symbol: "textformat", palette: .coral, detail: model.preferences.feedTheme.title)
+                        }
+                        NavigationLink(value: ProfileRoute.appIcon) {
+                            ProfileTile(title: "App icon", symbol: "app.gift.fill", palette: .olive,
+                                        detail: AppIconOption.all.first { $0.iconName == model.preferences.appIcon }?.title)
+                        }
+                    }
+                    .buttonStyle(TactileButtonStyle(fill: Palette.surface, radius: Metrics.tileRadius))
 
-                proSection
-                learningSection
-                RemindersSection()
-                appearanceSection
-                aboutSection
+                    if !model.isPro {
+                        UnlockBanner { model.sheet = .paywall(.settings) }
+                    }
+                }
+                .padding(.horizontal, Metrics.gutter)
+                .padding(.bottom, 120)
             }
-            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
             .background(Palette.charcoal.ignoresSafeArea())
             .navigationTitle(model.preferences.name.map { "Hi, \($0)" } ?? "Profile")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: ProfileRoute.settings) {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .navigationDestination(for: ProfileRoute.self) { route in
+                switch route {
+                case .settings: SettingsView()
+                case .reminders: RemindersScreen()
+                case .voices: VoicesView()
+                case .themes: ThemesView()
+                case .appIcon: AppIconView()
+                }
+            }
             .navigationDestination(for: LibraryRoute.self) { LibraryDestination(route: $0) }
             .navigationDestination(for: String.self) { TermDetailView(termID: $0) }
-            .sheet(isPresented: $editingTopics) { TopicPickerSheet() }
-            .sheet(isPresented: $showingWidgetGuide) { WidgetInstallView(mode: .settings) }
-            .manageSubscriptionsSheet(isPresented: $managingSubscription)
+            .sheet(item: $widgetGuide) { guide in
+                WidgetInstallView(mode: .settings, startOnLockScreen: guide == .lock)
+            }
+            .navigationDestination(isPresented: $screenshotVoices) { VoicesView() }
         }
+    }
+
+    @State private var screenshotVoices = ScreenshotMode.current == .voices
+
+    private var voiceName: String {
+        model.preferences.voiceIdentifier.flatMap { AVSpeechSynthesisVoice(identifier: $0)?.name } ?? "Default"
     }
 
     private var statsRow: some View {
@@ -66,6 +109,40 @@ struct ProfileView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Palette.surface))
+    }
+
+}
+
+/// Everything else: library, Pro, learning, reminders, appearance, about.
+struct SettingsView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
+    @Environment(\.requestReview) private var requestReview
+    @State private var editingTopics = false
+    @State private var showingWidgetGuide = false
+    @State private var managingSubscription = false
+
+    var body: some View {
+        List {
+            Section {
+                NavigationLink(value: LibraryRoute.saved) { row("Your deck", "bookmark.fill", Palette.teal, detail: "\(model.state.learnedCount)") }
+                NavigationLink(value: LibraryRoute.favorites) { row("Favorites", "heart.fill", Palette.coral, detail: "\(model.favorites.count)") }
+                NavigationLink(value: LibraryRoute.history) { row("History", "clock.fill", Palette.gold, detail: "\(model.history.count)") }
+                NavigationLink(value: LibraryRoute.collections) { row("Collections", "folder.fill", Palette.oliveSoft, detail: "\(model.state.collections.count)") }
+            }
+            proSection
+            learningSection
+            RemindersSection()
+            appearanceSection
+            aboutSection
+        }
+        .scrollContentBackground(.hidden)
+        .background(Palette.charcoal.ignoresSafeArea())
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $editingTopics) { TopicPickerSheet() }
+        .sheet(isPresented: $showingWidgetGuide) { WidgetInstallView(mode: .settings) }
+        .manageSubscriptionsSheet(isPresented: $managingSubscription)
     }
 
     private func row(_ title: String, _ symbol: String, _ tint: Color, detail: String? = nil) -> some View {
@@ -294,5 +371,233 @@ private struct ThemeSwatch: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(theme.title) theme\(locked ? ", Pro" : "")")
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Illustrated profile tile: art on top, title bottom-left.
+private struct ProfileTile: View {
+    let title: String
+    let symbol: String
+    let palette: ArtPalette
+    let detail: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            IsoObject(symbol: symbol, palette: palette, size: 92)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 4)
+            Spacer(minLength: 0)
+            Text(title)
+                .font(.system(.headline, weight: .bold))
+                .foregroundStyle(Palette.textPrimary)
+                .multilineTextAlignment(.leading)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            if let detail {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(Palette.textSecondary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 190, alignment: .topLeading)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+struct RemindersScreen: View {
+    var body: some View {
+        List { RemindersSection() }
+            .scrollContentBackground(.hidden)
+            .background(Palette.charcoal.ignoresSafeArea())
+            .navigationTitle("Reminders")
+            .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Pronunciation voice and speed.
+struct VoicesView: View {
+    @Environment(AppModel.self) private var model
+    @State private var rate = SpeechService.defaultRate
+    @State private var voices: [AVSpeechSynthesisVoice] = []
+
+    private let sample = "Retrieval-augmented generation"
+
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Speed")
+                        Spacer()
+                        Text(rateLabel).foregroundStyle(Palette.textSecondary)
+                    }
+                    Slider(value: $rate, in: 0.5...1.3, step: 0.1) {
+                        Text("Speed")
+                    } minimumValueLabel: {
+                        Image(systemName: "tortoise.fill")
+                    } maximumValueLabel: {
+                        Image(systemName: "hare.fill")
+                    } onEditingChanged: { editing in
+                        if !editing {
+                            model.setVoice(model.preferences.voiceIdentifier, rate: rate)
+                            preview(id: "voice.rate")
+                        }
+                    }
+                    .tint(Palette.teal)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Section {
+                voiceRow(name: "System default", detail: "English (US)", id: nil)
+                ForEach(voices, id: \.identifier) { voice in
+                    voiceRow(name: voice.name, detail: detail(for: voice), id: voice.identifier)
+                }
+            } header: {
+                Text("Voice")
+            } footer: {
+                Text("Download Enhanced and Premium voices in Settings › Accessibility › Spoken Content › Voices › English.")
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(Palette.charcoal.ignoresSafeArea())
+        .navigationTitle("Voices")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            rate = model.preferences.speechRate ?? SpeechService.defaultRate
+            if voices.isEmpty { voices = SpeechService.englishVoices }
+        }
+    }
+
+    private var rateLabel: String {
+        switch rate {
+        case ..<0.75: "Slow"
+        case ..<1.05: "Normal"
+        default: "Fast"
+        }
+    }
+
+    private func voiceRow(name: String, detail: String, id: String?) -> some View {
+        let selected = model.preferences.voiceIdentifier == id
+        let rowID = "voice.\(id ?? "default")"
+        return Button {
+            model.setVoice(id, rate: rate)
+            preview(id: rowID)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: model.speech.speakingID == rowID ? "speaker.wave.3.fill" : "speaker.wave.2")
+                    .foregroundStyle(Palette.teal)
+                    .frame(width: 26)
+                    .contentTransition(.symbolEffect(.replace))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name).foregroundStyle(Palette.textPrimary)
+                    Text(detail).font(.caption).foregroundStyle(Palette.textSecondary)
+                }
+                Spacer()
+                if selected { Image(systemName: "checkmark").fontWeight(.semibold).foregroundStyle(Palette.teal) }
+            }
+        }
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    private func detail(for voice: AVSpeechSynthesisVoice) -> String {
+        let region = Locale.current.localizedString(forIdentifier: voice.language) ?? voice.language
+        switch voice.quality {
+        case .premium: return "\(region) · Premium"
+        case .enhanced: return "\(region) · Enhanced"
+        default: return region
+        }
+    }
+
+    private func preview(id: String) {
+        model.speech.speak(sample, id: id)
+    }
+}
+
+/// Word feed themes as large previews.
+struct ThemesView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
+                ForEach(FeedTheme.allCases) { theme in
+                    let colors = FeedColors.forTheme(theme)
+                    let selected = model.preferences.feedTheme == theme
+                    let locked = theme.isPremium && !model.isPro
+                    Button { model.setFeedTheme(theme) } label: {
+                        VStack(spacing: 10) {
+                            ZStack(alignment: .topTrailing) {
+                                RoundedRectangle(cornerRadius: 24, style: .continuous).fill(colors.background)
+                                VStack(spacing: 6) {
+                                    Text("token")
+                                        .font(.system(size: 30, weight: .bold, design: .serif))
+                                        .foregroundStyle(colors.primary)
+                                    Text("The unit a model reads")
+                                        .font(.caption)
+                                        .foregroundStyle(colors.secondary)
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                if locked {
+                                    LockBadge(color: colors.secondary).padding(12)
+                                }
+                            }
+                            .frame(height: 200)
+                            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .strokeBorder(selected ? Palette.teal : Color.white.opacity(0.12), lineWidth: selected ? 3 : 1))
+                            Text(theme.title)
+                                .font(.subheadline.weight(selected ? .semibold : .regular))
+                                .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(theme.title) theme\(locked ? ", Pro" : "")")
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+            .padding(Metrics.gutter)
+            .padding(.bottom, 100)
+        }
+        .background(Palette.charcoal.ignoresSafeArea())
+        .navigationTitle("Themes")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Alternate app icons.
+struct AppIconView: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 18)], spacing: 22) {
+                ForEach(AppIconOption.all) { option in
+                    let selected = model.preferences.appIcon == option.iconName
+                    Button { model.setAppIcon(option.iconName) } label: {
+                        VStack(spacing: 8) {
+                            Image(option.previewAsset)
+                                .resizable()
+                                .frame(width: 84, height: 84)
+                                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                .padding(4)
+                                .overlay(RoundedRectangle(cornerRadius: 23, style: .continuous)
+                                    .strokeBorder(selected ? Palette.teal : .clear, lineWidth: 3))
+                            Text(option.title)
+                                .font(.caption)
+                                .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(option.title) icon")
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+            .padding(Metrics.gutter)
+        }
+        .background(Palette.charcoal.ignoresSafeArea())
+        .navigationTitle("App icon")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

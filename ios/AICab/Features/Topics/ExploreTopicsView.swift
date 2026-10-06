@@ -57,29 +57,68 @@ struct ExploreTopicsView: View {
             }
 
             ForEach(TopicSection.allCases, id: \.self) { section in
-                let topics = model.topics(in: section)
-                if !topics.isEmpty {
-                    VStack(alignment: .leading, spacing: 14) {
-                        Text(section.title)
-                            .font(.serifTitle2)
-                            .foregroundStyle(Palette.textPrimary)
-                            .accessibilityAddTraits(.isHeader)
-                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
-                            ForEach(topics) { topic in
-                                NavigationLink(value: LibraryRoute.topic(topic.id)) {
-                                    TopicCard(topic: topic, count: model.terms(in: topic).count, locked: model.isLocked(topic),
-                                              selected: model.preferences.topicIds.contains(topic.id))
-                                }
-                                .buttonStyle(TactileButtonStyle(fill: Palette.surface, radius: Metrics.tileRadius))
-                            }
-                        }
-                    }
-                }
+                topicSection(section.title, topics: model.topics(in: section))
+            }
+
+            topicSection("By level", topics: model.levelTopics)
+
+            if !model.isPro {
+                PremiumFooter { model.sheet = .paywall(.banner) }
             }
         }
         .padding(.horizontal, Metrics.gutter)
         .padding(.top, 8)
         .padding(.bottom, 120)
+    }
+}
+
+extension ExploreTopicsView {
+    @ViewBuilder
+    fileprivate func topicSection(_ title: String, topics: [Topic]) -> some View {
+        if !topics.isEmpty {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(title)
+                    .font(.serifTitle2)
+                    .foregroundStyle(Palette.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
+                    ForEach(topics) { topic in
+                        NavigationLink(value: LibraryRoute.topic(topic.id)) {
+                            TopicCard(topic: topic, count: model.terms(in: topic).count, locked: model.isLocked(topic),
+                                      selected: model.preferences.topicIds.contains(topic.id))
+                        }
+                        .buttonStyle(TactileButtonStyle(fill: Palette.surface, radius: Metrics.tileRadius))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// "Go Premium — Unlock all topics" footer at the end of the catalog.
+private struct PremiumFooter: View {
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "crown.fill")
+                .font(.system(size: 30))
+                .foregroundStyle(Palette.gold)
+                .frame(width: 68, height: 68)
+                .background(Circle().fill(Palette.surface))
+                .overlay(Circle().strokeBorder(Palette.outline, lineWidth: 2))
+            Text("Go Premium")
+                .font(.serifTitle2)
+                .foregroundStyle(Palette.textPrimary)
+            Text("Unlock all topics, Research definitions and every Journey chapter.")
+                .font(.subheadline)
+                .foregroundStyle(Palette.textSecondary)
+                .multilineTextAlignment(.center)
+            Button("Unlock all topics", action: action)
+                .buttonStyle(PrimaryButtonStyle(.teal))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
     }
 }
 

@@ -19,6 +19,13 @@ struct OnboardingAnswers {
     var placementLevel: Level?
 }
 
+/// "Saved to <collection> · Change" toast after saving from the feed.
+struct SaveToast: Identifiable, Equatable {
+    let id = UUID()
+    let termID: String
+    let destination: String
+}
+
 struct HistoryItem: Identifiable {
     let term: Term
     let date: Date
@@ -70,6 +77,10 @@ final class AppModel {
     private(set) var celebration = 0
     /// Feed position to jump to (deep links, "learn this topic").
     var feedScrollTarget: String?
+    /// Toast shown after a feed save.
+    var saveToast: SaveToast?
+    /// Collection new feed saves are also filed into (chosen via the toast's Change button).
+    var defaultCollectionID: UUID?
 
     @ObservationIgnored private var termIndex: [String: Term] = [:]
 
@@ -100,6 +111,8 @@ final class AppModel {
         self.calendar = calendar
         self.now = now
         self.state = store.load() ?? UserState(now: now())
+        speech.voiceIdentifier = state.preferences.voiceIdentifier
+        speech.rate = state.preferences.speechRate ?? SpeechService.defaultRate
         rebuildIndex()
     }
 
@@ -151,7 +164,11 @@ final class AppModel {
         case .widget: model.sheet = .widgetInstall
         case .term: model.sheet = .term("rag")
         case .share: model.sheet = .share("rag")
+        case .toast: model.saveToast = SaveToast(termID: "context-engineering", destination: "Agent design review")
+        case .coach, .challenge, .flashcards, .levelTest, .voices: break
         }
+        if [.challenge, .flashcards, .levelTest].contains(screen) { model.selectedTab = .practice }
+        if screen == .voices { model.selectedTab = .profile }
         return model
     }
 
@@ -187,7 +204,33 @@ final class AppModel {
 
     func topics(in section: TopicSection) -> [Topic] { topics.filter { $0.section == section } }
     func terms(in topic: Topic) -> [Term] {
-        content.terms.filter { $0.topics.contains(topic.id) }.sorted { $0.difficulty.rawValue < $1.difficulty.rawValue }
+        if let difficulty = Self.difficulty(forLevelTopic: topic.id) {
+            return content.terms.filter { $0.difficulty == difficulty }.sorted { $0.term.lowercased() < $1.term.lowercased() }
+        }
+        return content.terms.filter { $0.topics.contains(topic.id) }.sorted { $0.difficulty.rawValue < $1.difficulty.rawValue }
+    }
+
+    /// Virtual "By level" topics: every word at one difficulty.
+    var levelTopics: [Topic] {
+        let art: [Difficulty: (String, ArtPalette)] = [.beginner: ("graduationcap.fill", .olive),
+                                                       .intermediate: ("hammer.fill", .teal),
+                                                       .pro: ("atom", .coral)]
+        return Difficulty.allCases.enumerated().map { index, difficulty in
+            Topic(id: Self.levelTopicPrefix + difficulty.rawValue, title: difficulty.title, eyebrow: "By level",
+                  section: .foundations, symbol: art[difficulty]?.0 ?? "circle", palette: art[difficulty]?.1 ?? .teal,
+                  isPremium: false, order: 1000 + index)
+        }
+    }
+
+    /// Catalog topics plus the virtual level topics.
+    func topic(_ id: String) -> Topic? {
+        topics.first { $0.id == id } ?? levelTopics.first { $0.id == id }
+    }
+
+    private static let levelTopicPrefix = "level-"
+    private static func difficulty(forLevelTopic id: String) -> Difficulty? {
+        guard id.hasPrefix(levelTopicPrefix) else { return nil }
+        return Difficulty(rawValue: String(id.dropFirst(levelTopicPrefix.count)))
     }
     func isLocked(_ topic: Topic) -> Bool { topic.isPremium && !isPro }
     func isLocked(_ term: Term) -> Bool { term.isPremium && !isPro }
@@ -329,8 +372,9 @@ final class AppModel {
             sheet = .paywall(.lockedTopic)
             return
         }
-        let words = terms(in: topic).filter { !isSaved($0.id) }.shuffled(using: &rng)
-        feed = Array((words.isEmpty ? terms(in: topic) : words).prefix(30))
+        let all = terms(in: topic).filter { !isLocked($0) }
+        let words = all.filter { !isSaved($0.id) }.shuffled(using: &rng)
+        feed = Array((words.isEmpty ? all : words).prefix(30))
         selectedTab = .words
         feedScrollTarget = feed.first?.id
     }
@@ -360,6 +404,45 @@ final class AppModel {
     func toggleSave(_ term: Term) {
         setSaved(!isSaved(term.id), termID: term.id, at: now())
         syncWidgets()
+    }
+
+    /// Feed save: also files into the default collection and shows the "Saved to … · Change" toast.
+    func toggleSaveFromFeed(_ term: Term) {
+        let saving = !isSaved(term.id)
+        toggleSave(term)
+        guard saving else {
+            if saveToast?.termID == term.id { saveToast = nil }
+            return
+        }
+        var destination = "Your deck"
+        if let id = defaultCollectionID, let collection = state.collections.first(where: { $0.id == id }) {
+            if !collection.termIds.contains(term.id) { toggle(term.id, in: id) }
+            destination = collection.name
+        }
+        let toast = SaveToast(termID: term.id, destination: destination)
+        saveToast = toast
+        Task {
+            try? await Task.sleep(for: .seconds(3.5))
+            if saveToast?.id == toast.id { saveToast = nil }
+        }
+    }
+
+    /// Makes a collection (or none: deck only) the destination for feed saves and files the toast's word there.
+    func chooseSaveDestination(_ collectionID: UUID?, for termID: String) {
+        defaultCollectionID = collectionID
+        if let collectionID, let collection = state.collections.first(where: { $0.id == collectionID }),
+           !collection.termIds.contains(termID) {
+            toggle(termID, in: collectionID)
+        }
+    }
+
+    // MARK: - Coach marks
+
+    func hasSeenTip(_ tip: String) -> Bool { state.preferences.seenTips?.contains(tip) ?? false }
+
+    func markTipSeen(_ tip: String) {
+        guard !hasSeenTip(tip) else { return }
+        mutate { $0.preferences.seenTips = ($0.preferences.seenTips ?? []) + [tip] }
     }
 
     private func setSaved(_ saved: Bool, termID: String, at date: Date) {
@@ -461,8 +544,70 @@ final class AppModel {
         journeyEngine.questions(for: lesson, chapter: chapter, terms: termIndex, pool: quizPool(), level: level, using: &rng)
     }
 
-    func quiz(for targets: [Term], count: Int) -> [QuizQuestion] {
-        QuizGenerator(level: level).quiz(for: targets.shuffled(using: &rng), pool: quizPool(), count: count, using: &rng)
+    func quiz(for targets: [Term], count: Int, kinds: [QuizQuestion.Kind] = QuizQuestion.Kind.allCases) -> [QuizQuestion] {
+        QuizGenerator(level: level).quiz(for: targets.shuffled(using: &rng), pool: quizPool(), count: count, kinds: kinds, using: &rng)
+    }
+
+    /// Words worth practising: due reviews, the deck, recent history, then the wider catalog.
+    func practiceTargets(minimum: Int = 20) -> [Term] {
+        var seen = Set<String>()
+        var targets = (dueReviews + savedTerms + history.map(\.term)).filter { !isLocked($0) && seen.insert($0.id).inserted }
+        if targets.count < minimum {
+            targets += quizPool().shuffled(using: &rng).filter { seen.insert($0.id).inserted }.prefix(minimum - targets.count)
+        }
+        return targets
+    }
+
+    /// A game's questions, e.g. only "fill in the gap" or a shuffle of every kind.
+    func gameQuestions(kinds: [QuizQuestion.Kind], count: Int = 10) -> [QuizQuestion] {
+        quiz(for: practiceTargets(), count: count, kinds: kinds)
+    }
+
+    /// Endless supply for challenges: another batch whenever the run gets close to the end.
+    func challengeBatch(count: Int = 15) -> [QuizQuestion] {
+        let kinds: [QuizQuestion.Kind] = [.pickDefinition, .pickTerm, .useInSentence, .expansion]
+        return QuizGenerator(level: level).quiz(for: quizPool().shuffled(using: &rng), pool: quizPool(), count: count, kinds: kinds, using: &rng)
+    }
+
+    func challengeBest(_ mode: ChallengeMode) -> Int { state.challengeBests?[mode.rawValue] ?? 0 }
+
+    /// Stores the score; returns true for a new personal best.
+    @discardableResult
+    func recordChallenge(_ mode: ChallengeMode, score: Int) -> Bool {
+        let isBest = score > challengeBest(mode)
+        if isBest { mutate { $0.challengeBests = ($0.challengeBests ?? [:]).merging([mode.rawValue: score]) { _, new in new } } }
+        return isBest
+    }
+
+    func isLocked(_ mode: ChallengeMode) -> Bool { mode.isPremium && !isPro }
+
+    /// Flash card deck: due first, then the rest of the deck; falls back to fresh words.
+    func flashCardDeck() -> [Term] {
+        Array(practiceTargets(minimum: 12).prefix(30))
+    }
+
+    /// Flip-card self rating. "Know it" counts as a correct recall; "Still learning" as a miss and enrols the word.
+    func rateFlashCard(_ term: Term, knewIt: Bool) {
+        if !knewIt && !isSaved(term.id) { setSaved(true, termID: term.id, at: now()) }
+        recordAnswer(termID: term.id, correct: knewIt)
+    }
+
+    /// "What's your level?" quiz: three meaning questions per level.
+    func levelTest() -> (rounds: [PlacementTest.Round], questions: [QuizQuestion]) {
+        let rounds = PlacementTest().quizRounds(in: termIndex, using: &rng)
+        let generator = QuizGenerator(level: .beginner)
+        let pool = content.terms
+        let questions = rounds.flatMap { round in
+            round.termIds.compactMap(term).compactMap { generator.question(.pickDefinition, for: $0, pool: pool, using: &rng) }
+        }
+        return (rounds, questions)
+    }
+
+    func applyLevelTest(correctIds: Set<String>, rounds: [PlacementTest.Round]) -> Level {
+        let recommended = PlacementTest().recommendedLevel(correctIds: correctIds, quizRounds: rounds)
+        mutate { $0.preferences.level = recommended }
+        syncWidgets()
+        return recommended
     }
 
     /// Daily quiz: due reviews first, then saved words, then recently seen ones.
@@ -506,6 +651,15 @@ final class AppModel {
     func setAppIcon(_ name: String?) {
         mutate { $0.preferences.appIcon = name }
         Task { await AppIconService.apply(name) }
+    }
+
+    func setVoice(_ identifier: String?, rate: Double) {
+        speech.voiceIdentifier = identifier
+        speech.rate = rate
+        mutate {
+            $0.preferences.voiceIdentifier = identifier
+            $0.preferences.speechRate = rate
+        }
     }
 
     func setTrialReminder(_ enabled: Bool) {

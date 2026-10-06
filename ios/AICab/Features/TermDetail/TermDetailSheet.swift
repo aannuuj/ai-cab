@@ -41,14 +41,27 @@ struct TermDetailView: View {
                 if let analogy = term.analogy {
                     infoCard(title: "Think of it like", symbol: "lightbulb", text: analogy, tint: Palette.gold)
                 }
-                if let example = term.example {
-                    infoCard(title: "In a sentence", symbol: "text.quote", text: "\u{201C}\(example)\u{201D}", tint: Palette.teal, serif: true)
-                }
+                examples(term)
                 if let origin = term.origin {
-                    infoCard(title: "Origin", symbol: "clock.arrow.circlepath", text: origin, tint: Palette.coral)
+                    if model.isPro {
+                        infoCard(title: "Origin", symbol: "clock.arrow.circlepath", text: origin, tint: Palette.coral)
+                    } else {
+                        LockedSection(title: "Origin", symbol: "clock.arrow.circlepath", lines: 3) {
+                            model.sheet = .paywall(.researchLevel)
+                        }
+                    }
                 }
                 related(term)
                 progress(term)
+                if !model.isPro {
+                    Button {
+                        model.sheet = .paywall(.banner)
+                    } label: {
+                        Label("Unlock everything", systemImage: "crown.fill")
+                    }
+                    .buttonStyle(PrimaryButtonStyle(.teal))
+                    .padding(.top, 4)
+                }
             }
             .padding(Metrics.gutter)
             .padding(.bottom, 40)
@@ -82,7 +95,7 @@ struct TermDetailView: View {
                     .foregroundStyle(Palette.ink)
                     .padding(.horizontal, 10).padding(.vertical, 4)
                     .background(Capsule().fill(difficultyColor(term.difficulty)))
-                ForEach(term.topics.compactMap { id in model.topics.first { $0.id == id } }.prefix(2)) { topic in
+                ForEach(term.topics.compactMap(model.topic).prefix(2)) { topic in
                     Text(topic.title)
                         .lineLimit(1)
                         .fixedSize()
@@ -139,18 +152,20 @@ struct TermDetailView: View {
                         Spacer()
                         if locked { LockBadge(color: Palette.textSecondary).font(.caption) }
                     }
-                    Text(term.definition(at: level))
-                        .font(.body)
-                        .foregroundStyle(Palette.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .blur(radius: locked ? 6 : 0)
-                        .overlay {
-                            if locked {
-                                Button("Unlock research definitions") { model.sheet = .paywall(.researchLevel) }
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(Palette.teal)
-                            }
+                    if locked {
+                        Button {
+                            model.sheet = .paywall(.researchLevel)
+                        } label: {
+                            SkeletonLines(count: 3)
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Research definition, Pro. Unlock")
+                    } else {
+                        Text(term.definition(at: level))
+                            .font(.body)
+                            .foregroundStyle(Palette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 if level != .research { Divider().overlay(Color.white.opacity(0.08)) }
             }
@@ -172,6 +187,47 @@ struct TermDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Palette.surface))
+    }
+
+    /// "Examples" with numbered sentences and the word in bold.
+    @ViewBuilder
+    private func examples(_ term: Term) -> some View {
+        let sentences = [term.example].compactMap { $0 }
+        if !sentences.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Examples", systemImage: "text.quote")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Palette.teal)
+                ForEach(Array(sentences.enumerated()), id: \.offset) { index, sentence in
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text("\(index + 1)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Palette.ink)
+                            .frame(width: 22, height: 22)
+                            .background(Circle().fill(Palette.teal))
+                        Text(Self.highlight(term.term, in: sentence))
+                            .font(.system(.body, design: .serif))
+                            .foregroundStyle(Palette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(18)
+            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Palette.surface))
+        }
+    }
+
+    /// Bolds every case-insensitive occurrence of the word.
+    static func highlight(_ word: String, in sentence: String) -> AttributedString {
+        var attributed = AttributedString(sentence)
+        var searchStart = attributed.startIndex
+        while searchStart < attributed.endIndex,
+              let range = attributed[searchStart...].range(of: word, options: .caseInsensitive) {
+            attributed[range].inlinePresentationIntent = .stronglyEmphasized
+            searchStart = range.upperBound
+        }
+        return attributed
     }
 
     @ViewBuilder
@@ -236,5 +292,63 @@ struct TermDetailView: View {
         case .intermediate: Palette.gold
         case .pro: Palette.coral
         }
+    }
+}
+
+/// Placeholder bars standing in for Pro-only text.
+struct SkeletonLines: View {
+    let count: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            ForEach(0..<count, id: \.self) { index in
+                Capsule()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(height: 12)
+                    .frame(maxWidth: index == count - 1 ? 180 : .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .center) {
+            Image(systemName: "lock.fill")
+                .font(.footnote.weight(.bold))
+                .foregroundStyle(Palette.ink)
+                .frame(width: 30, height: 30)
+                .background(Circle().fill(Palette.gold))
+        }
+        .padding(.vertical, 4)
+        .accessibilityHidden(true)
+    }
+}
+
+/// A detail card whose contents are Pro: header plus skeleton bars.
+struct LockedSection: View {
+    let title: String
+    let symbol: String
+    let lines: Int
+    let unlock: () -> Void
+
+    var body: some View {
+        Button(action: unlock) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Label(title, systemImage: symbol)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Palette.textSecondary)
+                    Spacer()
+                    Text("PRO").font(.caption2.weight(.heavy)).tracking(1.2)
+                        .foregroundStyle(Palette.ink)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Capsule().fill(Palette.gold))
+                }
+                SkeletonLines(count: lines)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(18)
+            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Palette.surface))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title), Pro")
+        .accessibilityHint("Opens the upgrade screen")
     }
 }

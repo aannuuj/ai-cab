@@ -7,6 +7,9 @@ struct WordsFeedView: View {
     @Environment(AppModel.self) private var model
     @State private var currentID: String?
     @State private var celebrating = false
+    @State private var showingCoach = false
+
+    static let saveTip = "save5"
 
     private var colors: FeedColors { .forTheme(model.preferences.feedTheme) }
 
@@ -29,7 +32,26 @@ struct WordsFeedView: View {
             .scrollPosition(id: $currentID)
             .ignoresSafeArea()
 
-            header
+            VStack(spacing: 10) {
+                header
+                if let toast = model.saveToast {
+                    SaveToastView(toast: toast, colors: colors) {
+                        model.saveToast = nil
+                        model.sheet = .saveDestination(toast.termID)
+                    }
+                    .padding(.horizontal, 16)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(response: 0.4, dampingFraction: 0.82), value: model.saveToast)
+        }
+        .sheet(isPresented: $showingCoach, onDismiss: { model.markTipSeen(Self.saveTip) }) {
+            SaveCoachSheet { showingCoach = false }
+        }
+        .task {
+            guard !model.hasSeenTip(Self.saveTip), model.savedTerms.count < 5 || model.isScreenshotRun else { return }
+            try? await Task.sleep(for: .seconds(model.isScreenshotRun ? 0.3 : 1.5))
+            if model.sheet == nil { showingCoach = true }
         }
         .overlay {
             GoalCelebration(isPresented: $celebrating, streak: model.streak, goal: model.dailyGoal, name: model.preferences.name)
@@ -189,7 +211,7 @@ struct TermPage: View {
                 .symbolEffect(.bounce, value: favorite)
                 actionButton(saved ? "bookmark.fill" : "bookmark", label: saved ? "Remove from deck" : "Save to deck",
                              tint: saved ? Palette.tealDeep : colors.chrome) {
-                    model.toggleSave(term)
+                    model.toggleSaveFromFeed(term)
                 }
                 .symbolEffect(.bounce, value: saved)
             }
@@ -205,7 +227,7 @@ struct TermPage: View {
             heartBurst += 1
         }
         .overlay { HeartBurst(trigger: heartBurst) }
-        .accessibilityAction(named: "Save to deck") { model.toggleSave(term) }
+        .accessibilityAction(named: "Save to deck") { model.toggleSaveFromFeed(term) }
     }
 
     private func actionButton(_ symbol: String, label: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
@@ -219,6 +241,140 @@ struct TermPage: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+    }
+}
+
+/// "Saved to **Your deck** · Change" glass toast under the header.
+private struct SaveToastView: View {
+    let toast: SaveToast
+    let colors: FeedColors
+    let change: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("Saved to \(Text(toast.destination).bold())")
+                .font(.subheadline)
+                .foregroundStyle(Palette.textPrimary)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            Button(action: change) {
+                Text("Change")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Palette.ink)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(TactileButtonStyle(fill: Palette.teal, radius: 18))
+        }
+        .padding(.leading, 18)
+        .padding(.trailing, 10)
+        .padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Palette.ink.opacity(0.92)))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
+        .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
+        .accessibilityElement(children: .combine)
+        .accessibilityAction(named: "Change") { change() }
+    }
+}
+
+/// First-run tip: save five words to personalise the feed.
+private struct SaveCoachSheet: View {
+    let done: () -> Void
+
+    var body: some View {
+        VStack(spacing: 18) {
+            ZStack {
+                IsoObject(symbol: "bookmark.fill", palette: .teal, size: 104)
+                IsoDisc(symbol: "sparkles", size: 48, tint: Palette.coral)
+                    .offset(x: 58, y: -38)
+            }
+            .padding(.top, 26)
+            Text("Get words that match your interests")
+                .font(.serifTitle2)
+                .foregroundStyle(Palette.textPrimary)
+                .multilineTextAlignment(.center)
+            Text("Personalize your feed by saving at least 5 words with \(Image(systemName: "bookmark.fill"))")
+            .font(.body)
+            .foregroundStyle(Palette.textSecondary)
+            .multilineTextAlignment(.center)
+            Button("Got it!", action: done)
+                .buttonStyle(PrimaryButtonStyle(.teal))
+                .padding(.top, 4)
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 12)
+        .presentationDetents([.height(400)])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(Palette.charcoal)
+        .presentationCornerRadius(36)
+    }
+}
+
+/// "Change" from the save toast: choose which collection feed saves go to.
+struct SaveDestinationSheet: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    let termID: String
+    @State private var newName = ""
+    @State private var creating = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    row("Your deck", subtitle: "Saved words only", symbol: "bookmark.fill", selected: model.defaultCollectionID == nil) {
+                        model.chooseSaveDestination(nil, for: termID)
+                        dismiss()
+                    }
+                } footer: {
+                    Text("Every saved word lands in your deck for review. Pick a collection to also file new saves there.")
+                }
+                Section("Collections") {
+                    ForEach(model.state.collections) { collection in
+                        row(collection.name, subtitle: "\(collection.termIds.count) words", symbol: "folder.fill",
+                            selected: model.defaultCollectionID == collection.id) {
+                            model.chooseSaveDestination(collection.id, for: termID)
+                            dismiss()
+                        }
+                    }
+                    Button("New collection…", systemImage: "plus") { creating = true }
+                        .foregroundStyle(Palette.teal)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Palette.charcoal)
+            .navigationTitle("Save to")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+            .alert("New collection", isPresented: $creating) {
+                TextField("Name", text: $newName)
+                Button("Create") {
+                    model.createCollection(named: newName)
+                    if let created = model.state.collections.last { model.chooseSaveDestination(created.id, for: termID) }
+                    newName = ""
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationBackground(Palette.charcoal)
+    }
+
+    private func row(_ title: String, subtitle: String, symbol: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: symbol).foregroundStyle(Palette.teal).frame(width: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).foregroundStyle(Palette.textPrimary)
+                    Text(subtitle).font(.caption).foregroundStyle(Palette.textSecondary)
+                }
+                Spacer()
+                if selected { Image(systemName: "checkmark").foregroundStyle(Palette.teal).fontWeight(.semibold) }
+            }
+        }
     }
 }
 
