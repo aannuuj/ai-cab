@@ -33,8 +33,11 @@ struct JourneyView: View {
                 }
                 .scrollIndicators(.hidden)
                 .onAppear {
-                    if let current = model.journeyCurrent {
-                        proxy.scrollTo(current.chapter.number, anchor: .top)
+                    guard let current = model.journeyCurrent else { return }
+                    // Load the unit first (lazy stack), then centre the current step above the Go card.
+                    proxy.scrollTo(current.chapter.number, anchor: .top)
+                    Task { @MainActor in
+                        proxy.scrollTo(JourneyView.stepID(current.chapter, current.lesson), anchor: UnitPoint(x: 0.5, y: 0.42))
                     }
                 }
                 .overlay(alignment: .bottom) {
@@ -98,6 +101,8 @@ struct JourneyView: View {
         .padding(.horizontal, Metrics.gutter)
     }
 
+    static func stepID(_ chapter: Chapter, _ lesson: LessonKind) -> String { "step.\(chapter.number).\(lesson.rawValue)" }
+
     private func open(_ lesson: LessonKind, in chapter: Chapter) {
         if chapter.isPremium && !model.isPro {
             model.sheet = .paywall(.lockedChapter)
@@ -155,6 +160,7 @@ private struct ChapterSection: View {
                             IsoLessonTile(symbol: lesson.symbol, state: tileState(status, isCurrent: isCurrent), size: 150)
                         }
                         .buttonStyle(TileButtonStyle())
+                        .id(JourneyView.stepID(chapter, lesson))
                         .position(x: x, y: y)
                         .accessibilityLabel("\(lesson.title), \(statusLabel(status))")
                         .accessibilityHint(lesson.subtitle)
