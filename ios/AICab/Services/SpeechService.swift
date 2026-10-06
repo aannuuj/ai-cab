@@ -17,6 +17,8 @@ final class SpeechService: NSObject {
     static var englishVoices: [AVSpeechSynthesisVoice] {
         AVSpeechSynthesisVoice.speechVoices()
             .filter { $0.language.hasPrefix("en") }
+            // Skip novelty (Bahh, Bells…) and Eloquence (Grandma, Rocko…) voices; they don't suit definitions.
+            .filter { !$0.voiceTraits.contains(.isNoveltyVoice) && !$0.identifier.contains("eloquence") }
             .sorted { lhs, rhs in
                 lhs.quality.rawValue == rhs.quality.rawValue ? lhs.name < rhs.name : lhs.quality.rawValue > rhs.quality.rawValue
             }

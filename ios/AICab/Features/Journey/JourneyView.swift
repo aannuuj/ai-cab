@@ -65,7 +65,7 @@ struct JourneyView: View {
                             }
                         }
                         .padding(.horizontal, Metrics.gutter)
-                        .padding(.bottom, 92)
+                        .padding(.bottom, 10)
                         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: visibleChapter)
                     }
                 }

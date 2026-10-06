@@ -49,11 +49,11 @@ struct FlashCardsView: View {
 
                     HStack(spacing: 14) {
                         Button { rate(term, knewIt: false) } label: {
-                            Label("Still learning", systemImage: "arrow.uturn.backward")
+                            Label("Not yet", systemImage: "arrow.uturn.backward")
                         }
                         .buttonStyle(PrimaryButtonStyle(.coral))
                         Button { rate(term, knewIt: true) } label: {
-                            Label("Know it", systemImage: "checkmark")
+                            Label("Got it", systemImage: "checkmark")
                         }
                         .buttonStyle(PrimaryButtonStyle(.teal))
                     }
@@ -86,7 +86,7 @@ struct FlashCardsView: View {
             Text("All cards rated")
                 .font(.serifTitle)
                 .foregroundStyle(Palette.textPrimary)
-            Text("\(known) known · \(learning) still learning.\nWords you're still learning come back in your reviews.")
+            Text("\(known) got it · \(learning) not yet.\nThe not-yets come back in your spaced reviews.")
                 .font(.body)
                 .foregroundStyle(Palette.textSecondary)
                 .multilineTextAlignment(.center)
