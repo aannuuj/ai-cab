@@ -396,8 +396,8 @@ public struct StairsIllustration: View {
             // Trophy on the top step.
             Image(systemName: "trophy.fill")
                 .font(.system(size: 64, weight: .bold))
-                .foregroundStyle(Palette.outline, Palette.teal)
-                .symbolRenderingMode(.palette)
+                .foregroundStyle(LinearGradient(colors: [Palette.cream, Palette.teal], startPoint: .top, endPoint: .bottom))
+                .shadow(color: Palette.outline, radius: 0, x: 3, y: 3)
                 .offset(x: 86, y: rise ? -110 : -40)
                 .opacity(rise ? 1 : 0)
                 .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.35), value: rise)

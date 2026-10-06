@@ -65,6 +65,9 @@ struct OnboardingFlow: View {
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.88), value: step)
         .sensoryFeedback(.selection, trigger: step)
+        .onChange(of: step, initial: true) { _, current in
+            model.onboardingIsDark = current.isDark
+        }
     }
 
     private var topBar: some View {
@@ -422,6 +425,7 @@ private struct StreakCommitmentStep: View {
             Spacer()
             Text("Saving your daily words keeps the flame going. Miss a day and it starts again.")
                 .font(.footnote)
+                .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(Palette.inkSoft)
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)

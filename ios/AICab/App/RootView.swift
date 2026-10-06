@@ -45,7 +45,8 @@ struct RootView: View {
     private var colorScheme: ColorScheme {
         let lightFeed = model.preferences.hasOnboarded && model.selectedTab == .words && model.sheet == nil
             && FeedColors.isLight(model.preferences.feedTheme)
-        return lightFeed || !model.preferences.hasOnboarded ? .light : .dark
+        if !model.preferences.hasOnboarded { return model.onboardingIsDark ? .dark : .light }
+        return lightFeed ? .light : .dark
     }
 }
 

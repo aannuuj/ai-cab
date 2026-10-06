@@ -51,6 +51,8 @@ final class AppModel {
     var overlayNudge: Nudge?
     /// Bumped to fire the goal celebration.
     private(set) var celebration = 0
+    /// Whether the current onboarding step uses the dark style (drives status bar colour).
+    var onboardingIsDark = false
     /// Feed position to jump to (deep links, "learn this topic").
     var feedScrollTarget: String?
 
