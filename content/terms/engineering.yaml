@@ -1,0 +1,515 @@
+# LLM engineering, RAG, evals, agents.
+
+- id: api
+  term: API
+  expansion: Application Programming Interface
+  ipa: /ˌeɪ.piːˈaɪ/
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering]
+  beginner: A way for one program to talk to another, like how apps send requests to an AI model.
+  builder: The HTTP interface to a hosted model; you send messages, tools and settings, and pay per input and output token.
+  research: A contract exposing model inference as a service, abstracting away weights and serving infrastructure.
+  analogy: A restaurant's order window.
+  example: We call the API instead of hosting our own model.
+  related: [token, latency]
+
+- id: latency
+  term: latency
+  ipa: /ˈleɪ.tən.si/
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering, infra]
+  beginner: How long you wait for an AI to start or finish responding.
+  builder: Time to first token and total generation time; drive it down with streaming, smaller models, caching and shorter outputs.
+  research: Wall-clock response time, dominated by prefill (compute-bound) and decode (memory-bandwidth-bound) phases.
+  analogy: The pause between asking and hearing the answer.
+  example: Streaming hid the latency so users stopped complaining.
+  related: [streaming, throughput, prompt-caching]
+  contrast: [throughput]
+
+- id: throughput
+  term: throughput
+  ipa: /ˈθruː.pʊt/
+  pos: n.
+  difficulty: beginner
+  topics: [infra, llm-engineering]
+  beginner: How much work an AI system can handle per second across all its users.
+  builder: Tokens per second across concurrent requests; batching raises throughput at some cost to per-request latency.
+  research: Aggregate decode rate under batching, bounded by accelerator memory bandwidth and KV-cache capacity.
+  analogy: How many cars cross the bridge per hour, not how fast one car drives.
+  example: Continuous batching doubled our throughput.
+  contrast: [latency]
+  related: [continuous-batching]
+
+- id: streaming
+  term: streaming
+  ipa: /ˈstriː.mɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering]
+  beginner: Showing an AI's answer word by word as it's written, instead of all at once at the end.
+  builder: Server-sent events delivering tokens as they decode; improves perceived speed and avoids timeouts on long outputs.
+  research: Incremental emission of autoregressive outputs, exposing per-token latency rather than total sequence latency.
+  analogy: Watching someone type versus waiting for the email.
+  example: Turning on streaming made the chat feel instant.
+  related: [latency]
+
+- id: prompt-caching
+  term: prompt caching
+  ipa: /prɒmpt ˈkæʃ.ɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, infra]
+  beginner: Reusing the work an AI already did on a repeated part of your prompt so later requests are faster and cheaper.
+  builder: Caching the processed prefix (system prompt, docs) server-side; repeated prefixes bill at a fraction of the price. Keep stable content first.
+  research: Persisting KV states for shared prefixes across requests, amortising prefill compute.
+  analogy: Keeping the oven hot between batches of cookies.
+  example: Prompt caching cut our bill by 70 percent.
+  related: [kv-cache, latency]
+
+- id: function-calling
+  term: tool use
+  ipa: /tuːl juːs/
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, agent-era]
+  beginner: Letting an AI use outside tools, like search, a calculator or your calendar, to get things done.
+  builder: Declaring functions with JSON schemas; the model emits structured calls, your code runs them and returns results. Also called function calling.
+  research: Augmenting a policy's action space with external APIs, interleaving generation with environment observations.
+  analogy: Giving the assistant a phone and a calculator instead of only a pen.
+  example: With tool use, the bot checks real flight prices.
+  related: [agent, mcp, structured-output]
+
+- id: mcp
+  term: MCP
+  expansion: Model Context Protocol
+  ipa: /ˌem.siːˈpiː/
+  pos: n.
+  difficulty: pro
+  topics: [agent-era, llm-engineering]
+  beginner: A standard way to plug apps and data sources into AI assistants, like USB for AI.
+  builder: An open protocol for exposing tools, resources and prompts to any compatible AI client via MCP servers.
+  research: A client–server JSON-RPC protocol standardising capability discovery and invocation between models and external systems.
+  analogy: A universal power adapter for AI.
+  example: There's an MCP server for our database now.
+  origin: Open-sourced by Anthropic in November 2024.
+  related: [function-calling, agent]
+  trending: 0.8
+
+- id: agent
+  term: AI agent
+  ipa: /ˌeɪˈaɪ ˈeɪ.dʒənt/
+  pos: n.
+  difficulty: beginner
+  topics: [agent-era, ai-headlines]
+  beginner: An AI that can take actions on its own, using tools step by step to complete a goal, not just chat.
+  builder: An LLM in a loop that plans, calls tools, reads results and continues until done, with guardrails and human checkpoints.
+  research: A policy acting over multiple steps in an environment via tool calls, pursuing goals with partial observability.
+  analogy: Hiring a doer, not just an adviser.
+  example: The AI agent booked the meeting room and emailed everyone.
+  related: [agent-loop, function-calling, mcp]
+  trending: 0.9
+
+- id: agent-loop
+  term: agent loop
+  ipa: /ˈeɪ.dʒənt luːp/
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, llm-engineering]
+  beginner: The repeating cycle an AI agent runs, think, act, check the result, until the job is done.
+  builder: The control loop that sends context to the model, executes requested tool calls, appends results and repeats until a stop condition.
+  research: An iterated observe–reason–act process; reliability compounds multiplicatively with the number of steps.
+  analogy: A cook tasting and adjusting until the dish is right.
+  example: The agent loop ran 40 steps before opening the pull request.
+  related: [agent, orchestration]
+
+- id: orchestration
+  term: orchestration
+  ipa: /ˌɔː.kɪˈstreɪ.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, llm-engineering]
+  beginner: Coordinating several AI steps or agents so they work together on a bigger task.
+  builder: Code that routes work between models, tools and sub-agents (parallel fan-out, handoffs, retries) and merges results.
+  research: Workflow composition over model calls, from fixed DAGs to model-directed multi-agent delegation.
+  analogy: A conductor keeping the orchestra in time.
+  example: The orchestration layer sends research to three sub-agents at once.
+  related: [multi-agent, agent-loop]
+
+- id: multi-agent
+  term: multi-agent system
+  ipa: /ˌmʌl.tiˈeɪ.dʒənt ˈsɪs.təm/
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era]
+  beginner: Several AI agents, each with its own job, working together like a team.
+  builder: A lead agent delegating sub-tasks to specialised workers in parallel; helps with broad research at a higher token cost.
+  research: Distributed problem-solving across interacting policies, with shared or partitioned context and communication protocols.
+  analogy: A newsroom: editor, researchers, writer.
+  example: Our multi-agent system splits a report into twelve research threads.
+  related: [orchestration, agent]
+
+- id: computer-use
+  term: computer use
+  ipa: /kəmˈpjuː.tər juːs/
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, multimodal]
+  beginner: AI that operates a computer like a person does, looking at the screen, clicking and typing.
+  builder: Agents that act through screenshots plus mouse/keyboard actions, useful where no API exists, slower than direct tool calls.
+  research: Vision-language policies over GUI action spaces, grounding instructions in pixel coordinates.
+  analogy: A remote assistant driving your mouse.
+  example: Computer use lets the agent fill in the old government portal.
+  related: [agent, vision-language-model]
+  trending: 0.6
+
+- id: vibe-coding
+  term: vibe coding
+  ipa: /vaɪb ˈkəʊ.dɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [vibe-coding, culture]
+  beginner: Building software by describing what you want to an AI and accepting its code, often without reading it closely.
+  builder: Prompt-driven development where AI writes most code; great for prototypes, risky for production without review and tests.
+  research: Natural-language programming in which specification and verification shift from code to intent and behaviour.
+  analogy: Directing a builder by describing the house, never touching a hammer.
+  example: She shipped the landing page in an afternoon of vibe coding.
+  origin: Coined by Andrej Karpathy in February 2025.
+  related: [coding-agent, copilot]
+  trending: 0.9
+
+- id: coding-agent
+  term: coding agent
+  ipa: /ˈkəʊ.dɪŋ ˈeɪ.dʒənt/
+  pos: n.
+  difficulty: beginner
+  topics: [vibe-coding, agent-era]
+  beginner: An AI that writes, runs and fixes code on its own across a whole project.
+  builder: An agent with file, terminal and test tools that can complete multi-file changes and open pull requests.
+  research: Software-engineering agents evaluated on repository-level benchmarks such as SWE-bench.
+  analogy: A junior developer who never sleeps but needs code review.
+  example: The coding agent fixed the bug and wrote the test.
+  related: [vibe-coding, agent, swe-bench]
+  trending: 0.85
+
+- id: copilot
+  term: copilot
+  ipa: /ˈkəʊ.paɪ.lət/
+  pos: n.
+  difficulty: beginner
+  topics: [vibe-coding, business]
+  beginner: An AI assistant built into an app that helps you as you work, suggesting text or code.
+  builder: Inline assistance (autocomplete, chat, edits) inside an existing tool, with a human in control.
+  research: Human-in-the-loop assistance optimised for acceptance rate and productivity rather than autonomous completion.
+  analogy: A co-pilot suggests, the pilot decides.
+  example: The copilot finished my function before I did.
+  related: [coding-agent]
+  contrast: [agent]
+
+- id: rag
+  term: RAG
+  expansion: Retrieval-Augmented Generation
+  ipa: /ræɡ/
+  pos: n.
+  difficulty: intermediate
+  topics: [rag, llm-engineering]
+  beginner: Letting an AI look things up before it answers, like an open-book exam.
+  builder: Retrieve relevant chunks from a search index and inject them into the prompt to ground the answer in your own data.
+  research: Conditioning generation on retrieved documents p(y | x, z) to reduce hallucination and update knowledge without retraining.
+  analogy: An open-book exam instead of answering from memory.
+  example: We added RAG so the support bot cites our actual docs.
+  origin: Lewis et al., Meta AI, 2020.
+  related: [embedding, vector-database, chunking, grounding]
+  contrast: [fine-tuning]
+  trending: 0.6
+
+- id: vector-database
+  term: vector database
+  ipa: /ˈvek.tər ˈdeɪ.tə.beɪs/
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: A database that finds things by meaning rather than exact words.
+  builder: Stores embeddings and runs approximate nearest-neighbour search; the retrieval engine behind most RAG systems.
+  research: An index (HNSW, IVF-PQ) supporting sublinear approximate k-NN queries in high-dimensional vector spaces.
+  analogy: A librarian who shelves books by topic, not alphabet.
+  example: Every help article lives in the vector database.
+  related: [embedding, semantic-search, rag]
+
+- id: semantic-search
+  term: semantic search
+  ipa: /sɪˈmæn.tɪk sɜːtʃ/
+  pos: n.
+  difficulty: beginner
+  topics: [rag]
+  beginner: Search that understands what you mean, not just the exact words you typed.
+  builder: Embedding the query and documents and ranking by vector similarity, often blended with keyword search (hybrid).
+  research: Dense retrieval in a learned representation space, complementing sparse lexical methods like BM25.
+  analogy: Asking for "something cosy to read" and getting good books.
+  example: Semantic search found the refund policy when I typed "money back".
+  related: [embedding, vector-database, reranking]
+
+- id: chunking
+  term: chunking
+  ipa: /ˈtʃʌŋ.kɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: Cutting long documents into smaller pieces so an AI search can find the right part.
+  builder: Splitting documents into retrievable units (by tokens, headings or semantics); chunk size strongly affects RAG quality.
+  research: Segmentation of corpora into retrieval units trading off context completeness against retrieval precision.
+  analogy: Cutting a book into index cards.
+  example: Better chunking fixed answers that mixed up two products.
+  related: [rag, embedding]
+
+- id: reranking
+  term: reranking
+  ipa: /ˌriːˈræŋ.kɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: A second, smarter pass that reorders search results so the best ones come first.
+  builder: Scoring the top-k retrieved chunks with a cross-encoder or LLM and keeping only the most relevant before generation.
+  research: Two-stage retrieval where an expensive joint query–document model refines a cheap first-stage candidate set.
+  analogy: A shortlist interview after the CV screen.
+  example: Adding reranking stopped irrelevant passages reaching the prompt.
+  related: [semantic-search, rag]
+
+- id: evals
+  term: evals
+  ipa: /ɪˈvælz/
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, llm-engineering]
+  beginner: Tests that check how well an AI system does the job you actually need it for.
+  builder: Task-specific test sets plus graders (code, rubric or LLM-as-judge) run on every prompt or model change, like unit tests for AI.
+  research: Measurement protocols estimating model capability or behaviour with attention to validity, variance and contamination.
+  analogy: A driving test for your chatbot.
+  example: Our evals caught the regression before launch.
+  related: [benchmark, llm-as-judge, red-teaming]
+  trending: 0.5
+
+- id: llm-as-judge
+  term: LLM-as-judge
+  ipa: /ˌel.elˈem æz dʒʌdʒ/
+  pos: n.
+  difficulty: intermediate
+  topics: [evals]
+  beginner: Using one AI to grade another AI's answers.
+  builder: Scoring outputs with a model against a rubric; scalable, but validate against human labels and watch for position and length bias.
+  research: Automatic evaluation via model-based preference or rubric scoring, with known self-preference and verbosity biases.
+  analogy: A teaching assistant marking papers with the professor's rubric.
+  example: LLM-as-judge agreed with our reviewers 90% of the time.
+  related: [evals]
+
+- id: swe-bench
+  term: SWE-bench
+  ipa: /ˌes.dʌb.əl.juːˈiː bentʃ/
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, vibe-coding]
+  beginner: A test that checks whether AI can fix real bugs from open-source GitHub projects.
+  builder: Benchmark of real GitHub issues where the model must produce a patch that passes the repo's tests; the go-to coding-agent metric.
+  research: Repository-level program repair evaluated by execution of held-out tests; Verified subset filters ambiguous tasks.
+  analogy: A real job interview instead of a quiz.
+  example: The new model scored a record on SWE-bench.
+  origin: Jimenez et al., Princeton, 2023.
+  related: [benchmark, coding-agent]
+
+- id: saturation
+  term: benchmark saturation
+  ipa: /ˌsætʃ.əˈreɪ.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, ai-headlines]
+  beginner: When AI models all score near 100% on a test, so it stops telling them apart.
+  builder: A benchmark maxed out (or contaminated) loses signal; the field moves on to harder evals.
+  research: Ceiling effects where residual error is dominated by label noise, eliminating discriminative power.
+  analogy: A ruler that's too short to measure the tall kids.
+  example: Benchmark saturation forced everyone to build harder tests.
+  related: [benchmark]
+
+- id: lora
+  term: LoRA
+  expansion: Low-Rank Adaptation
+  ipa: /ˈlɔː.rə/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, llm-engineering]
+  beginner: A cheap way to customise a big model by training a tiny add-on instead of the whole thing.
+  builder: Freeze the base weights and train small low-rank adapter matrices; adapters are megabytes and swappable per customer.
+  research: Parameterising weight updates as ΔW = BA with rank r ≪ d, drastically reducing trainable parameters.
+  analogy: A clip-on lens instead of a new camera.
+  example: Each customer gets their own LoRA adapter.
+  origin: Hu et al., Microsoft, 2021.
+  related: [fine-tuning, quantization]
+
+- id: distillation
+  term: distillation
+  ipa: /ˌdɪs.tɪˈleɪ.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, business]
+  beginner: Training a small, cheap model to copy a big, smart one.
+  builder: Train a student on a teacher model's outputs or probabilities; how fast "mini" models get surprisingly good.
+  research: Matching the student's predictive distribution to the teacher's soft targets, transferring dark knowledge.
+  analogy: A master chef's apprentice learning by watching.
+  example: The mini model is a distillation of the big one.
+  origin: Hinton, Vinyals & Dean, 2015.
+  related: [synthetic-data, quantization]
+
+- id: quantization
+  term: quantization
+  ipa: /ˌkwɒn.tɪ.zeɪˈʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra, llm-engineering]
+  beginner: Shrinking a model by storing its numbers with less precision, so it runs faster on smaller hardware.
+  builder: Converting weights (and sometimes activations) to 8- or 4-bit; big memory and speed wins for small quality loss.
+  research: Mapping parameters to low-bit discrete grids (GPTQ, AWQ) while minimising reconstruction error of layer outputs.
+  analogy: Saving a photo as a smaller JPEG.
+  example: Quantization lets the model run on a laptop.
+  related: [weights, fp8, on-device-ai]
+
+- id: on-device-ai
+  term: edge AI
+  ipa: /ɒn dɪˈvaɪs ˌeɪˈaɪ/
+  pos: n.
+  difficulty: beginner
+  topics: [infra, business]
+  beginner: AI that runs directly on your phone or laptop instead of in the cloud.
+  builder: Small, quantised models on NPUs; private and offline with no per-call cost, but limited capability.
+  research: Inference under tight memory, power and thermal budgets using compression and hardware-specific kernels.
+  analogy: A pocket calculator versus calling the bank.
+  example: Edge AI summarises your messages without uploading them.
+  related: [quantization, small-language-model]
+
+- id: small-language-model
+  term: SLM
+  expansion: Small Language Model
+  ipa: /ˌes.elˈem/
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, business]
+  beginner: A compact language model that is cheaper and faster, good enough for focused tasks.
+  builder: Models of roughly 1–10B parameters for routing, extraction and on-device use; often distilled from larger ones.
+  research: Parameter-efficient models trading generality for latency and cost, benefiting from over-training and distillation.
+  analogy: A scooter for short trips instead of a truck.
+  example: An SLM classifies tickets before the big model sees them.
+  related: [distillation, on-device-ai]
+  contrast: [llm]
+
+- id: reasoning-model
+  term: reasoning model
+  ipa: /ˈriː.zən.ɪŋ ˈmɒd.əl/
+  pos: n.
+  difficulty: intermediate
+  topics: [reasoning-models, ai-headlines]
+  beginner: An AI that "thinks" privately before answering, which makes it much better at maths, code and planning.
+  builder: Models trained with RL to produce long internal reasoning before the answer; tune the effort or thinking budget per task.
+  research: Policies trained via RL on verifiable rewards to exploit test-time compute through extended chains of thought.
+  analogy: A student allowed scratch paper.
+  example: Use the reasoning model for the tax calculations.
+  related: [test-time-compute, chain-of-thought]
+  trending: 0.8
+
+- id: test-time-compute
+  term: test-time compute
+  ipa: /test taɪm kəmˈpjuːt/
+  pos: n.
+  difficulty: pro
+  topics: [reasoning-models, research-math]
+  beginner: Letting an AI spend more thinking time on a hard question to get a better answer.
+  builder: Spending more inference tokens (longer reasoning, multiple samples, verification) to raise accuracy; a new scaling axis.
+  research: Scaling performance with inference FLOPs via sequential reasoning or parallel sampling, complementing pre-training scale.
+  analogy: Giving someone an hour for the puzzle instead of a minute.
+  example: Test-time compute doubled its score on the olympiad problems.
+  related: [reasoning-model, scaling-laws]
+  trending: 0.7
+
+- id: verifiable-rewards
+  term: RLVR
+  expansion: Reinforcement Learning from Verifiable Rewards
+  ipa: /ˌɑːr.el.viːˈɑːr/
+  pos: n.
+  difficulty: pro
+  topics: [reasoning-models, training]
+  beginner: Training an AI on problems where answers can be checked automatically, like maths or passing code tests.
+  builder: RL with programmatic graders (unit tests, exact answers) instead of human ratings; the recipe behind reasoning models.
+  research: Policy optimisation with binary or graded rewards from deterministic verifiers, enabling scalable reasoning RL.
+  analogy: Practising with an answer key instead of a human tutor.
+  example: RLVR on maths problems taught it to check its own work.
+  related: [reasoning-model, grpo, reward-hacking]
+
+- id: grpo
+  term: GRPO
+  expansion: Group Relative Policy Optimization
+  ipa: /ˌdʒiː.ɑːr.piːˈəʊ/
+  pos: n.
+  difficulty: pro
+  topics: [reasoning-models, research-math]
+  beginner: A training method where an AI tries a problem several times and learns from which attempts beat its own average.
+  builder: PPO variant without a critic; advantages come from comparing rewards within a group of samples for the same prompt.
+  research: Policy gradient with group-normalised advantages (r − mean)/std over k samples, removing the value network.
+  analogy: Grading your attempts on a curve against each other.
+  example: DeepSeek used GRPO to train its reasoning model cheaply.
+  origin: Shao et al., DeepSeek, 2024.
+  related: [ppo, verifiable-rewards]
+  contrast: [ppo]
+
+- id: ppo
+  term: PPO
+  expansion: Proximal Policy Optimization
+  ipa: /ˌpiː.piːˈəʊ/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math, training]
+  beginner: A popular, careful way to train AI with rewards that avoids changing it too much at once.
+  builder: The classic RL algorithm behind early RLHF; clipped updates and a learned value model keep training stable.
+  research: Policy-gradient method maximising a clipped surrogate objective, bounding the probability ratio between successive policies.
+  analogy: Adjusting a recipe a pinch at a time.
+  example: PPO powered the original ChatGPT fine-tune.
+  origin: Schulman et al., OpenAI, 2017.
+  related: [rlhf]
+  contrast: [grpo]
+
+- id: hybrid-search
+  term: hybrid search
+  ipa: /ˈhaɪ.brɪd sɜːtʃ/
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: Combining keyword search with meaning-based search to get the best of both.
+  builder: Fusing BM25 and vector results (e.g. reciprocal rank fusion); catches exact IDs and paraphrases alike.
+  research: Ensemble of sparse and dense retrievers exploiting complementary failure modes.
+  analogy: Using both the index and a librarian's hunch.
+  example: Hybrid search finally found error code E-1042.
+  related: [semantic-search, reranking]
+
+- id: memory
+  term: agent memory
+  ipa: /ˈeɪ.dʒənt ˈmem.ər.i/
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, llm-engineering]
+  beginner: How an AI remembers things about you or a task between conversations.
+  builder: Persisting facts, preferences and notes outside the context window (files, databases) and pulling them back in when relevant.
+  research: External read/write stores that extend an agent's effective state beyond its fixed context length.
+  analogy: A notebook the assistant keeps between meetings.
+  example: Agent memory means I don't re-explain my project every day.
+  related: [context-engineering, rag]
+  trending: 0.6
+
+- id: human-in-the-loop
+  term: human-in-the-loop
+  ipa: /ˈhjuː.mən ɪn ðə luːp/
+  pos: adj.
+  difficulty: beginner
+  topics: [agent-era, safety]
+  beginner: A setup where a person checks or approves an AI's work at key moments.
+  builder: Approval gates on risky actions (payments, deletes, sends) inside agent workflows.
+  research: Mixed-initiative systems where human oversight bounds the consequences of policy errors.
+  analogy: A pilot who can always take the controls.
+  example: Refunds over $100 stay human-in-the-loop.
+  related: [agent, guardrails]

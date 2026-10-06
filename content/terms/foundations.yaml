@@ -1,0 +1,586 @@
+# How models learn + data & training.
+# Fields: id, term, expansion?, ipa?, pos, difficulty (beginner|intermediate|pro), topics,
+# beginner / builder / research definitions, analogy?, example? (should contain the term),
+# origin?, related?, contrast?, trending? (0-1), added? (yyyy-mm-dd)
+
+- id: artificial-intelligence
+  term: AI
+  expansion: Artificial Intelligence
+  ipa: /ˌeɪˈaɪ/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, ai-headlines]
+  beginner: Computer systems that do things we'd normally call smart, like writing, seeing or deciding.
+  builder: The broad field of building software that performs tasks requiring perception, language, reasoning or planning.
+  research: The study of agents that perceive their environment and act to maximise some objective, spanning search, learning and inference.
+  analogy: An umbrella word, like "transport" covers bikes and planes.
+  example: Every app now claims to have AI inside.
+  origin: Coined by John McCarthy for the 1956 Dartmouth workshop.
+  related: [machine-learning, agi, generative-ai]
+  trending: 0.4
+
+- id: machine-learning
+  term: machine learning
+  ipa: /məˈʃiːn ˈlɜːr.nɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, training]
+  beginner: Teaching computers by showing them lots of examples instead of writing every rule by hand.
+  builder: Fitting a model's parameters to data so it generalises to new inputs, rather than hand-coding logic.
+  research: Algorithms that improve performance on a task with experience, typically by minimising an empirical loss over a hypothesis class.
+  analogy: Learning to cook by tasting many dishes rather than memorising a rulebook.
+  example: The spam filter uses machine learning to spot new scams.
+  related: [model, training, dataset]
+  contrast: [algorithm]
+
+- id: model
+  term: model
+  ipa: /ˈmɒd.əl/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn]
+  beginner: The trained "brain" file that an AI app runs to produce answers.
+  builder: A learned function, its architecture plus trained weights, that maps inputs to outputs and is served behind an API.
+  research: A parameterised function f(x; θ) whose parameters θ were estimated from data to approximate a target distribution or mapping.
+  analogy: A recipe the computer wrote for itself after tasting millions of meals.
+  example: They swapped in a smaller model to cut costs.
+  related: [parameter, weights, llm]
+
+- id: algorithm
+  term: algorithm
+  ipa: /ˈæl.ɡə.rɪ.ðəm/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn]
+  beginner: A step-by-step set of instructions a computer follows to solve a problem.
+  builder: A finite, well-defined procedure. In ML, the training procedure is the algorithm and the trained model is its output.
+  research: An effective procedure computing a function; in learning theory, the map from a training sample to a hypothesis.
+  analogy: A recipe: do this, then this, until done.
+  example: The feed is ranked by an algorithm nobody fully understands.
+  contrast: [machine-learning]
+
+- id: neural-network
+  term: neural network
+  ipa: /ˈnjʊə.rəl ˈnet.wɜːk/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn]
+  beginner: Software made of layers of tiny math units, loosely inspired by brain cells, that learns patterns from data.
+  builder: Stacked layers of weighted sums and nonlinearities trained with gradient descent; the backbone of modern AI.
+  research: A composition of affine maps and elementwise nonlinearities, a universal function approximator optimised via backpropagation.
+  analogy: A huge team passing notes, each adjusting how loudly they listen to their neighbours.
+  example: A neural network learned to read handwriting from scanned cheques.
+  related: [deep-learning, backpropagation, parameter]
+
+- id: deep-learning
+  term: deep learning
+  ipa: /diːp ˈlɜːr.nɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn]
+  beginner: Machine learning with very big neural networks that have many layers.
+  builder: Training deep neural networks end-to-end on large datasets, usually on GPUs; behind vision, speech and LLMs.
+  research: Representation learning with deep, differentiable architectures where hierarchical features emerge from gradient-based optimisation.
+  analogy: Learning to recognise a face by first spotting edges, then eyes, then whole faces.
+  example: Deep learning took image recognition from a research toy to your phone camera.
+  origin: Popularised after AlexNet won ImageNet in 2012.
+  related: [neural-network, gpu]
+
+- id: training
+  term: training
+  ipa: /ˈtreɪ.nɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [training, how-models-learn]
+  beginner: The expensive phase where a model learns by practising on huge amounts of data.
+  builder: Running optimisation over a dataset to update model weights; costly, done once (or periodically), unlike inference.
+  research: Minimising expected loss over the data distribution via stochastic gradient methods, typically for many steps across accelerators.
+  analogy: Years of school, versus inference which is sitting the exam.
+  example: Training the model took three months on thousands of GPUs.
+  related: [dataset, gradient-descent, pre-training]
+  contrast: [inference]
+
+- id: inference
+  term: inference
+  ipa: /ˈɪn.fər.əns/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, llm-engineering]
+  beginner: When a finished model is used to answer you, as opposed to when it was learning.
+  builder: Running a trained model forward to produce outputs; where latency, cost per token and serving infrastructure matter.
+  research: Evaluating the learned function (and decoding procedure) on new inputs with frozen parameters.
+  analogy: Sitting the exam after all the studying is done.
+  example: Inference costs dropped tenfold this year.
+  related: [latency, token]
+  contrast: [training]
+
+- id: dataset
+  term: training data
+  ipa: /ˈdeɪ.tə.set/
+  pos: n.
+  difficulty: beginner
+  topics: [training]
+  beginner: The big pile of examples, like text, images or clicks, that a model learns from.
+  builder: A curated collection of examples split into train / validation / test sets; its quality caps model quality.
+  research: A finite sample assumed drawn from the target distribution; biases and contamination in it propagate to the model.
+  analogy: The textbook a student learns from. A bad textbook makes a bad student.
+  example: They cleaned the training data and the model got noticeably better.
+  related: [training, synthetic-data, data-contamination]
+
+- id: parameter
+  term: parameter
+  ipa: /pəˈræm.ɪ.tər/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn]
+  beginner: One of the billions of adjustable numbers inside a model that store what it learned.
+  builder: A trainable weight or bias. Parameter count (e.g. 70B) is a rough proxy for size, memory and cost.
+  research: An element of θ, the vector optimised during training; count scales compute and memory roughly linearly.
+  analogy: Billions of tiny dials, each tuned slightly during training.
+  example: The open model has 70 billion parameters.
+  related: [weights, model, scaling-laws]
+
+- id: weights
+  term: model weights
+  ipa: /weɪts/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, llm-engineering]
+  beginner: The saved numbers that make up a trained model, basically the model itself as a file.
+  builder: The tensor values learned in training; "releasing the weights" means anyone can download and run the model.
+  research: Learned parameters of the network's linear maps, usually stored in bf16/fp8; their distribution informs quantisation strategies.
+  analogy: The model's memory written to disk.
+  example: The lab published the model weights under a permissive licence.
+  related: [parameter, open-weights, quantization]
+
+- id: gradient-descent
+  term: gradient descent
+  ipa: /ˈɡreɪ.di.ənt dɪˈsent/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, research-math]
+  beginner: How a model improves: it checks which way makes it less wrong, then takes a small step that way, millions of times.
+  builder: The optimisation loop: compute the loss gradient, nudge weights against it by the learning rate, repeat (usually Adam-style variants).
+  research: Iterative first-order optimisation θ ← θ − η∇L(θ); stochastic mini-batch variants with momentum dominate deep learning.
+  analogy: Walking downhill in fog by always stepping where the ground slopes down.
+  example: Gradient descent slowly pushed the loss toward zero.
+  related: [loss-function, learning-rate, backpropagation]
+
+- id: loss-function
+  term: loss function
+  ipa: /lɒs ˈfʌŋk.ʃən/
+  pos: n.
+  difficulty: beginner
+  topics: [training, research-math]
+  beginner: A score of how wrong the model is. Training tries to make it as small as possible.
+  builder: The objective being minimised; cross-entropy for next-token prediction, plus extras like KL penalties in RL fine-tuning.
+  research: A function L(ŷ, y) measuring discrepancy between prediction and target; its expectation is the risk minimised in training.
+  analogy: The red ink on a marked test paper.
+  example: The loss function stopped dropping after day four.
+  related: [gradient-descent, cross-entropy]
+
+- id: learning-rate
+  term: learning rate
+  ipa: /ˈlɜːr.nɪŋ reɪt/
+  pos: n.
+  difficulty: intermediate
+  topics: [training]
+  beginner: How big a step the model takes each time it adjusts itself. Too big and it overshoots, too small and it barely moves.
+  builder: The step-size hyperparameter, usually with warmup and cosine decay; the first knob to tune when training diverges.
+  research: Scalar η scaling each update; schedules and per-parameter adaptation (Adam) critically shape convergence and generalisation.
+  analogy: Stride length when walking downhill in the dark.
+  example: We halved the learning rate and the training run stopped exploding.
+  related: [gradient-descent, epoch]
+
+- id: epoch
+  term: epoch
+  ipa: /ˈiː.pɒk/
+  pos: n.
+  difficulty: beginner
+  topics: [training]
+  beginner: One full pass through all the training data.
+  builder: A complete pass over the training set; LLM pre-training often runs ~1 epoch, while fine-tunes run a few.
+  research: One traversal of the empirical dataset; multi-epoch training on finite data raises memorisation and overfitting risk.
+  analogy: Reading the whole textbook once, cover to cover.
+  example: The fine-tune ran for three epochs.
+  related: [overfitting, learning-rate]
+
+- id: overfitting
+  term: overfitting
+  ipa: /ˌəʊ.vəˈfɪt.ɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [training, evals]
+  beginner: When a model memorises its practice examples so well it does badly on anything new.
+  builder: Training loss keeps falling while validation loss rises; fix with more data, regularisation or early stopping.
+  research: High variance: the hypothesis fits sample noise, widening the generalisation gap between empirical and true risk.
+  analogy: A student who memorised last year's answers but can't handle a new question.
+  example: The validation curve showed clear overfitting after epoch two.
+  related: [epoch, benchmark]
+  contrast: [generalization]
+
+- id: generalization
+  term: generalization
+  ipa: /ˌdʒen.ər.əl.aɪˈzeɪ.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, research-math]
+  beginner: A model's ability to handle new situations it never saw during training.
+  builder: Performance on held-out data, the thing you actually care about; measured on a test set the model never trained on.
+  research: The gap between empirical and population risk; bounded classically by capacity, empirically puzzling for overparameterised nets.
+  analogy: Understanding the rules, not just memorising past games.
+  example: Good generalization means it works on your messy real-world data too.
+  contrast: [overfitting]
+  related: [double-descent]
+
+- id: pre-training
+  term: pre-training
+  ipa: /ˌpriːˈtreɪ.nɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, how-models-learn]
+  beginner: The first, giant stage where a model reads a huge chunk of the internet and learns how language works.
+  builder: Self-supervised next-token training on trillions of tokens, producing a base model that later post-training shapes into an assistant.
+  research: Large-scale self-supervised learning of p(x) on broad corpora, yielding transferable representations; dominates total compute.
+  analogy: Reading the entire library before ever being asked a question.
+  example: Pre-training alone cost more than the whole company's first round.
+  related: [base-model, fine-tuning, scaling-laws]
+  contrast: [post-training]
+
+- id: post-training
+  term: post-training
+  ipa: /ˌpəʊstˈtreɪ.nɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, safety]
+  beginner: The later training that turns a raw text-predictor into a helpful, safe assistant.
+  builder: Everything after pre-training: instruction tuning, RLHF/RLAIF, safety training and tool-use tuning that shape behaviour.
+  research: Fine-tuning and RL stages that reshape the pre-trained distribution toward preferred policies under KL constraints.
+  analogy: Finishing school after a lifetime of reading.
+  example: Most of the model's personality comes from post-training.
+  related: [rlhf, fine-tuning, alignment]
+  contrast: [pre-training]
+
+- id: base-model
+  term: base model
+  ipa: /beɪs ˈmɒd.əl/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, llm-engineering]
+  beginner: A model straight out of pre-training. It continues text well but isn't yet good at following instructions.
+  builder: The raw pre-trained checkpoint, great for fine-tuning and completion, awkward as a chatbot without instruction tuning.
+  research: The pre-trained density model prior to any alignment, often better calibrated than post-trained variants.
+  analogy: A brilliant mimic who hasn't been taught manners.
+  example: The base model just kept writing more questions instead of answering.
+  related: [pre-training, fine-tuning]
+
+- id: fine-tuning
+  term: fine-tuning
+  ipa: /ˌfaɪnˈtjuː.nɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [training, llm-engineering]
+  beginner: Extra training on a smaller, specific set of examples so a general model gets good at one job.
+  builder: Continuing training on task data to change behaviour or style. Great for format and tone, poor for injecting fresh facts.
+  research: Further optimisation of pre-trained parameters on a narrower distribution, fully or via parameter-efficient methods like LoRA.
+  analogy: A trained chef doing a month at a sushi bar.
+  example: We tried fine-tuning on our support tickets to match our tone.
+  related: [lora, post-training]
+  contrast: [rag]
+
+- id: synthetic-data
+  term: synthetic data
+  ipa: /sɪnˈθet.ɪk ˈdeɪ.tə/
+  pos: n.
+  difficulty: beginner
+  topics: [training]
+  beginner: Training examples created by AI instead of collected from people.
+  builder: Model-generated training data, filtered and verified, used to cover gaps, reasoning traces or rare cases cheaply.
+  research: Samples from generative models used as training signal; quality filtering prevents distribution collapse ("model collapse").
+  analogy: Practice exams written by a teacher instead of past papers.
+  example: Half the fine-tuning set was synthetic data checked by a verifier.
+  related: [distillation, dataset, model-collapse]
+
+- id: data-contamination
+  term: data contamination
+  ipa: /ˈdeɪ.tə kənˌtæm.ɪˈneɪ.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, evals]
+  beginner: When test questions accidentally end up in the training data, so the model "cheats" without meaning to.
+  builder: Benchmark items leaking into pre-training corpora, inflating scores; mitigated by held-out, fresh or private eval sets.
+  research: Overlap between evaluation and training distributions that invalidates the i.i.d. held-out assumption behind reported metrics.
+  analogy: Seeing the exam paper the night before.
+  example: The suspicious jump in scores turned out to be data contamination.
+  related: [benchmark, dataset]
+
+- id: token
+  term: token
+  ipa: /ˈtəʊ.kən/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, llm-engineering]
+  beginner: A small chunk of text, often part of a word, that language models read and write. Roughly ¾ of a word.
+  builder: The unit models process and bill by; ~4 characters of English. Context limits, pricing and speed are all in tokens.
+  research: A discrete symbol from the tokenizer's vocabulary; sequences of token ids are the model's actual input and output space.
+  analogy: Lego bricks of language.
+  example: That long prompt used 12,000 tokens.
+  related: [tokenizer, context-window]
+
+- id: tokenizer
+  term: tokenizer
+  ipa: /ˈtəʊ.kən.aɪ.zər/
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, llm-engineering]
+  beginner: The tool that chops text into tokens before the model sees it.
+  builder: Maps text to token ids (usually BPE); explains odd behaviour like miscounting letters, and why other languages cost more.
+  research: A learned subword segmentation (BPE, unigram) balancing vocabulary size against sequence length and cross-lingual coverage.
+  analogy: A butcher deciding where to cut the sentence.
+  example: The tokenizer splits "strawberry" into chunks, which is why it miscounts the r's.
+  related: [token, bpe]
+
+- id: bpe
+  term: BPE
+  expansion: Byte-Pair Encoding
+  ipa: /ˌbiː.piːˈiː/
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, research-math]
+  beginner: A common way of splitting text into tokens by merging the most frequent letter pairs.
+  builder: The subword tokenization algorithm behind most LLM vocabularies; frequent strings become single tokens.
+  research: Greedy iterative merging of the most frequent adjacent symbol pairs from bytes up to a target vocabulary size.
+  analogy: Inventing abbreviations for the phrases you write most.
+  example: Byte-level BPE means the model never meets an unknown character.
+  origin: Adapted for neural machine translation by Sennrich et al., 2016.
+  related: [tokenizer, token]
+
+- id: embedding
+  term: embedding
+  ipa: /ɪmˈbed.ɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, rag]
+  beginner: A list of numbers that captures what something means, so similar things end up close together.
+  builder: A dense vector from an embedding model; compare with cosine similarity for search, clustering and RAG retrieval.
+  research: A learned map into ℝᵈ where geometric relations (distance, direction) encode semantic relations between inputs.
+  analogy: GPS coordinates for meaning.
+  example: We store an embedding for every help article.
+  related: [vector-database, rag, semantic-search]
+
+- id: transformer
+  term: transformer
+  ipa: /trænsˈfɔː.mər/
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, research-math]
+  beginner: The design behind ChatGPT, Claude and most modern AI. It looks at all the words at once to understand context.
+  builder: The architecture of stacked attention + MLP blocks that powers LLMs; parallelises well on GPUs, which is why it scaled.
+  research: A sequence model built from multi-head self-attention and position-wise feed-forward layers with residual connections and normalisation.
+  analogy: A meeting where everyone can hear everyone, instead of a game of telephone.
+  example: The "T" in GPT stands for transformer.
+  origin: '"Attention Is All You Need", Vaswani et al., Google, 2017.'
+  related: [attention, llm, positional-encoding]
+
+- id: attention
+  term: attention
+  ipa: /əˈten.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, research-math]
+  beginner: How a model decides which earlier words matter most for the word it's working on now.
+  builder: The transformer mechanism that mixes information across tokens; cost grows with the square of the context length.
+  research: softmax(QKᵀ/√d)V, a content-based weighted average letting each position aggregate information from all others.
+  analogy: Highlighting the parts of a page relevant to your question.
+  example: Attention lets "it" link back to "the cat" three sentences earlier.
+  related: [transformer, kv-cache, flash-attention]
+
+- id: llm
+  term: LLM
+  expansion: Large Language Model
+  ipa: /ˌel.elˈem/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, llm-engineering, ai-headlines]
+  beginner: An AI trained on huge amounts of text that can write, summarise, answer and chat. Claude and ChatGPT are LLMs.
+  builder: A large transformer trained to predict the next token, then post-trained to follow instructions and use tools.
+  research: An autoregressive model of p(xₜ | x<t) with billions of parameters, trained on web-scale corpora; capabilities scale with compute.
+  analogy: Autocomplete that read the whole library.
+  example: Our app calls an LLM to draft replies.
+  related: [token, transformer, foundation-model]
+
+- id: foundation-model
+  term: foundation model
+  ipa: /faʊnˈdeɪ.ʃən ˈmɒd.əl/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, policy]
+  beginner: A big general-purpose AI model that many different apps are built on top of.
+  builder: A broadly pre-trained model adapted to many downstream tasks via prompting or fine-tuning; a key category in AI regulation.
+  research: A model trained on broad data at scale that is adaptable to a wide range of tasks, a term from Stanford's CRFM.
+  analogy: A building's foundation: many different houses go on top.
+  example: Dozens of startups are wrappers around the same foundation model.
+  origin: Coined by Stanford CRFM in 2021.
+  related: [llm, frontier-model]
+
+- id: generative-ai
+  term: generative AI
+  ipa: /ˈdʒen.ər.ə.tɪv ˌeɪˈaɪ/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, ai-headlines]
+  beginner: AI that creates new things, like text, images, music or code, instead of just sorting or predicting.
+  builder: Models that sample new content from a learned distribution: LLMs, diffusion image models, audio and video generators.
+  research: Models of p(x) (or p(x|c)) from which novel samples are drawn: autoregressive, diffusion, flow-based or GAN families.
+  analogy: A camera captures; generative AI paints.
+  example: Generative AI wrote the first draft of the ad.
+  related: [llm, diffusion-model]
+
+- id: multimodal
+  term: multimodal
+  ipa: /ˌmʌl.tiˈməʊ.dəl/
+  pos: adj.
+  difficulty: beginner
+  topics: [multimodal, how-models-learn]
+  beginner: Able to handle more than one kind of input or output, like text, images and audio together.
+  builder: Models that accept or produce multiple modalities; e.g. paste a screenshot and ask about it.
+  research: Joint modelling across modalities via shared token spaces or cross-attention, enabling grounding of language in perception.
+  analogy: A person who can read, look and listen at the same time.
+  example: The multimodal model read the chart in my screenshot.
+  related: [vision-language-model]
+
+- id: context-window
+  term: context window
+  ipa: /ˈkɒn.tekst ˈwɪn.dəʊ/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, llm-engineering, prompting]
+  beginner: How much text a model can keep in mind at once, its working memory, measured in tokens.
+  builder: The max tokens (prompt + output) per request; 1M-token windows fit whole codebases, but cost and latency grow with length.
+  research: The maximum sequence length the model attends over, bounded by positional encoding range and attention's memory cost.
+  analogy: The size of the desk you can spread papers on.
+  example: The whole contract fits in the context window.
+  related: [token, kv-cache, context-engineering]
+
+- id: knowledge-cutoff
+  term: knowledge cutoff
+  ipa: /ˈnɒl.ɪdʒ ˈkʌt.ɒf/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, prompting]
+  beginner: The date a model's training data ends. It doesn't know about anything after that unless you tell it.
+  builder: The last date covered by training data; supply fresher facts via search tools or RAG.
+  research: The temporal boundary of the pre-training corpus; post-cutoff knowledge must come from retrieval or context.
+  analogy: A letter from someone who has been at sea since last spring.
+  example: Its knowledge cutoff is last year, so it missed the election.
+  related: [rag, hallucination]
+
+- id: benchmark
+  term: benchmark
+  ipa: /ˈbentʃ.mɑːk/
+  pos: n.
+  difficulty: beginner
+  topics: [evals, ai-headlines]
+  beginner: A standard test used to compare AI models, like an exam everyone sits.
+  builder: A fixed dataset and metric (e.g. SWE-bench, MMLU) for comparing models; useful but gameable and prone to saturation.
+  research: A standardised evaluation protocol; validity threatened by contamination, saturation and Goodhart effects.
+  analogy: A standardised test: useful to compare, but students can learn to the test.
+  example: The new model tops every benchmark, but how does it feel to use?
+  related: [evals, data-contamination, saturation]
+
+- id: open-weights
+  term: open weights
+  ipa: /ˈəʊ.pən weɪts/
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, policy, business]
+  beginner: A model whose trained files are released so anyone can download and run it themselves.
+  builder: Downloadable weights you can self-host and fine-tune. Not always "open source": training data and code may stay closed.
+  research: Public release of trained parameters (often under use restrictions), enabling replication of inference but not of training.
+  analogy: Getting the finished cake recipe, but not the farm that grew the ingredients.
+  example: Llama made open weights mainstream.
+  related: [weights, open-source-model]
+  contrast: [closed-model]
+
+- id: open-source-model
+  term: open-source model
+  ipa: /ˌəʊ.pənˈsɔːs ˈmɒd.əl/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, policy, business]
+  beginner: An AI model that is freely shared so anyone can use, study and change it.
+  builder: Ideally weights + code + data under an OSI-style licence; in practice many "open" models share weights only.
+  research: Release meeting the Open Source AI Definition: weights, training code and sufficient data information to reproduce.
+  analogy: A community garden instead of a private farm.
+  example: The startup built on an open-source model to avoid API fees.
+  related: [open-weights]
+  contrast: [closed-model]
+
+- id: closed-model
+  term: closed model
+  ipa: /kləʊzd ˈmɒd.əl/
+  pos: n.
+  difficulty: beginner
+  topics: [business, policy]
+  beginner: A model you can only use through the company's app or API. You can't download it.
+  builder: Proprietary model served via API only; you get managed scaling and frontier quality, trading off control and data residency.
+  research: A model whose parameters are withheld; external evaluation is limited to black-box query access.
+  analogy: Eating at the restaurant versus getting the recipe.
+  example: Most frontier labs ship a closed model behind an API.
+  contrast: [open-weights]
+
+- id: scaling-laws
+  term: scaling laws
+  ipa: /ˈskeɪ.lɪŋ lɔːz/
+  pos: n.
+  difficulty: pro
+  topics: [research-math, training, ai-headlines]
+  beginner: The finding that AI models get predictably better as you add more data, compute and size.
+  builder: Empirical power laws predicting loss from parameters, data and compute; used to plan training runs before spending millions.
+  research: L(N, D) ≈ E + A/N^α + B/D^β; smooth power-law relations between loss and scale across many orders of magnitude.
+  analogy: A recipe that says doubling the oven size makes the cake better by a predictable amount.
+  example: Scaling laws told them exactly how big the next model should be.
+  origin: Kaplan et al. (OpenAI) 2020; refined by Hoffmann et al. (Chinchilla) 2022.
+  related: [chinchilla-optimal, compute, emergent-abilities]
+  trending: 0.5
+
+- id: chinchilla-optimal
+  term: Chinchilla-optimal
+  ipa: /tʃɪnˈtʃɪl.ə ˈɒp.tɪ.məl/
+  pos: adj.
+  difficulty: pro
+  topics: [research-math, training]
+  beginner: The rule of thumb that a model should be trained on about 20 words of data for every one of its parameters.
+  builder: Compute-optimal balance of ~20 tokens per parameter; modern models deliberately "over-train" smaller models for cheaper inference.
+  research: The allocation minimising loss for fixed FLOPs C ≈ 6ND, finding N and D should scale roughly equally with compute.
+  analogy: Matching the size of the student to the size of the library.
+  example: The model was trained far past Chinchilla-optimal to make it cheap to serve.
+  origin: Hoffmann et al., DeepMind, 2022.
+  related: [scaling-laws]
+
+- id: emergent-abilities
+  term: emergent abilities
+  ipa: /ɪˈmɜː.dʒənt əˈbɪl.ə.tiz/
+  pos: n.
+  difficulty: pro
+  topics: [research-math, ai-headlines]
+  beginner: Skills that seem to suddenly appear once a model gets big enough.
+  builder: Capabilities absent in small models that show up at scale. Some apparent jumps are artifacts of all-or-nothing metrics.
+  research: Discontinuous task-metric gains with scale; debated, since continuous metrics often reveal smooth underlying improvement.
+  analogy: Water suddenly boiling after degrees of quiet warming.
+  example: Emergent abilities make it hard to predict what the next model can do.
+  origin: Wei et al., 2022; challenged by Schaeffer et al., 2023.
+  related: [scaling-laws]
+
+- id: compute
+  term: compute
+  ipa: /kəmˈpjuːt/
+  pos: n.
+  difficulty: beginner
+  topics: [infra, business, ai-headlines]
+  beginner: The raw computer processing power used to train and run AI, mostly from specialised chips.
+  builder: Accelerator capacity (GPU/TPU hours, FLOPs); the main cost driver and bottleneck for labs and AI products.
+  research: Total floating-point operations; training compute C ≈ 6 × parameters × tokens for dense transformers.
+  analogy: The electricity and engines of the AI economy.
+  example: The lab signed a ten-billion-dollar compute deal.
+  related: [gpu, data-center, scaling-laws]

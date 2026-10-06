@@ -1,0 +1,357 @@
+# From the curated word list — 🟢 Beginner (Foundations & Concepts), items 1–80 not covered elsewhere.
+
+- id: zero-shot-prompting
+  term: zero-shot prompting
+  pos: n.
+  difficulty: beginner
+  topics: [prompting]
+  beginner: Asking an AI to do a task with no examples, just instructions.
+  builder: Prompting with only a task description; modern instruction-tuned models handle most tasks this way before you reach for examples.
+  research: Task performance without in-context demonstrations, relying on instruction tuning to map task descriptions to behaviour.
+  analogy: Handing someone a task with no sample to copy.
+  example: Zero-shot prompting was enough to classify the tickets.
+  related: [few-shot-prompting, prompt-engineering]
+  contrast: [few-shot-prompting]
+
+- id: chatbot
+  term: chatbot
+  ipa: /ˈtʃæt.bɒt/
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, business]
+  beginner: An app you talk to in plain language that answers back, like ChatGPT or Claude.
+  builder: A conversational UI over an LLM with a system prompt, history management and often tools or retrieval behind it.
+  research: A dialogue system; modern ones are post-trained LLMs conditioned on multi-turn conversation transcripts.
+  analogy: A help desk that never sleeps.
+  example: The bank's new chatbot actually solved my problem.
+  related: [llm, system-prompt]
+  contrast: [agent]
+
+- id: context-drift
+  term: context drift
+  pos: n.
+  difficulty: beginner
+  topics: [prompting, agent-era]
+  beginner: When a long AI conversation slowly loses track of the original goal or instructions.
+  builder: Quality decay over long sessions as early instructions get diluted; fix with summaries, reminders and fresh context.
+  research: Degradation of instruction adherence with context length as attention to early tokens weakens relative to recent ones.
+  analogy: A game of telephone with yourself.
+  example: After 50 messages, context drift made it forget our style guide.
+  related: [context-window, context-engineering]
+
+- id: json-mode
+  term: JSON mode
+  pos: n.
+  difficulty: beginner
+  topics: [prompting, llm-engineering]
+  beginner: A setting that makes an AI reply in a tidy, machine-readable format instead of chatty text.
+  builder: Forces syntactically valid JSON output; pair with a schema (structured outputs) so fields are also guaranteed.
+  research: Constrained decoding restricted to the JSON grammar, without necessarily enforcing a specific schema.
+  analogy: Asking for a filled-in form, not a letter.
+  example: Turn on JSON mode so the app can read the answer.
+  related: [structured-output, structured-output-validation]
+
+- id: hallucination-rate
+  term: hallucination rate
+  pos: n.
+  difficulty: beginner
+  topics: [evals, safety]
+  beginner: How often an AI makes things up, measured as a percentage of answers.
+  builder: Share of responses with unsupported claims on a fixed eval set; track it per release and per feature.
+  research: Frequency of factually unsupported generations under a defined annotation protocol, sensitive to task and grader.
+  analogy: A newspaper's corrections count.
+  example: RAG cut our hallucination rate from 12% to 3%.
+  related: [hallucination, faithfulness]
+
+- id: top-p-sampling
+  term: top-p sampling
+  pos: n.
+  difficulty: beginner
+  topics: [prompting, llm-engineering]
+  beginner: A setting that makes an AI choose only from its most likely next words, keeping answers sensible.
+  builder: Nucleus sampling, which keeps the smallest set of tokens whose probabilities sum to p; usually tune it or temperature, not both.
+  research: Truncating the predictive distribution to the minimal-mass nucleus ≥ p, then renormalising and sampling.
+  analogy: Only picking from the top shelf.
+  example: We set top-p sampling to 0.9 for the story generator.
+  related: [temperature, sampling]
+
+- id: knowledge-base
+  term: knowledge base
+  pos: n.
+  difficulty: beginner
+  topics: [rag, business]
+  beginner: A company's collection of documents and FAQs that an AI can search to answer questions.
+  builder: The curated source corpus behind RAG; its freshness and structure matter more than the model you choose.
+  research: A document or fact store serving as non-parametric memory for retrieval-augmented systems.
+  analogy: The company handbook the assistant can open.
+  example: We connected the bot to our knowledge base.
+  related: [rag, vector-database]
+
+- id: xai
+  term: explainable AI
+  expansion: XAI
+  pos: n.
+  difficulty: beginner
+  topics: [safety, interpretability, policy]
+  beginner: Methods that help people understand why an AI made a particular decision.
+  builder: Attribution, feature importance and rationales that make model decisions auditable; often required in finance and health.
+  research: Post-hoc and intrinsic interpretability techniques (SHAP, saliency, counterfactuals) explaining model predictions.
+  analogy: Showing your working, not just the answer.
+  example: Regulators asked for explainable AI before approving the loan model.
+  related: [mechanistic-interpretability, bias]
+
+- id: gpu-cluster
+  term: GPU cluster
+  pos: n.
+  difficulty: beginner
+  topics: [infra, business]
+  beginner: Thousands of AI chips wired together to work as one giant computer.
+  builder: Racks of GPUs joined by fast networking (NVLink, InfiniBand); training jobs span the whole cluster.
+  research: Distributed accelerator systems whose interconnect bandwidth and topology bound parallel training efficiency.
+  analogy: An orchestra of chips playing one piece.
+  example: The GPU cluster has 100,000 chips.
+  related: [gpu, data-center, compute]
+
+- id: model-compression
+  term: model compression
+  pos: n.
+  difficulty: beginner
+  topics: [infra, llm-engineering]
+  beginner: Making AI models smaller and faster so they're cheaper to run or fit on phones.
+  builder: Umbrella for quantization, pruning and distillation, trading a little quality for big cuts in memory and latency.
+  research: Techniques reducing parameter count or precision while bounding degradation in task loss.
+  analogy: Packing a suitcase with vacuum bags.
+  example: Model compression got it running on a phone.
+  related: [quantization, model-pruning, distillation]
+
+- id: supervised-learning
+  term: supervised learning
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, training]
+  beginner: Teaching AI with examples that come with the right answers attached.
+  builder: Training on labelled input→output pairs; classic for classifiers and the basis of supervised fine-tuning (SFT).
+  research: Learning a mapping from x to y by minimising loss over labelled pairs drawn from a joint distribution.
+  analogy: Flashcards with the answer on the back.
+  example: Supervised learning trained it on photos labelled "cat" or "dog".
+  related: [data-labeling, sft]
+  contrast: [unsupervised-learning]
+
+- id: unsupervised-learning
+  term: unsupervised learning
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, training]
+  beginner: AI finding patterns in data on its own, without being told the right answers.
+  builder: Learning structure from unlabelled data (clustering, embeddings); LLM pre-training is its self-supervised cousin.
+  research: Modelling p(x) or latent structure without targets, including clustering, density estimation and representation learning.
+  analogy: Sorting a pile of photos without any labels.
+  example: Unsupervised learning grouped customers into five types.
+  contrast: [supervised-learning]
+  related: [embedding]
+
+- id: reinforcement-learning
+  term: reinforcement learning
+  pos: n.
+  difficulty: beginner
+  topics: [how-models-learn, training, reasoning-models]
+  beginner: Teaching AI through trial and error, rewarding good results and discouraging bad ones.
+  builder: An agent optimises actions to maximise reward; used for RLHF and for training reasoning models on checkable tasks.
+  research: Learning a policy π(a|s) maximising expected discounted return through interaction with an environment.
+  analogy: Training a dog with treats.
+  example: Reinforcement learning taught it to win at Go.
+  related: [rlhf, verifiable-rewards, ppo]
+
+- id: underfitting
+  term: underfitting
+  pos: n.
+  difficulty: beginner
+  topics: [training]
+  beginner: When a model is too simple or undertrained to learn the patterns, so it does badly everywhere.
+  builder: High training and validation loss; fix with a bigger model, more training or better features.
+  research: High bias: the hypothesis class or optimisation can't capture the target function's structure.
+  analogy: Skimming the textbook the night before.
+  example: The tiny model was underfitting, so we scaled it up.
+  contrast: [overfitting]
+
+- id: data-scraping
+  term: data scraping
+  pos: n.
+  difficulty: beginner
+  topics: [training, policy]
+  beginner: Automatically copying large amounts of content from websites to train AI.
+  builder: Crawling the web (e.g. Common Crawl) for training corpora; raises consent, copyright and robots.txt questions.
+  research: Large-scale automated collection of web data, with filtering and deduplication pipelines determining corpus quality.
+  analogy: Photocopying the whole internet.
+  example: News sites sued over data scraping for training.
+  related: [dataset, copyright-ai]
+
+- id: data-labeling
+  term: data labeling
+  pos: n.
+  difficulty: beginner
+  topics: [training]
+  beginner: People tagging examples with the right answer, like marking photos "cat", so AI can learn from them.
+  builder: Human annotation for supervised training and evals; expert labellers now write reasoning traces and preference rankings.
+  research: Producing targets or judgements for training data, where annotator agreement and guidelines shape label noise.
+  analogy: Writing the answer key.
+  example: Data labeling is now done by PhDs for frontier models.
+  related: [supervised-learning, rlhf]
+
+- id: autonomous-agent
+  term: autonomous agent
+  pos: n.
+  difficulty: beginner
+  topics: [agent-era]
+  beginner: An AI agent that works toward a goal for a long time with little or no human help.
+  builder: Long-running agents with broad tool access that plan and recover from errors on their own; need strong guardrails and audit logs.
+  research: Agents operating over extended horizons with minimal oversight, where error compounding and goal robustness dominate.
+  analogy: An employee working remotely all week without check-ins.
+  example: The autonomous agent ran overnight and fixed 30 bugs.
+  related: [agent, human-in-the-loop]
+  contrast: [copilot]
+
+- id: function-calling-api
+  term: function calling
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering, agent-era]
+  beginner: When an AI asks your app to run a specific function, like "get_weather", with the right details filled in.
+  builder: The model emits a structured call matching your declared JSON schema; your code executes it and returns the result.
+  research: Structured action emission over a typed API surface, enabling programmatic execution of model-selected operations.
+  analogy: Filling in an order form for the kitchen.
+  example: Function calling lets the bot look up your order status.
+  related: [function-calling, structured-output]
+
+- id: vector-search
+  term: vector search
+  pos: n.
+  difficulty: beginner
+  topics: [rag]
+  beginner: Finding items by how similar their meaning is, using lists of numbers that represent them.
+  builder: Nearest-neighbour search over embeddings, usually approximate (HNSW) for speed at scale.
+  research: k-NN retrieval in embedding space under a similarity metric, approximated with graph or quantisation indexes.
+  analogy: Finding songs that "sound like" this one.
+  example: Vector search found articles about refunds even without the word.
+  related: [embedding, vector-database, hnsw]
+
+- id: personalization
+  term: personalization
+  pos: n.
+  difficulty: beginner
+  topics: [business, llm-engineering]
+  beginner: Tailoring what an AI shows or says to each person's preferences and history.
+  builder: Feeding user profile, memory and behaviour into prompts or ranking so outputs fit each user.
+  research: Conditioning models on user-specific signals, balancing relevance gains against privacy and filter-bubble risks.
+  analogy: A barista who remembers your order.
+  example: Personalization made the tutor start at my level.
+  related: [memory]
+
+- id: system-instructions
+  term: system instructions
+  pos: n.
+  difficulty: beginner
+  topics: [prompting]
+  beginner: The standing rules you give an AI about how to behave, like tone, role or what to avoid.
+  builder: Persistent instructions (system prompt, custom instructions) that apply to every turn; keep them clear and testable.
+  research: High-priority conditioning text that post-training teaches models to follow over conflicting user requests.
+  analogy: The house rules on the fridge.
+  example: Our system instructions say to always answer in British English.
+  related: [system-prompt]
+
+- id: context-overflow
+  term: context overflow
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering, prompting]
+  beginner: When you give an AI more text than it can hold in memory, so some gets cut off or rejected.
+  builder: Exceeding the context window; handle with truncation, summarising, compaction or retrieval instead of pasting everything.
+  research: Inputs exceeding the model's maximum sequence length, requiring eviction or compression strategies.
+  analogy: Overfilling a cup.
+  example: The 900-page PDF caused a context overflow.
+  related: [context-window, token-limit, context-window-compression]
+
+- id: rate-limiting
+  term: rate limiting
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering]
+  beginner: Caps on how many requests you can send to an AI service in a given time.
+  builder: Requests- and tokens-per-minute quotas; handle 429 errors with retries, backoff and queues.
+  research: Admission control on shared inference capacity to bound tail latency and ensure fair allocation.
+  analogy: A one-in, one-out door policy.
+  example: Rate limiting kicked in during our launch spike.
+  related: [api]
+
+- id: token-limit
+  term: token limit
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering, prompting]
+  beginner: The maximum amount of text, counted in tokens, an AI can read or write in one go.
+  builder: Context window plus the max output tokens setting; cut-off answers usually mean max_tokens was too low.
+  research: Hard bounds on input and generated sequence length imposed by architecture and serving configuration.
+  analogy: A word count on an essay.
+  example: The summary stopped mid-sentence because it hit the token limit.
+  related: [context-window, token]
+
+- id: ai-pipeline
+  term: AI pipeline
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering]
+  beginner: A chain of steps, like fetch, clean, ask the AI, check, save, that turns input into a finished result.
+  builder: A fixed workflow of model calls and code; more predictable and cheaper than open-ended agents.
+  research: A directed composition of model and non-model stages with explicit data flow and validation.
+  analogy: An assembly line.
+  example: Our AI pipeline turns call recordings into CRM notes.
+  related: [agentic-workflow, orchestration]
+  contrast: [agent]
+
+- id: ai-governance
+  term: AI governance
+  pos: n.
+  difficulty: beginner
+  topics: [policy, safety, business]
+  beginner: The rules, policies and oversight an organisation or government uses to manage AI responsibly.
+  builder: Inventories, risk reviews, approval flows and monitoring for AI systems; increasingly required by law and customers.
+  research: Institutional mechanisms (standards, audits, liability) shaping AI development and deployment.
+  analogy: A company's rulebook for using powerful tools.
+  example: The board set up an AI governance committee.
+  related: [eu-ai-act, model-card, model-registry]
+
+- id: model-registry
+  term: model registry
+  pos: n.
+  difficulty: beginner
+  topics: [llm-engineering, infra]
+  beginner: A catalogue that keeps track of every AI model a team has built, with versions and notes.
+  builder: Versioned store of models with metadata, eval results and approval status; the source of truth for what's deployed.
+  research: An artifact store linking model versions to lineage, data and evaluation for reproducibility.
+  analogy: A library catalogue for models.
+  example: Pull the approved version from the model registry.
+  related: [checkpoint, ai-governance]
+
+- id: dark-data
+  term: dark data
+  pos: n.
+  difficulty: beginner
+  topics: [business, rag]
+  beginner: Data a company collects but never uses, like old emails, call recordings and PDFs.
+  builder: Unstructured, unindexed internal data that LLMs can now parse; often the most valuable RAG source.
+  research: Latent organisational data lacking structure or metadata, newly tractable with foundation-model extraction.
+  analogy: Boxes in the attic you forgot you had.
+  example: Ten years of support calls were dark data until now.
+  related: [knowledge-base]
+
+- id: data-flywheel
+  term: data flywheel
+  pos: n.
+  difficulty: beginner
+  topics: [business]
+  beginner: A loop where more users create more data, which improves the AI, which attracts more users.
+  builder: Logging usage and feedback to improve prompts, evals and fine-tunes; a common AI moat.
+  research: A positive feedback loop between deployment data and model quality.
+  analogy: A snowball rolling downhill.
+  example: Their data flywheel is why the product keeps getting better.
+  related: [moat]

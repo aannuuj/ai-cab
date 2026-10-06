@@ -1,0 +1,309 @@
+# Policy, business, culture & headlines.
+
+- id: eu-ai-act
+  term: EU AI Act
+  ipa: /ˌiːˈjuː ˌeɪˈaɪ ækt/
+  pos: n.
+  difficulty: beginner
+  topics: [policy, ai-headlines]
+  beginner: Europe's law that sets rules for AI based on how risky each use is.
+  builder: Risk-tiered regulation, with bans, high-risk obligations, transparency duties and GPAI model rules phasing in from 2025.
+  research: The first horizontal AI regulation, layering product-safety conformity assessment with systemic-risk duties for frontier models.
+  analogy: Food safety rules, but for algorithms.
+  example: The EU AI Act requires labelling deepfakes.
+  origin: Adopted in 2024.
+  related: [high-risk-ai, gpai]
+
+- id: high-risk-ai
+  term: high-risk AI
+  ipa: /haɪ rɪsk ˌeɪˈaɪ/
+  pos: n.
+  difficulty: intermediate
+  topics: [policy]
+  beginner: AI used in areas like hiring, credit or healthcare, where mistakes can seriously hurt people, so it faces stricter rules.
+  builder: A regulatory category requiring risk management, data governance, logging, human oversight and conformity checks.
+  research: Annex-listed use cases under the EU AI Act subject to ex-ante obligations proportional to potential harm.
+  analogy: Like the extra inspections a passenger plane gets versus a kite.
+  example: Our CV-screening tool counts as high-risk AI.
+  related: [eu-ai-act]
+
+- id: gpai
+  term: GPAI
+  expansion: General-Purpose AI
+  ipa: /ˌdʒiː.piː.eɪˈaɪ/
+  pos: n.
+  difficulty: intermediate
+  topics: [policy]
+  beginner: The legal name in Europe for big AI models that can be used for many different things.
+  builder: EU category for foundation models with transparency and copyright duties, plus extra obligations for "systemic risk" models.
+  research: Models displaying significant generality; systemic-risk presumption tied to training compute thresholds.
+  analogy: A Swiss Army knife, regulated differently from a single blade.
+  example: GPAI providers must publish a training data summary.
+  related: [eu-ai-act, foundation-model]
+
+- id: compute-governance
+  term: compute governance
+  ipa: /kəmˈpjuːt ˈɡʌv.ən.əns/
+  pos: n.
+  difficulty: pro
+  topics: [policy, infra]
+  beginner: Controlling who gets powerful AI chips and how they're used, as a way to manage AI risks.
+  builder: Policy levers on chips and data centres (export controls, reporting thresholds, know-your-customer for cloud).
+  research: Governance via the physical, quantifiable, concentrated compute supply chain as a verifiable chokepoint.
+  analogy: Regulating the factories that make engines, not every car.
+  example: Export controls are compute governance in action.
+  related: [export-controls, compute]
+
+- id: export-controls
+  term: export controls
+  ipa: /ˈek.spɔːt kənˈtrəʊlz/
+  pos: n.
+  difficulty: intermediate
+  topics: [policy, infra, ai-headlines]
+  beginner: Government rules that stop advanced AI chips from being sold to certain countries.
+  builder: US restrictions on advanced GPUs and chipmaking tools to specific destinations, shaping where frontier AI gets built.
+  research: Strategic trade policy targeting semiconductor chokepoints to slow rival frontier capabilities.
+  analogy: Not selling engines to a rival racing team.
+  example: Export controls made top GPUs hard to buy in some markets.
+  related: [compute-governance, gpu]
+
+- id: frontier-model
+  term: frontier model
+  ipa: /ˈfrʌn.tɪər ˈmɒd.əl/
+  pos: n.
+  difficulty: intermediate
+  topics: [policy, ai-headlines, safety]
+  beginner: The most advanced AI models at any given time, at the edge of what's possible.
+  builder: State-of-the-art models from leading labs, the focus of safety testing, regulation and enterprise deals.
+  research: Models at or beyond the capability frontier, whose novel risks motivate pre-deployment evaluation regimes.
+  analogy: The newest jets, not the trusty old planes.
+  example: Only a few labs can afford to train a frontier model.
+  related: [responsible-scaling-policy, foundation-model]
+
+- id: responsible-scaling-policy
+  term: responsible scaling policy
+  ipa: /rɪˈspɒn.sə.bəl ˈskeɪ.lɪŋ ˈpɒl.ə.si/
+  pos: n.
+  difficulty: pro
+  topics: [policy, safety]
+  beginner: A lab's public promise to add stronger safety measures as its AI gets more capable.
+  builder: Capability thresholds tied to required safeguards, e.g. Anthropic's ASL levels; testing gates each release.
+  research: If-then commitments linking evaluated dangerous-capability thresholds to security and deployment safeguards.
+  analogy: Safety rules that tighten as the lab handles more dangerous materials.
+  example: Their responsible scaling policy triggered stricter security.
+  origin: Introduced by Anthropic in 2023.
+  related: [frontier-model, alignment]
+
+- id: copyright-ai
+  term: fair use
+  ipa: /feər juːs/
+  pos: n.
+  difficulty: intermediate
+  topics: [policy, business, ai-headlines]
+  beginner: The legal question of whether training AI on copyrighted books, art and news is allowed without permission.
+  builder: US doctrine at the centre of AI training lawsuits; outcomes shape licensing deals and dataset choices.
+  research: A four-factor test (purpose, nature, amount, market effect) applied to the novel case of model training.
+  analogy: Is reading every book in the library to learn to write "copying"?
+  example: The court ruled on fair use for training data.
+  related: [dataset]
+  trending: 0.5
+
+- id: ai-wrapper
+  term: AI wrapper
+  ipa: /ˌeɪˈaɪ ˈræp.ər/
+  pos: n.
+  difficulty: beginner
+  topics: [business, culture]
+  beginner: An app that is mostly a nice interface on top of someone else's AI model.
+  builder: A product whose core value is UX and workflow around a third-party API; moats come from data, distribution and integration.
+  research: Thin-layer applications exposed to platform risk when the underlying model provider expands downstream.
+  analogy: A nice storefront selling someone else's bread.
+  example: Investors worry it's just an AI wrapper.
+  related: [api, moat]
+
+- id: moat
+  term: moat
+  ipa: /məʊt/
+  pos: n.
+  difficulty: beginner
+  topics: [business]
+  beginner: Something that makes a company hard to copy or compete with.
+  builder: Durable advantages like proprietary data, distribution, workflow lock-in or cost, rarely the model alone.
+  research: Sustainable competitive advantage; in AI, contested as frontier capabilities diffuse quickly.
+  analogy: The water around a castle.
+  example: The team's moat is their exclusive medical data.
+  related: [ai-wrapper]
+
+- id: token-pricing
+  term: price per token
+  ipa: /praɪs pɜː ˈtəʊ.kən/
+  pos: n.
+  difficulty: beginner
+  topics: [business, llm-engineering]
+  beginner: How AI APIs charge, a tiny fee for every chunk of text going in and coming out.
+  builder: Separate input and output rates per million tokens; output costs more. Caching and batching cut the bill.
+  research: Usage-based pricing reflecting prefill vs decode compute asymmetry and memory occupancy.
+  analogy: A taxi meter that runs on words.
+  example: The price per token fell 90% in a year.
+  related: [token, prompt-caching]
+
+- id: hyperscaler
+  term: hyperscaler
+  ipa: /ˈhaɪ.pəˌskeɪ.lər/
+  pos: n.
+  difficulty: intermediate
+  topics: [business, infra]
+  beginner: One of the giant cloud companies, like Amazon, Microsoft and Google, that run huge data centres.
+  builder: Cloud providers selling GPU capacity and hosting models; also major investors in AI labs.
+  research: Firms operating global-scale infrastructure whose capex now dominates AI compute supply.
+  analogy: The power companies of computing.
+  example: Every hyperscaler raised its AI spending again.
+  related: [data-center, compute]
+
+- id: capex
+  term: AI capex
+  ipa: /ˈkæp.eks/
+  pos: n.
+  difficulty: intermediate
+  topics: [business, ai-headlines]
+  beginner: The huge amounts companies spend building data centres and buying chips for AI.
+  builder: Capital expenditure on AI infrastructure; markets watch it as a bet on future AI revenue.
+  research: Front-loaded fixed investment whose return depends on inference demand growth and hardware depreciation.
+  analogy: Building the railways before the trains are full.
+  example: Big Tech's AI capex now tops hundreds of billions a year.
+  related: [hyperscaler, data-center]
+
+- id: slop
+  term: slop
+  ipa: /slɒp/
+  pos: n.
+  difficulty: beginner
+  topics: [culture]
+  beginner: Low-quality, mass-produced AI content flooding the internet.
+  builder: Unreviewed generated text, images or video produced for clicks; a quality and trust problem for platforms.
+  research: Low-effort synthetic media whose prevalence threatens information ecosystems and future training corpora.
+  analogy: Spam's lazy cousin.
+  example: My feed is full of AI slop.
+  related: [model-collapse]
+  trending: 0.7
+
+- id: stochastic-parrot
+  term: stochastic parrot
+  ipa: /stəˈkæs.tɪk ˈpær.ət/
+  pos: n.
+  difficulty: intermediate
+  topics: [culture, ai-headlines]
+  beginner: A critic's term for AI that repeats patterns of language without truly understanding it.
+  builder: A framing from the 2021 paper on risks of large LMs; still a shorthand in debates about understanding.
+  research: The claim that LMs stitch together linguistic forms by probability without reference to meaning.
+  analogy: A parrot that can recite poetry.
+  example: Critics called the chatbot a stochastic parrot.
+  origin: Bender, Gebru et al., 2021.
+  related: [llm]
+
+- id: ai-winter
+  term: AI winter
+  ipa: /ˌeɪˈaɪ ˈwɪn.tər/
+  pos: n.
+  difficulty: beginner
+  topics: [culture, business]
+  beginner: A period when hype fades and money for AI research dries up.
+  builder: Historical funding crashes (1970s, late 1980s) after over-promising; invoked whenever a bubble is suspected.
+  research: Cycles of inflated expectation and retrenchment in AI funding and institutional support.
+  analogy: The hangover after the party.
+  example: Sceptics predict another AI winter.
+  related: [ai-bubble]
+
+- id: ai-bubble
+  term: AI bubble
+  ipa: /ˌeɪˈaɪ ˈbʌb.əl/
+  pos: n.
+  difficulty: beginner
+  topics: [business, ai-headlines, culture]
+  beginner: The worry that AI company values and spending have grown faster than real profits.
+  builder: The debate over whether infrastructure spend and valuations outrun revenue, akin to the dot-com era.
+  research: Asset prices disconnected from discounted expected cash flows under speculative expectations.
+  analogy: Paying mansion prices for a house still being built.
+  example: Analysts argue about whether there's an AI bubble.
+  related: [capex, ai-winter]
+  trending: 0.6
+
+- id: p-doom
+  term: p(doom)
+  ipa: /piː duːm/
+  pos: n.
+  difficulty: intermediate
+  topics: [culture, safety]
+  beginner: Slang for someone's estimated probability that AI leads to catastrophe.
+  builder: Half-serious shorthand in AI safety circles; useful as a conversation starter, not as data.
+  research: A subjective credence in existential catastrophe from AI, widely varying across experts.
+  analogy: A weather forecast for the end of the world.
+  example: Over dinner everyone shared their p(doom).
+  related: [alignment, agi]
+
+- id: accelerationism
+  term: e/acc
+  expansion: effective accelerationism
+  ipa: /ˌiː ˈæk/
+  pos: n.
+  difficulty: intermediate
+  topics: [culture]
+  beginner: An online movement arguing AI progress should go as fast as possible.
+  builder: Pro-speed tech subculture contrasted with safety-focused "decels"; mostly shows up in discourse, not engineering.
+  research: Techno-optimist ideology favouring unrestricted capability growth, opposed to precautionary governance.
+  analogy: Foot flat on the gas pedal.
+  example: His bio just says e/acc.
+  related: [p-doom]
+
+- id: ai-native
+  term: AI-native
+  ipa: /ˌeɪˈaɪ ˈneɪ.tɪv/
+  pos: adj.
+  difficulty: beginner
+  topics: [business, culture]
+  beginner: Built around AI from day one rather than adding it later.
+  builder: Products and teams designed so models do core work; workflows, UI and pricing assume AI in the loop.
+  research: Organisational and product designs premised on model capabilities as a primary production input.
+  analogy: Born digital versus scanned in.
+  example: They're an AI-native law firm.
+  related: [agent]
+
+- id: automation
+  term: automation
+  ipa: /ˌɔː.təˈmeɪ.ʃən/
+  pos: n.
+  difficulty: beginner
+  topics: [business, ai-headlines]
+  beginner: Using machines or software to do tasks people used to do by hand.
+  builder: With LLMs, automation reaches language-heavy work (support, drafting, coding) that rules-based systems couldn't handle.
+  research: Substitution of capital for labour in tasks; LLMs shift exposure toward cognitive, non-routine work.
+  analogy: The dishwasher, but for paperwork.
+  example: Automation handled 60% of support tickets.
+  related: [agent]
+
+- id: augmentation
+  term: augmentation
+  ipa: /ˌɔːɡ.menˈteɪ.ʃən/
+  pos: n.
+  difficulty: beginner
+  topics: [business]
+  beginner: Using AI to help people do their work better, rather than replacing them.
+  builder: AI as collaborator (drafts, suggestions, reviews) with humans deciding; often the faster path to adoption.
+  research: Complementarity between human and machine inputs, raising labour productivity without displacement.
+  analogy: Power steering, not a self-driving car.
+  example: The team chose augmentation over full automation.
+  contrast: [automation]
+  related: [copilot]
+
+- id: model-card
+  term: model card
+  ipa: /ˈmɒd.əl kɑːd/
+  pos: n.
+  difficulty: intermediate
+  topics: [policy, safety, evals]
+  beginner: A document describing what an AI model is for, how it was tested and its known limits.
+  builder: Release documentation covering intended use, evals, safety results and limitations; increasingly expected by regulators.
+  research: Standardised reporting of model provenance and disaggregated performance, proposed by Mitchell et al., 2019.
+  analogy: The nutrition label on the box.
+  example: The model card lists its known weaknesses.
+  related: [evals]

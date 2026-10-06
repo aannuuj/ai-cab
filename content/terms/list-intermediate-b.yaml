@@ -1,0 +1,462 @@
+# From the curated word list — 🟡 Intermediate: serving, evaluation, tokenization & architecture.
+
+- id: ttft
+  term: TTFT
+  expansion: Time to First Token
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, infra]
+  beginner: How long you wait before an AI's answer starts appearing.
+  builder: Latency until the first streamed token, dominated by prefill; the number users actually feel in chat UIs.
+  research: Prefill-bound latency scaling with prompt length and queueing delay before decode begins.
+  analogy: How long before the waiter brings the first dish.
+  example: Prompt caching halved our TTFT.
+  related: [latency, tps, prefix-caching]
+
+- id: tps
+  term: tokens per second
+  expansion: TPS
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, infra]
+  beginner: How fast an AI writes once it starts, measured in tokens each second.
+  builder: Decode speed per stream; drives how long full answers take and how many users a GPU can serve.
+  research: Autoregressive decode throughput, bounded by memory bandwidth for weights and KV cache.
+  analogy: Typing speed.
+  example: The small model runs at 200 tokens per second.
+  related: [ttft, throughput]
+
+- id: vllm
+  term: vLLM
+  pos: n.
+  difficulty: intermediate
+  topics: [infra, llm-engineering]
+  beginner: Popular open-source software for running AI models quickly on servers.
+  builder: High-throughput inference engine with PagedAttention, continuous batching and an OpenAI-compatible server.
+  research: A serving system co-designing KV-cache memory management and scheduling for LLM inference.
+  analogy: A high-performance engine for model serving.
+  example: We self-host Llama on vLLM.
+  origin: UC Berkeley, 2023.
+  related: [paged-attention, continuous-batching]
+
+- id: ollama
+  term: Ollama
+  ipa: /ˈɒl.ə.mə/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra, llm-engineering]
+  beginner: An easy app for downloading and running AI models on your own laptop.
+  builder: A local model runner wrapping llama.cpp with one-line installs, a model library and a local API.
+  research: Developer tooling packaging quantised GGUF models for local CPU/GPU inference.
+  analogy: An app store for local models.
+  example: I run a coding model offline with Ollama.
+  related: [llama-cpp, on-device-ai]
+
+- id: llama-cpp
+  term: llama.cpp
+  pos: n.
+  difficulty: intermediate
+  topics: [infra]
+  beginner: Lightweight software that runs AI models on ordinary computers, even without a big GPU.
+  builder: C/C++ inference engine with aggressive quantization (GGUF format); powers most local AI tools.
+  research: CPU- and Apple-Silicon-optimised inference with integer quantisation kernels and memory-mapped weights.
+  analogy: A model that fits in your backpack.
+  example: llama.cpp runs a 7B model on a MacBook Air.
+  related: [ollama, quantization]
+
+- id: cold-start
+  term: cold start latency
+  pos: n.
+  difficulty: intermediate
+  topics: [infra]
+  beginner: The extra wait when an AI server has to wake up and load the model first.
+  builder: Time to provision a GPU and load weights before serving; hurts serverless and scale-to-zero deployments.
+  research: Startup overhead from weight loading and kernel compilation, amortised by keeping replicas warm.
+  analogy: A car on a frosty morning.
+  example: Cold start latency made the first request take 40 seconds.
+  related: [latency]
+
+- id: model-pruning
+  term: model pruning
+  pos: n.
+  difficulty: intermediate
+  topics: [infra, research-math]
+  beginner: Removing parts of a model that barely matter, to make it smaller and faster.
+  builder: Zeroing or deleting low-importance weights, heads or layers, then briefly retraining to recover quality.
+  research: Structured or unstructured sparsification guided by magnitude or saliency criteria.
+  analogy: Pruning a hedge.
+  example: Model pruning removed a third of the layers.
+  related: [model-compression, distillation]
+
+- id: token-overhead
+  term: token overhead
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, business]
+  beginner: Extra tokens you pay for that don't add value, like long boilerplate instructions or wordy answers.
+  builder: Bloat from verbose prompts, repeated context, tool schemas and padding; trim it to cut cost and latency.
+  research: Non-informative token mass in inputs and outputs that consumes compute without improving task performance.
+  analogy: Packaging that costs more than the product.
+  example: Our tool schemas were 40% token overhead.
+  related: [token-pricing, context-compression]
+
+- id: context-window-compression
+  term: context window compression
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, agent-era]
+  beginner: Summarising older parts of a long conversation so it still fits in the AI's memory.
+  builder: Compaction of history (summaries, dropping stale tool output) so long-running agents keep going.
+  research: Lossy compression of the context state, trading fidelity for effective horizon length.
+  analogy: Replacing old meeting notes with a one-page summary.
+  example: Context window compression kept the agent running for hours.
+  related: [context-overflow, context-compression]
+
+- id: mmlu
+  term: MMLU
+  expansion: Massive Multitask Language Understanding
+  pos: n.
+  difficulty: intermediate
+  topics: [evals]
+  beginner: A famous multiple-choice test covering 57 school and professional subjects.
+  builder: Broad knowledge benchmark, now saturated for frontier models; harder variants (MMLU-Pro) took over.
+  research: 57-subject multiple-choice benchmark measuring zero/few-shot knowledge breadth.
+  analogy: A general knowledge exam.
+  example: Every model now scores near 90 on MMLU.
+  origin: Hendrycks et al., 2020.
+  related: [benchmark, saturation]
+
+- id: humaneval
+  term: HumanEval
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, vibe-coding]
+  beginner: A test of whether AI can write small working programs.
+  builder: 164 Python function problems checked by unit tests (pass@k); a classic coding benchmark now largely saturated.
+  research: Execution-based functional-correctness evaluation of code synthesis from docstrings.
+  analogy: A coding interview with an automated grader.
+  example: It scores 95% on HumanEval but still struggles in real repos.
+  origin: Chen et al., OpenAI, 2021.
+  related: [swe-bench]
+
+- id: gsm8k
+  term: GSM8K
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, reasoning-models]
+  beginner: A test of 8,000 grade-school maths word problems.
+  builder: Multi-step arithmetic reasoning benchmark; popularised chain-of-thought, now saturated.
+  research: Grade-school maths dataset evaluating multi-step numerical reasoning with exact-match answers.
+  analogy: A primary school maths homework sheet.
+  example: Chain-of-thought pushed GSM8K scores past 90%.
+  origin: Cobbe et al., OpenAI, 2021.
+  related: [benchmark]
+
+- id: chatbot-arena
+  term: Chatbot Arena
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, ai-headlines]
+  beginner: A public website where people vote on which of two anonymous AIs answered better.
+  builder: Crowdsourced pairwise votes turned into Elo-style leaderboard ratings; reflects user preference, can reward style.
+  research: Bradley–Terry ratings fit to blind pairwise human preferences (LMSYS/LMArena).
+  analogy: A blind taste test.
+  example: The new model jumped to first on Chatbot Arena.
+  related: [elo-rating, benchmark]
+
+- id: elo-rating
+  term: Elo rating
+  ipa: /ˈiː.ləʊ/
+  pos: n.
+  difficulty: intermediate
+  topics: [evals]
+  beginner: A score that goes up when you beat strong opponents, used to rank AI models like chess players.
+  builder: Pairwise-comparison rating system behind arena leaderboards; differences map to win probabilities.
+  research: Logistic rating model where rating gaps predict expected win rates.
+  analogy: Chess rankings for chatbots.
+  example: A 100-point Elo rating gap means about 64% win rate.
+  related: [chatbot-arena]
+
+- id: ragas
+  term: Ragas
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, rag]
+  beginner: Tools that score how well a RAG system finds and uses the right information.
+  builder: RAG eval frameworks (Ragas, TruLens) computing faithfulness, relevance and context precision/recall with LLM judges.
+  research: Reference-free metric suites decomposing RAG quality into retrieval and generation components.
+  analogy: A report card for search-plus-answer bots.
+  example: Ragas showed retrieval, not the model, was the weak link.
+  related: [faithfulness, answer-relevance, context-precision-recall]
+
+- id: faithfulness
+  term: faithfulness
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, rag]
+  beginner: Whether an AI's answer sticks to what the source documents actually say.
+  builder: Share of claims supported by retrieved context; the key RAG anti-hallucination metric.
+  research: Entailment of generated statements by provided evidence, estimated via NLI or LLM judges.
+  analogy: A reporter who quotes sources accurately.
+  example: Faithfulness dropped when we allowed outside knowledge.
+  related: [grounding, hallucination-rate]
+
+- id: answer-relevance
+  term: answer relevance
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, rag]
+  beginner: Whether the AI actually answered the question that was asked.
+  builder: Scores how directly a response addresses the query, independent of factual accuracy.
+  research: Semantic alignment between question and answer, often via reverse-generated questions.
+  analogy: Did they answer what you asked, or something nearby?
+  example: Answer relevance flagged replies that rambled.
+  related: [faithfulness]
+
+- id: context-precision-recall
+  term: context precision / recall
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, rag]
+  beginner: Whether search found the right documents (recall) without lots of junk (precision).
+  builder: Retrieval metrics: share of retrieved chunks that are relevant, and share of needed info that was retrieved.
+  research: Precision and recall of the retrieved set against ground-truth evidence for each query.
+  analogy: Did you grab all the right files, and only the right files?
+  example: Context precision / recall showed the retriever missed key policies.
+  related: [precision-recall, ragas]
+
+- id: bleu-rouge
+  term: BLEU / ROUGE
+  pos: n.
+  difficulty: intermediate
+  topics: [evals]
+  beginner: Old-school scores that compare AI text with a reference by counting shared words.
+  builder: N-gram overlap metrics for translation (BLEU) and summaries (ROUGE); cheap but weak judges of quality for LLMs.
+  research: Precision- and recall-oriented n-gram overlap statistics against reference texts.
+  analogy: Grading an essay by matching words to the answer key.
+  example: BLEU / ROUGE scores rewarded copying, not quality.
+  related: [llm-as-judge]
+
+- id: precision-recall
+  term: precision vs. recall
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, research-math]
+  beginner: Precision is how many flagged items were right; recall is how many right items got flagged.
+  builder: Precision = TP/(TP+FP), recall = TP/(TP+FN); pick the trade-off your product can live with.
+  research: Complementary classification metrics whose trade-off is traced by varying the decision threshold.
+  analogy: A fishing net: catch only fish, or catch every fish?
+  example: The spam filter favours precision vs. recall to protect real emails.
+  related: [f1-score, confusion-matrix]
+
+- id: f1-score
+  term: F1 score
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, research-math]
+  beginner: A single number that balances precision and recall.
+  builder: Harmonic mean of precision and recall; useful for imbalanced classification evals.
+  research: F1 = 2PR/(P+R), the harmonic mean penalising imbalance between precision and recall.
+  analogy: One grade for both accuracy and completeness.
+  example: The classifier's F1 score rose to 0.91.
+  related: [precision-recall]
+
+- id: confusion-matrix
+  term: confusion matrix
+  pos: n.
+  difficulty: intermediate
+  topics: [evals]
+  beginner: A table showing what a model predicted versus what was actually true.
+  builder: Counts of true/false positives and negatives per class; reveals which categories get mixed up.
+  research: Cross-tabulation of predicted and true labels from which classification metrics are derived.
+  analogy: A scoreboard of right and wrong guesses.
+  example: The confusion matrix showed refunds mislabelled as complaints.
+  related: [precision-recall]
+
+- id: ab-testing-prompts
+  term: A/B testing prompts
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, llm-engineering]
+  beginner: Showing two versions of a prompt to different users to see which works better.
+  builder: Online experiments comparing prompts or models on real metrics (resolution rate, thumbs-up), after offline evals.
+  research: Randomised controlled comparison of prompt variants under live traffic with significance testing.
+  analogy: Two shop signs, see which brings more customers.
+  example: A/B testing prompts showed the shorter one converted better.
+  related: [evals]
+
+- id: model-drift
+  term: model drift
+  pos: n.
+  difficulty: intermediate
+  topics: [evals, llm-engineering]
+  beginner: When an AI gets worse over time because the world, or the data it sees, changes.
+  builder: Monitor input distributions and quality metrics in production; alert, re-evaluate and retrain when they shift.
+  research: Performance degradation from covariate or concept shift between training and deployment distributions.
+  analogy: A map that slowly goes out of date.
+  example: Model drift crept in after we launched in a new country.
+  related: [out-of-distribution]
+
+- id: out-of-distribution
+  term: out-of-distribution
+  expansion: OOD
+  pos: adj.
+  difficulty: intermediate
+  topics: [evals, safety]
+  beginner: Inputs that look very different from anything the AI saw in training.
+  builder: Where models fail unpredictably; test with edge cases, new domains and adversarial inputs.
+  research: Samples from a distribution differing from the training distribution, where generalisation guarantees lapse.
+  analogy: A tourist in a country they never studied.
+  example: Handwritten forms were out-of-distribution for the OCR model.
+  related: [model-drift, generalization]
+
+- id: red-teaming-automation
+  term: automated red teaming
+  pos: n.
+  difficulty: intermediate
+  topics: [safety, evals]
+  beginner: Using AI to attack other AI systems automatically to find weaknesses at scale.
+  builder: Attacker models generate and mutate jailbreaks and harmful prompts; findings feed safety training and evals.
+  research: Adversarial search over the input space with RL-trained or prompted attacker models.
+  analogy: A robot sparring partner.
+  example: Automated red teaming found 2,000 jailbreaks overnight.
+  related: [red-teaming]
+
+- id: safety-classifiers
+  term: safety classifier
+  pos: n.
+  difficulty: intermediate
+  topics: [safety, llm-engineering]
+  beginner: A small AI that screens inputs and outputs for harmful content, like Llama Guard.
+  builder: Moderation models (Llama Guard, NeMo Guardrails) wrapped around an LLM to block unsafe requests and responses.
+  research: Discriminative policy models classifying content against a harm taxonomy, layered with generation.
+  analogy: Airport security for chatbots.
+  example: A safety classifier blocks requests for weapons instructions.
+  related: [guardrails]
+
+- id: vocab-size
+  term: vocabulary size
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, research-math]
+  beginner: How many different tokens a model knows, often 50,000 to 250,000.
+  builder: Bigger vocabularies compress text into fewer tokens (cheaper, multilingual) but enlarge the embedding tables.
+  research: |V| trades sequence length against embedding/softmax parameter cost and rare-token undertraining.
+  analogy: How many Lego brick shapes are in the box.
+  example: The bigger vocabulary size made Hindi much cheaper.
+  related: [tokenizer, bpe]
+
+- id: wordpiece
+  term: WordPiece
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn]
+  beginner: A way of splitting words into pieces, used by Google's BERT.
+  builder: Subword tokenizer that merges pairs maximising training-data likelihood; marks continuations with "##".
+  research: Likelihood-guided greedy merge segmentation, a close relative of BPE.
+  analogy: Breaking "unhappiness" into "un", "##happi", "##ness".
+  example: BERT uses WordPiece tokens.
+  related: [bpe, sentencepiece]
+
+- id: sentencepiece
+  term: SentencePiece
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn]
+  beginner: A tokenizer that works directly on raw text in any language, including spaces.
+  builder: Language-agnostic tokenizer library (BPE or unigram) treating whitespace as a symbol; used by Llama and T5.
+  research: Lossless subword tokenisation over raw Unicode streams without pre-tokenisation.
+  analogy: A universal cutter for any language's text.
+  example: SentencePiece handles Japanese without word spaces.
+  related: [unigram-tokenization, bpe]
+
+- id: unigram-tokenization
+  term: unigram tokenization
+  pos: n.
+  difficulty: intermediate
+  topics: [how-models-learn, research-math]
+  beginner: A tokenizer that keeps the most useful word pieces by probability.
+  builder: Starts with a large vocabulary and prunes pieces that least hurt likelihood; supports sampling multiple segmentations.
+  research: Unigram language model over subwords optimised via EM, with vocabulary pruning by loss contribution.
+  analogy: Keeping only the most-used puzzle pieces.
+  example: Unigram tokenization is an option in SentencePiece.
+  related: [sentencepiece]
+
+- id: embedding-dimension
+  term: embedding dimension
+  pos: n.
+  difficulty: intermediate
+  topics: [rag, research-math]
+  beginner: How many numbers are in each embedding vector, like 768 or 3,072.
+  builder: Higher dimensions capture more nuance but cost more storage and search time; Matryoshka embeddings can be truncated.
+  research: Dimensionality d of the representation space, bounding capacity and ANN cost.
+  analogy: How many adjectives you get to describe a thing.
+  example: We shrank the embedding dimension to 512 to save storage.
+  related: [embedding]
+
+- id: attention-mask
+  term: attention mask
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math, how-models-learn]
+  beginner: A filter telling the model which words it's allowed to look at.
+  builder: Blocks padding tokens and, in causal models, future tokens so predictions only use the past.
+  research: Additive −∞ masking of attention logits enforcing causality or ignoring padding.
+  analogy: Covering the answers while you read the question.
+  example: The causal attention mask stops it peeking ahead.
+  related: [causal-lm, attention]
+
+- id: alibi
+  term: ALiBi
+  expansion: Attention with Linear Biases
+  ipa: /ˈæl.ɪ.baɪ/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math]
+  beginner: A way of telling a model about word distance by penalising far-away words.
+  builder: Adds a distance-proportional penalty to attention scores instead of position embeddings; extrapolates to longer inputs.
+  research: Head-specific linear biases −m·|i−j| on attention logits enabling length extrapolation.
+  analogy: Voices get quieter the further away they are.
+  example: ALiBi let the model read past its training length.
+  origin: Press et al., 2021.
+  related: [rope, positional-encoding]
+
+- id: sparse-dense-models
+  term: sparse vs. dense models
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math, infra]
+  beginner: Dense models use every part for every word; sparse models only switch on some parts.
+  builder: MoE (sparse) models get big-model quality at lower per-token compute but need more memory.
+  research: Conditional computation versus full parameter activation per token, with distinct scaling behaviour.
+  analogy: Everyone works every shift versus specialists on call.
+  example: The sparse vs. dense models debate is about memory versus compute.
+  related: [mixture-of-experts, router]
+
+- id: router
+  term: router
+  expansion: gating network
+  ipa: /ˈruː.tər/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math]
+  beginner: The part of a mixture-of-experts model that decides which experts handle each word.
+  builder: A small learned layer scoring experts per token and picking the top-k; load balancing keeps experts evenly used.
+  research: A gating function softmax(W·x) selecting experts, regularised with auxiliary balance losses.
+  analogy: A receptionist sending patients to specialists.
+  example: The router sends maths tokens to the same few experts.
+  related: [mixture-of-experts]
+
+- id: mqa
+  term: MQA
+  expansion: Multi-Query Attention
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math, infra]
+  beginner: A memory-saving attention design where all heads share the same keys and values.
+  builder: One shared K/V head across query heads; shrinks the KV cache and speeds decoding with small quality loss.
+  research: Attention with H query heads and a single key/value head, cutting memory bandwidth at decode.
+  analogy: Many readers sharing one reference book.
+  example: MQA made long-context serving affordable.
+  origin: Shazeer, 2019.
+  related: [gqa, kv-cache]

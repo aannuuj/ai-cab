@@ -1,0 +1,25 @@
+# Topics shown on the Explore screen. `symbol` is an SF Symbol name; `palette` colours the illustration.
+- {id: agent-era, title: Agent Era, eyebrow: Software that acts, section: trending, symbol: wand.and.stars, palette: teal}
+- {id: vibe-coding, title: Vibe Coding, eyebrow: Building by talking, section: trending, symbol: chevron.left.forwardslash.chevron.right, palette: coral}
+- {id: reasoning-models, title: Reasoning Models, eyebrow: Models that think first, section: trending, symbol: brain, palette: cream, premium: true}
+- {id: ai-headlines, title: AI Headlines, eyebrow: Decode the news, section: trending, symbol: newspaper, palette: olive}
+
+- {id: how-models-learn, title: How Models Learn, eyebrow: The basics, section: foundations, symbol: brain.head.profile, palette: teal}
+- {id: prompting, title: Prompting, eyebrow: Talking to machines, section: foundations, symbol: text.bubble, palette: coral}
+- {id: training, title: Data & Training, eyebrow: Where skills come from, section: foundations, symbol: chart.line.uptrend.xyaxis, palette: cream}
+- {id: safety, title: Safety & Alignment, eyebrow: Keeping AI on our side, section: foundations, symbol: shield.lefthalf.filled, palette: olive}
+
+- {id: llm-engineering, title: LLM Engineering, eyebrow: Shipping with models, section: build, symbol: cpu, palette: teal}
+- {id: rag, title: RAG & Retrieval, eyebrow: Giving models memory, section: build, symbol: doc.text.magnifyingglass, palette: coral, premium: true}
+- {id: evals, title: Evals, eyebrow: Measuring smart, section: build, symbol: checklist, palette: cream, premium: true}
+- {id: infra, title: Chips & Infra, eyebrow: The hardware underneath, section: build, symbol: server.rack, palette: olive, premium: true}
+
+- {id: research-math, title: Research Math, eyebrow: Under the hood, section: frontier, symbol: function, palette: teal, premium: true}
+- {id: multimodal, title: Multimodal, eyebrow: Beyond text, section: frontier, symbol: photo.on.rectangle, palette: coral, premium: true}
+- {id: robotics, title: Robotics, eyebrow: AI with a body, section: frontier, symbol: gearshape.2, palette: cream, premium: true}
+- {id: interpretability, title: Interpretability, eyebrow: Reading the model's mind, section: frontier, symbol: eye, palette: olive, premium: true}
+
+- {id: policy, title: AI Policy & Law, eyebrow: The rules being written, section: world, symbol: building.columns, palette: teal}
+- {id: business, title: Business of AI, eyebrow: Money and markets, section: world, symbol: dollarsign.circle, palette: coral}
+- {id: culture, title: AI Culture & Slang, eyebrow: Talk like an insider, section: world, symbol: theatermasks, palette: cream}
+- {id: architectures, title: New Architectures, eyebrow: Beyond the transformer, section: frontier, symbol: square.stack.3d.up, palette: coral, premium: true}

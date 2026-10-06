@@ -1,0 +1,59 @@
+# Journey chapters. Each chapter needs >= 5 terms (its quizzes draw from them).
+# `decorations` are SF Symbols scattered around the chapter's path.
+- number: 1
+  title: Talking to Machines
+  subtitle: The words you hear in every AI conversation
+  terms: [artificial-intelligence, llm, prompt, token, context-window, hallucination, system-prompt]
+  decorations: [text.bubble, sparkles, character.cursor.ibeam, quote.bubble]
+- number: 2
+  title: How Models Learn
+  subtitle: From data to a working brain
+  terms: [machine-learning, model, training, inference, dataset, parameter, neural-network]
+  decorations: [brain, chart.line.uptrend.xyaxis, books.vertical, circle.grid.cross]
+- number: 3
+  title: Inside the Transformer
+  subtitle: The architecture behind it all
+  terms: [transformer, attention, tokenizer, embedding, pre-training, fine-tuning, base-model]
+  decorations: [square.stack.3d.up, eye, scope, point.3.connected.trianglepath.dotted]
+- number: 4
+  title: Making Models Useful
+  subtitle: Retrieval, tools and reliable output
+  terms: [rag, vector-database, chunking, grounding, citations, function-calling, structured-output]
+  premium: true
+  decorations: [doc.text.magnifyingglass, wrench.and.screwdriver, tray.full, link]
+- number: 5
+  title: Agents Take Action
+  subtitle: Software that does things for you
+  terms: [agent, agent-loop, mcp, computer-use, prompt-injection, human-in-the-loop, memory]
+  premium: true
+  decorations: [wand.and.stars, cursorarrow.click.2, powerplug, hand.raised]
+- number: 6
+  title: Measuring Smart
+  subtitle: Benchmarks, evals and how to read them
+  terms: [benchmark, evals, llm-as-judge, swe-bench, data-contamination, overfitting, saturation]
+  premium: true
+  decorations: [checklist, gauge.with.needle, chart.bar, medal]
+- number: 7
+  title: Safety & Alignment
+  subtitle: Keeping powerful systems on our side
+  terms: [alignment, rlhf, constitutional-ai, jailbreak, red-teaming, sycophancy, reward-hacking]
+  premium: true
+  decorations: [shield.lefthalf.filled, lock.shield, exclamationmark.triangle, hand.thumbsup]
+- number: 8
+  title: The Hardware Underneath
+  subtitle: Chips, clusters and the cost of thinking
+  terms: [gpu, tpu, compute, data-center, quantization, kv-cache, mixture-of-experts]
+  premium: true
+  decorations: [cpu, memorychip, server.rack, bolt]
+- number: 9
+  title: AI & the Law
+  subtitle: The rules being written right now
+  terms: [eu-ai-act, high-risk-ai, gpai, export-controls, copyright-ai, watermarking, deepfake]
+  premium: true
+  decorations: [building.columns, scalemass, doc.badge.gearshape, globe.europe.africa]
+- number: 10
+  title: Frontier Research
+  subtitle: Where the field is heading
+  terms: [scaling-laws, reasoning-model, test-time-compute, mechanistic-interpretability, superposition, world-model, verifiable-rewards]
+  premium: true
+  decorations: [atom, function, telescope, flask]

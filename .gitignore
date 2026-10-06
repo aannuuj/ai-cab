@@ -1,0 +1,9 @@
+dist/
+.DS_Store
+*.xcodeproj/
+ios/build/
+DerivedData/
+__pycache__/
+.venv/
+node_modules/
+.wrangler/

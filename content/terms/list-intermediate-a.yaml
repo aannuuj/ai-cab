@@ -1,0 +1,392 @@
+# From the curated word list — 🟡 Intermediate: retrieval, fine-tuning, prompting patterns & agents.
+
+- id: cosine-similarity
+  term: cosine similarity
+  pos: n.
+  difficulty: intermediate
+  topics: [rag, research-math]
+  beginner: A score of how similar two pieces of text are in meaning, from -1 to 1.
+  builder: The default metric for comparing embeddings; the angle between vectors, ignoring their length.
+  research: cos θ = a·b / (‖a‖‖b‖); equivalent to dot product for unit-normalised vectors.
+  analogy: Checking if two arrows point the same way.
+  example: Cosine similarity ranked the closest help articles.
+  related: [embedding, vector-search]
+
+- id: semantic-chunking
+  term: semantic chunking
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: Splitting documents at natural topic breaks instead of every fixed number of words.
+  builder: Chunk boundaries chosen by headings or embedding shifts, so each chunk holds one idea; improves retrieval precision.
+  research: Segmentation using semantic discontinuities between adjacent sentence embeddings rather than fixed windows.
+  analogy: Cutting a cake along the layers.
+  example: Semantic chunking kept each policy section intact.
+  related: [chunking, chunk-overlap]
+
+- id: chunk-overlap
+  term: chunk overlap
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: Letting neighbouring document pieces share a few sentences so no idea gets cut in half.
+  builder: Repeating 10–20% of tokens between consecutive chunks to preserve context across boundaries.
+  research: Sliding-window segmentation with stride smaller than window size, trading index size for boundary recall.
+  analogy: Overlapping roof tiles so rain can't slip through.
+  example: Adding chunk overlap fixed answers that missed half a sentence.
+  related: [chunking]
+
+- id: hnsw
+  term: HNSW
+  expansion: Hierarchical Navigable Small World
+  pos: n.
+  difficulty: intermediate
+  topics: [rag, infra]
+  beginner: A fast way of searching millions of vectors by hopping through a layered map of neighbours.
+  builder: The most common approximate nearest-neighbour index in vector databases; tune M and ef for recall vs speed.
+  research: Multi-layer proximity graphs with greedy search giving logarithmic-ish ANN query complexity.
+  analogy: Taking motorways first, then side streets.
+  example: HNSW returns results in milliseconds.
+  origin: Malkov & Yashunin, 2016.
+  related: [vector-indexing, vector-database]
+
+- id: graphrag
+  term: GraphRAG
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: RAG that builds a map of people, places and ideas from your documents so the AI can connect the dots.
+  builder: Extract entities and relations into a knowledge graph, summarise communities, then retrieve over the graph for global questions.
+  research: Graph-structured retrieval enabling multi-hop and corpus-level query answering beyond chunk similarity.
+  analogy: A detective's string board instead of a pile of notes.
+  example: GraphRAG answered "what themes connect all these reports?"
+  origin: Microsoft Research, 2024.
+  related: [knowledge-graph, rag]
+
+- id: knowledge-graph
+  term: knowledge graph
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: A network of facts showing how things relate, like "Paris is the capital of France".
+  builder: Entities and typed relationships queried alongside vector search to ground answers in structured facts.
+  research: A labelled directed graph of (subject, predicate, object) triples supporting symbolic reasoning over relations.
+  analogy: A family tree for facts.
+  example: The knowledge graph knows which products share a supplier.
+  related: [graphrag]
+
+- id: vector-indexing
+  term: vector indexing
+  pos: n.
+  difficulty: intermediate
+  topics: [rag, infra]
+  beginner: Organising stored vectors so similar ones can be found quickly.
+  builder: Building ANN structures (HNSW, IVF, PQ) over embeddings; trades memory, build time and recall.
+  research: Data structures for sublinear approximate similarity search via graphs, partitions or quantisation.
+  analogy: Shelving a library so you don't scan every book.
+  example: Re-running vector indexing took an hour for 50M docs.
+  related: [hnsw, vector-database]
+
+- id: dense-sparse-retrieval
+  term: dense vs. sparse retrieval
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: Two ways to search, by meaning (dense) or by exact keywords (sparse).
+  builder: Dense uses embeddings and catches paraphrases; sparse (BM25) nails exact terms and IDs. Hybrid combines both.
+  research: Learned continuous representations versus high-dimensional lexical vectors, with complementary recall profiles.
+  analogy: A friend who gets what you mean versus an index that matches exact words.
+  example: Dense vs. sparse retrieval each missed things the other caught.
+  related: [hybrid-search, semantic-search]
+
+- id: metadata-filtering
+  term: metadata filtering
+  pos: n.
+  difficulty: intermediate
+  topics: [rag]
+  beginner: Narrowing a search by facts like date, author or product before matching on meaning.
+  builder: Pre- or post-filtering vector results by structured fields; essential for permissions and freshness.
+  research: Constrained ANN search combining attribute predicates with similarity ranking.
+  analogy: Only searching this year's folder.
+  example: Metadata filtering hides docs the user isn't allowed to see.
+  related: [vector-database]
+
+- id: context-compression
+  term: context compression
+  pos: n.
+  difficulty: intermediate
+  topics: [rag, llm-engineering]
+  beginner: Trimming retrieved documents to just the useful bits before giving them to the AI.
+  builder: Extract or summarise relevant spans from retrieved chunks to cut tokens and noise.
+  research: Query-aware selection or abstraction of retrieved text to maximise information per token.
+  analogy: Highlighting the key lines before handing over the report.
+  example: Context compression cut our prompt from 20k to 4k tokens.
+  related: [reranking, context-engineering]
+
+- id: peft
+  term: PEFT
+  expansion: Parameter-Efficient Fine-Tuning
+  pos: n.
+  difficulty: intermediate
+  topics: [training, llm-engineering]
+  beginner: Customising a big model by training only a tiny part of it, saving time and money.
+  builder: Family of methods (LoRA, adapters, prefix tuning) that update a small fraction of parameters.
+  research: Fine-tuning restricted to a low-dimensional parameter subspace or added modules, with frozen base weights.
+  analogy: Tailoring a suit instead of sewing a new one.
+  example: PEFT let us fine-tune on a single GPU.
+  related: [lora, adapters, soft-prompting]
+
+- id: qlora
+  term: QLoRA
+  expansion: Quantized LoRA
+  pos: n.
+  difficulty: intermediate
+  topics: [training, infra]
+  beginner: A way to fine-tune huge models on modest hardware by compressing the base model first.
+  builder: LoRA adapters trained on top of a 4-bit quantized frozen base; fine-tune a 65B model on one GPU.
+  research: Backprop through a 4-bit NormalFloat-quantised base into low-rank adapters, with paged optimisers.
+  analogy: Renovating a room while the house is vacuum-packed.
+  example: QLoRA made the 70B fine-tune affordable.
+  origin: Dettmers et al., 2023.
+  related: [lora, quantization]
+
+- id: rlaif
+  term: RLAIF
+  expansion: Reinforcement Learning from AI Feedback
+  pos: n.
+  difficulty: intermediate
+  topics: [training, safety]
+  beginner: Training an AI using another AI's ratings instead of only humans'.
+  builder: An AI labeller generates preference data at scale, often guided by principles; cheaper than human RLHF.
+  research: Preference optimisation with model-generated comparisons, as in Constitutional AI.
+  analogy: A senior student grading practice papers.
+  example: RLAIF scaled preference data a hundredfold.
+  related: [rlhf, constitutional-ai]
+  contrast: [rlhf]
+
+- id: sft
+  term: SFT
+  expansion: Supervised Fine-Tuning
+  pos: n.
+  difficulty: intermediate
+  topics: [training]
+  beginner: Training a model on example conversations showing exactly how it should respond.
+  builder: Fine-tuning on curated prompt→ideal-response pairs; usually the first post-training step before preference tuning.
+  research: Maximum-likelihood training on demonstration data, cloning a target behaviour policy.
+  analogy: Learning by copying model answers.
+  example: SFT taught the base model to follow instructions.
+  related: [post-training, rlhf]
+
+- id: catastrophic-forgetting
+  term: catastrophic forgetting
+  pos: n.
+  difficulty: intermediate
+  topics: [training]
+  beginner: When training a model on something new makes it forget what it knew before.
+  builder: Fine-tuning erodes general abilities; mitigate with LoRA, mixing in general data and low learning rates.
+  research: Interference in shared parameters when sequentially optimising on shifted distributions.
+  analogy: Learning Spanish and forgetting your French.
+  example: Catastrophic forgetting made the legal fine-tune bad at maths.
+  related: [fine-tuning, unlearning]
+
+- id: lr-scheduler
+  term: learning rate scheduler
+  pos: n.
+  difficulty: intermediate
+  topics: [training]
+  beginner: A plan that changes how big the model's learning steps are over the course of training.
+  builder: Warmup then decay (cosine, linear, WSD); a bad schedule wastes compute or causes divergence.
+  research: Time-varying step-size policy η(t) shaping optimisation dynamics and final loss.
+  analogy: Sprinting at the start, then slowing to a careful walk.
+  example: The learning rate scheduler warms up over the first 2,000 steps.
+  related: [learning-rate]
+
+- id: batch-size
+  term: batch size
+  pos: n.
+  difficulty: intermediate
+  topics: [training, infra]
+  beginner: How many examples a model looks at before each update.
+  builder: Bigger batches use hardware better and smooth gradients; LLM training ramps to millions of tokens per batch.
+  research: Mini-batch cardinality governing gradient noise scale and the critical batch size beyond which returns diminish.
+  analogy: Grading a stack of papers before adjusting your teaching.
+  example: Doubling the batch size halved training time.
+  related: [gradient-descent, epoch]
+
+- id: checkpoint
+  term: checkpoint
+  ipa: /ˈtʃek.pɔɪnt/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, infra]
+  beginner: A saved snapshot of a model during or after training.
+  builder: Weights plus optimiser state saved periodically so training can resume and the best version can ship.
+  research: Serialised parameter and optimiser state enabling fault tolerance and post-hoc model selection.
+  analogy: A save point in a video game.
+  example: We rolled back to yesterday's checkpoint.
+  related: [weights, model-registry]
+
+- id: tree-of-thoughts
+  term: tree-of-thoughts
+  expansion: ToT
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, reasoning-models]
+  beginner: Having an AI explore several lines of reasoning, like branches, and pick the best one.
+  builder: Generate multiple reasoning steps, evaluate them and search (BFS/DFS) over the tree; costly but strong on puzzles.
+  research: Deliberate search over intermediate thought states with model-based value estimates.
+  analogy: A chess player considering several moves ahead.
+  example: Tree-of-thoughts solved puzzles that chain-of-thought missed.
+  origin: Yao et al., 2023.
+  related: [chain-of-thought, self-consistency]
+
+- id: react
+  term: ReAct
+  expansion: Reasoning + Acting
+  ipa: /riˈækt/
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, prompting]
+  beginner: An agent pattern where the AI alternates between thinking and taking actions, like searching.
+  builder: Thought → action (tool call) → observation loops; the template behind most tool-using agents.
+  research: Interleaving reasoning traces with environment actions so observations update subsequent reasoning.
+  analogy: Think, check, think again.
+  example: The ReAct agent searched three times before answering.
+  origin: Yao et al., 2022.
+  related: [agent-loop, chain-of-thought]
+
+- id: self-consistency
+  term: self-consistency
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, reasoning-models]
+  beginner: Asking the AI the same question several times and going with the most common answer.
+  builder: Sample multiple reasoning paths and majority-vote the final answers; boosts accuracy at extra cost.
+  research: Marginalising over sampled reasoning chains by voting on final answers.
+  analogy: Asking five friends and trusting the majority.
+  example: Self-consistency fixed one in five maths errors.
+  origin: Wang et al., 2022.
+  related: [chain-of-thought, test-time-compute]
+
+- id: directional-stimulus
+  term: directional stimulus prompting
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting]
+  beginner: Giving the AI small hints, like keywords, that steer it toward the answer you want.
+  builder: A small policy model generates hint keywords per input that are added to the prompt of a larger frozen model.
+  research: Learning instance-specific stimulus prompts via SFT and RL to guide black-box LLMs.
+  analogy: A coach whispering keywords from the sidelines.
+  example: Directional stimulus prompting improved summary coverage.
+  origin: Li et al., 2023.
+  related: [prompt-engineering]
+
+- id: skeleton-of-thought
+  term: skeleton-of-thought
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, infra]
+  beginner: Having the AI write a quick outline first, then fill in each point at the same time to answer faster.
+  builder: Generate an answer skeleton, then expand points in parallel calls to cut end-to-end latency.
+  research: Parallel decoding via outline-then-expand, trading coherence for wall-clock speed.
+  analogy: Drafting bullet points, then a team writes each paragraph.
+  example: Skeleton-of-thought made long answers twice as fast.
+  origin: Ning et al., 2023.
+  related: [latency]
+
+- id: reflection-pattern
+  term: reflection pattern
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, prompting]
+  beginner: Making the AI review and critique its own work, then improve it.
+  builder: Draft → critique → revise loop, optionally with tests or a separate critic model.
+  research: Self-refinement using model-generated feedback as an additional conditioning signal.
+  analogy: Proofreading your own essay.
+  example: The reflection pattern caught bugs before the code was shown.
+  related: [agentic-workflow]
+
+- id: agentic-workflow
+  term: agentic workflow
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, llm-engineering]
+  beginner: A process where AI handles several steps of a job, deciding some of what to do along the way.
+  builder: Structured flows mixing fixed steps with model decisions (routing, reflection, tool use); the middle ground between pipelines and agents.
+  research: Hybrid control flows where models select among predefined operations within a bounded graph.
+  analogy: A recipe with "season to taste" steps.
+  example: Our agentic workflow drafts, checks and files each claim.
+  related: [ai-pipeline, agent, reflection-pattern]
+
+- id: tool-retrieval
+  term: tool retrieval
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era]
+  beginner: Picking just the right tools for an AI from a big toolbox, so it isn't overwhelmed.
+  builder: Searching a large tool catalogue and loading only relevant tool definitions into context.
+  research: Retrieval over tool descriptions to scale the action space without exhausting context.
+  analogy: Handing a mechanic the wrenches for this car only.
+  example: Tool retrieval let the agent use 400 tools.
+  related: [function-calling, mcp]
+
+- id: plan-and-solve
+  term: plan-and-solve
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, agent-era]
+  beginner: Asking the AI to make a plan first, then carry it out step by step.
+  builder: A prompt pattern separating planning from execution; reduces skipped steps in multi-step tasks.
+  research: Decomposition prompting that elicits an explicit plan before stepwise execution.
+  analogy: Writing the shopping list before going to the store.
+  example: Plan-and-solve stopped it skipping steps.
+  origin: Wang et al., 2023.
+  related: [chain-of-thought]
+
+- id: memory-buffer
+  term: memory buffer
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era, llm-engineering]
+  beginner: Where an AI agent keeps notes on what it has done so it can pick up where it left off.
+  builder: Persistent state (scratchpad, conversation summary, task list) saved between steps or sessions.
+  research: External state persistence decoupling agent continuity from a single context window.
+  analogy: A sticky note left for your future self.
+  example: The memory buffer let the agent resume after a crash.
+  related: [memory, agent-memory-types]
+
+- id: agent-memory-types
+  term: short-term vs. long-term memory
+  pos: n.
+  difficulty: intermediate
+  topics: [agent-era]
+  beginner: An agent's working memory for the current task versus what it remembers across days.
+  builder: Short-term lives in the context window; long-term is stored externally (files, vector DB) and retrieved when needed.
+  research: Partitioning agent state into transient context and persistent retrievable memory.
+  analogy: Your desk versus your filing cabinet.
+  example: Short-term vs. long-term memory explains why it forgot your name tomorrow.
+  related: [memory, memory-buffer]
+
+- id: prompt-routing
+  term: dynamic prompt routing
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, business]
+  beginner: Automatically sending each request to the best model or prompt for the job.
+  builder: A classifier or small model routes easy queries to cheap models and hard ones to strong models.
+  research: Learned routing over model/prompt ensembles optimising a quality–cost frontier.
+  analogy: A hospital triage desk.
+  example: Dynamic prompt routing cut costs by 60%.
+  related: [small-language-model]
+
+- id: structured-output-validation
+  term: structured output validation
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering]
+  beginner: Checking that an AI's answer has the exact fields and types your app expects.
+  builder: Parsing outputs into typed schemas (Pydantic, Instructor, Zod) and retrying on failure.
+  research: Runtime type-checking of generated structures against a schema, with repair loops on violation.
+  analogy: A form that won't submit until it's filled in properly.
+  example: Structured output validation caught a missing price field.
+  related: [structured-output, json-mode]

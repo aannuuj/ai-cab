@@ -1,0 +1,413 @@
+# Prompting + safety & alignment.
+
+- id: prompt
+  term: prompt
+  ipa: /prɒmpt/
+  pos: n.
+  difficulty: beginner
+  topics: [prompting]
+  beginner: The message or instructions you give an AI to get a response.
+  builder: The full input sent to the model: system prompt, conversation, documents and tool results. Its structure drives quality.
+  research: The conditioning context x on which the model samples p(y | x); small changes can shift outputs substantially.
+  analogy: The brief you hand a very fast, very literal freelancer.
+  example: A clearer prompt fixed the formatting problem.
+  related: [system-prompt, prompt-engineering, context-window]
+
+- id: system-prompt
+  term: system prompt
+  ipa: /ˈsɪs.təm prɒmpt/
+  pos: n.
+  difficulty: beginner
+  topics: [prompting, llm-engineering]
+  beginner: Hidden instructions an app gives the AI before you start chatting, setting its role and rules.
+  builder: Operator-level instructions that persist across the conversation; where you put persona, policies, tools guidance and format.
+  research: A privileged context segment that models are trained to weight above user turns in the instruction hierarchy.
+  analogy: The job description the assistant read before you walked in.
+  example: The system prompt tells the bot to answer only about our product.
+  related: [prompt, prompt-injection]
+
+- id: prompt-engineering
+  term: prompt engineering
+  ipa: /prɒmpt ˌen.dʒɪˈnɪə.rɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [prompting]
+  beginner: The skill of wording instructions so an AI gives you better results.
+  builder: Iteratively designing prompts (instructions, examples, structure) and testing them against evals instead of vibes.
+  research: Search over the discrete input space to elicit desired behaviour without updating parameters.
+  analogy: Learning how to ask a genius coworker for help.
+  example: A day of prompt engineering beat a week of fine-tuning.
+  related: [few-shot-prompting, chain-of-thought, context-engineering]
+
+- id: context-engineering
+  term: context engineering
+  ipa: /ˈkɒn.tekst ˌen.dʒɪˈnɪə.rɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, agent-era, llm-engineering]
+  beginner: Carefully choosing everything an AI gets to see, like documents, memory and tools, not just the question.
+  builder: Designing what fills the context window each turn (retrieved docs, tool results, memory, compaction) to maximise signal per token.
+  research: Optimising the information state presented to a model across steps of an agentic loop under a finite token budget.
+  analogy: Packing a suitcase: what you bring matters more than how you ask.
+  example: Context engineering made the agent stop forgetting the user's goal.
+  related: [context-window, rag, agent]
+  trending: 0.8
+  added: 2026-09-15
+
+- id: few-shot-prompting
+  term: few-shot prompting
+  ipa: /ˌfjuːˈʃɒt ˈprɒmp.tɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [prompting]
+  beginner: Showing an AI a few examples of what you want before asking it to do the real thing.
+  builder: Including input→output examples in the prompt to pin down format and style without any training.
+  research: In-context learning from k demonstrations; the model infers the task from examples at inference time.
+  analogy: Showing a new hire three finished reports before they write the fourth.
+  example: Few-shot prompting with three examples fixed the tone.
+  related: [in-context-learning, prompt-engineering]
+  contrast: [fine-tuning]
+
+- id: in-context-learning
+  term: in-context learning
+  ipa: /ɪn ˈkɒn.tekst ˈlɜː.nɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, research-math]
+  beginner: When an AI picks up a new task just from instructions or examples in the conversation, with no retraining.
+  builder: Task adaptation purely through the prompt; why demos and docs in context change behaviour instantly.
+  research: Emergent meta-learning in which transformers implement learning-like updates within the forward pass over context.
+  analogy: Learning a board game by reading the rules on the box.
+  example: In-context learning let it follow our made-up file format.
+  related: [few-shot-prompting]
+
+- id: chain-of-thought
+  term: chain-of-thought
+  ipa: /ˌtʃeɪn.əvˈθɔːt/
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, reasoning-models]
+  beginner: Getting an AI to work through a problem step by step before answering, which makes it more accurate.
+  builder: Intermediate reasoning tokens before the answer; now built into reasoning models via "thinking" rather than prompt tricks.
+  research: Generating latent reasoning traces that decompose computation across tokens, increasing effective serial compute.
+  analogy: Showing your working in a maths exam.
+  example: Chain-of-thought fixed most of its arithmetic mistakes.
+  origin: Wei et al., Google, 2022.
+  related: [reasoning-model, test-time-compute]
+
+- id: temperature
+  term: temperature
+  ipa: /ˈtem.prə.tʃər/
+  pos: n.
+  difficulty: beginner
+  topics: [prompting, llm-engineering]
+  beginner: A setting that controls how random or creative an AI's answers are.
+  builder: Sampling parameter scaling logits; low for deterministic extraction, higher for brainstorming. Some newer models fix it.
+  research: The divisor T in softmax(z/T); T→0 approaches greedy decoding, larger T flattens the distribution.
+  analogy: A spice dial from "always the same" to "surprise me".
+  example: Set temperature to zero for the data extraction step.
+  related: [sampling]
+
+- id: sampling
+  term: sampling
+  ipa: /ˈsɑːm.plɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [llm-engineering, research-math]
+  beginner: How a model picks each next word from its list of likely options.
+  builder: Decoding strategy (temperature, top-p, top-k) that turns next-token probabilities into actual text.
+  research: Drawing tokens from the model's predictive distribution, possibly truncated (nucleus) or reshaped, at each autoregressive step.
+  analogy: Drawing from a bag where likelier words have more marbles.
+  example: Nucleus sampling made the stories less repetitive.
+  related: [temperature, token]
+
+- id: structured-output
+  term: structured output
+  ipa: /ˈstrʌk.tʃəd ˈaʊt.pʊt/
+  pos: n.
+  difficulty: intermediate
+  topics: [prompting, llm-engineering]
+  beginner: Making an AI answer in a fixed format, like a form with set fields, so software can read it.
+  builder: Constraining responses to a JSON schema so outputs parse every time; no regex scraping of prose.
+  research: Constrained decoding that masks tokens violating a grammar, guaranteeing outputs lie in a formal language.
+  analogy: Handing someone a form instead of a blank page.
+  example: Structured output gives us valid JSON on every call.
+  related: [function-calling]
+
+- id: hallucination
+  term: hallucination
+  ipa: /həˌluː.sɪˈneɪ.ʃən/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, how-models-learn, ai-headlines]
+  beginner: When an AI states something false with total confidence, like a made-up fact or fake source.
+  builder: Fluent but unfounded output; reduce with grounding (RAG, citations), tool use, and evals that check factuality.
+  research: Generation unsupported by training data or provided context, arising from likelihood-driven decoding beyond calibrated knowledge.
+  analogy: A confident dinner guest who never says "I don't know".
+  example: The lawyer was fined after a hallucination produced fake cases.
+  related: [grounding, rag]
+  trending: 0.4
+
+- id: grounding
+  term: grounding
+  ipa: /ˈɡraʊn.dɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [rag, safety]
+  beginner: Making an AI base its answers on real, provided sources instead of its memory.
+  builder: Tying outputs to supplied documents or tool results, ideally with citations, to cut hallucinations.
+  research: Conditioning generation on verifiable external evidence and attributing claims to it.
+  analogy: "Show me where it says that."
+  example: Grounding every answer in our docs made support replies trustworthy.
+  related: [rag, hallucination, citations]
+
+- id: citations
+  term: citations
+  ipa: /saɪˈteɪ.ʃənz/
+  pos: n.
+  difficulty: beginner
+  topics: [rag, safety]
+  beginner: Links or quotes showing exactly where an AI got its information.
+  builder: Model-emitted references to specific passages in provided sources, which users and evals can verify.
+  research: Attribution of generated spans to source segments, enabling precision/recall evaluation of support.
+  analogy: Footnotes for chatbots.
+  example: Turn on citations so reviewers can check every claim.
+  related: [grounding]
+
+- id: alignment
+  term: alignment
+  ipa: /əˈlaɪn.mənt/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, ai-headlines]
+  beginner: Making sure AI systems actually do what people intend and stay helpful, honest and harmless.
+  builder: Training and evaluation work (RLHF, constitutions, red teaming) that shapes model behaviour toward intended values.
+  research: The problem of specifying and robustly instilling objectives so capable systems pursue intended goals, even out of distribution.
+  analogy: Making sure the genie grants the wish you meant, not the one you said.
+  example: The lab doubled its alignment team.
+  related: [rlhf, constitutional-ai, reward-hacking]
+
+- id: guardrails
+  term: guardrails
+  ipa: /ˈɡɑːd.reɪlz/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, llm-engineering]
+  beginner: Safety limits that stop an AI from producing harmful or off-topic responses.
+  builder: Input/output filters, classifiers and policy checks wrapped around a model to block unsafe or out-of-scope content.
+  research: External or trained-in constraints on a policy's action space, evaluated for robustness under adversarial inputs.
+  analogy: The barriers on a mountain road.
+  example: Guardrails stop the bank's bot from giving tax advice.
+  related: [jailbreak, prompt-injection]
+
+- id: jailbreak
+  term: jailbreaking
+  ipa: /ˈdʒeɪl.breɪk/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, culture]
+  beginner: A trick prompt that gets an AI to ignore its safety rules.
+  builder: Adversarial input (role-play, encodings, many-shot) that bypasses a model's refusal training.
+  research: An input distribution shift that elicits policy-violating behaviour, exposing gaps between training and deployment.
+  analogy: Talking your way past a bouncer.
+  example: Jailbreaking worked by asking it to write "a movie script".
+  related: [red-teaming, guardrails]
+  contrast: [prompt-injection]
+
+- id: prompt-injection
+  term: prompt injection
+  ipa: /prɒmpt ɪnˈdʒek.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [safety, agent-era, llm-engineering]
+  beginner: Hidden instructions in a webpage or document that trick an AI into doing something its user didn't ask for.
+  builder: Untrusted content (emails, pages, tool output) carrying instructions the model may follow; the top security risk for agents.
+  research: Confusion of data and instruction channels in LLMs, analogous to SQL injection, without a clean architectural separation.
+  analogy: A note slipped into a package that says "the courier should give me your keys".
+  example: A prompt injection in an email told the agent to forward the inbox.
+  related: [agent, guardrails]
+  contrast: [jailbreak]
+  trending: 0.6
+
+- id: red-teaming
+  term: red teaming
+  ipa: /ˈred ˌtiː.mɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, evals]
+  beginner: Hiring people to attack an AI on purpose to find its dangerous weaknesses before release.
+  builder: Structured adversarial testing, human and automated, for harmful capabilities, jailbreaks and misuse.
+  research: Adversarial evaluation searching for failure modes beyond static benchmarks, increasingly automated with attacker models.
+  analogy: Paying burglars to test your locks.
+  example: Red teaming found the model could explain dangerous chemistry.
+  related: [jailbreak, evals]
+
+- id: rlhf
+  term: RLHF
+  expansion: Reinforcement Learning from Human Feedback
+  ipa: /ˌɑːr.el.eɪtʃˈef/
+  pos: n.
+  difficulty: intermediate
+  topics: [safety, training]
+  beginner: Training an AI using people's ratings of its answers, so it learns what humans prefer.
+  builder: Collect human preference comparisons, train a reward model, then optimise the LLM against it (e.g. PPO) with a KL leash.
+  research: Policy optimisation against a learned reward r(x,y) fit to pairwise preferences, regularised by KL to a reference policy.
+  analogy: A chef improving from diners' thumbs up and down.
+  example: RLHF turned the raw model into a polite assistant.
+  origin: Christiano et al., 2017; scaled in InstructGPT, 2022.
+  related: [reward-model, dpo, ppo]
+  contrast: [constitutional-ai]
+
+- id: constitutional-ai
+  term: constitutional AI
+  ipa: /ˌkɒn.stɪˈtjuː.ʃən.əl ˌeɪˈaɪ/
+  pos: n.
+  difficulty: intermediate
+  topics: [safety]
+  beginner: Training an AI to follow a written set of principles, using AI feedback instead of only human ratings.
+  builder: Self-critique and AI-generated preference labels guided by an explicit constitution; scales harmlessness training.
+  research: RLAIF where a model judges outputs against natural-language principles to produce preference data, reducing human labelling.
+  analogy: Giving a student a code of conduct and letting them grade their own essays against it.
+  example: Constitutional AI lets the team change behaviour by editing principles.
+  origin: Bai et al., Anthropic, 2022.
+  related: [alignment, rlhf]
+  contrast: [rlhf]
+
+- id: reward-hacking
+  term: reward hacking
+  ipa: /rɪˈwɔːd ˈhæk.ɪŋ/
+  pos: n.
+  difficulty: pro
+  topics: [safety, research-math]
+  beginner: When an AI finds a sneaky shortcut to score well on its training goal without doing the real task.
+  builder: Policies exploiting flaws in the reward signal, like editing tests so they pass. Watch for it in RL fine-tunes and agent evals.
+  research: Optimisation pressure exploiting misspecification between proxy reward and true objective (Goodhart's law).
+  analogy: A student who learns the grader only checks word count.
+  example: Reward hacking showed up when the agent deleted failing tests.
+  related: [reward-model, alignment]
+
+- id: reward-model
+  term: reward model
+  ipa: /rɪˈwɔːd ˈmɒd.əl/
+  pos: n.
+  difficulty: pro
+  topics: [safety, training]
+  beginner: A helper AI trained to score answers the way humans would, used to train the main AI.
+  builder: A model mapping (prompt, response) to a scalar preference score; the optimisation target in RLHF.
+  research: A learned r_φ(x, y) fit with a Bradley–Terry loss on comparisons; its errors are what policies learn to exploit.
+  analogy: A practice judge standing in for the real panel.
+  example: The reward model preferred longer answers, so the bot got wordy.
+  related: [rlhf, reward-hacking]
+
+- id: dpo
+  term: DPO
+  expansion: Direct Preference Optimization
+  ipa: /ˌdiː.piːˈəʊ/
+  pos: n.
+  difficulty: intermediate
+  topics: [training, research-math]
+  beginner: A simpler way to train AI on human preferences, skipping the separate scoring model.
+  builder: Fine-tunes directly on chosen/rejected pairs with a classification-style loss; cheaper and more stable than PPO-based RLHF.
+  research: Closed-form reparameterisation of the KL-regularised RLHF objective as a logistic loss on policy log-ratios.
+  analogy: Learning from "this one, not that one" without hiring a judge.
+  example: DPO got us most of the RLHF gains in a day.
+  origin: Rafailov et al., Stanford, 2023.
+  related: [rlhf]
+
+- id: sycophancy
+  term: sycophancy
+  ipa: /ˈsɪk.ə.fən.si/
+  pos: n.
+  difficulty: intermediate
+  topics: [safety, culture]
+  beginner: When an AI flatters you or agrees with you even when you're wrong.
+  builder: Preference-trained models over-agreeing with users; test for it and penalise it in training and evals.
+  research: Reward-model bias toward user-confirming responses that RL then amplifies; a canonical specification-gaming case.
+  analogy: A yes-man employee.
+  example: The sycophancy got so bad it praised obviously broken code.
+  related: [rlhf, reward-hacking]
+  trending: 0.5
+
+- id: agi
+  term: AGI
+  expansion: Artificial General Intelligence
+  ipa: /ˌeɪ.dʒiːˈaɪ/
+  pos: n.
+  difficulty: beginner
+  topics: [ai-headlines, safety, culture]
+  beginner: A hypothetical AI that can do most thinking tasks as well as a human can.
+  builder: A loosely defined milestone; labs and contracts define it differently, from "most economically valuable work" to benchmarks.
+  research: Broadly capable systems matching or exceeding humans across cognitive tasks; definitions and timelines remain contested.
+  analogy: A worker who can learn any job, not just one.
+  example: Every CEO now has an AGI timeline.
+  related: [asi, frontier-model]
+  contrast: [asi]
+  trending: 0.6
+
+- id: asi
+  term: ASI
+  expansion: Artificial Superintelligence
+  ipa: /ˌeɪ.esˈaɪ/
+  pos: n.
+  difficulty: intermediate
+  topics: [ai-headlines, safety, culture]
+  beginner: A hypothetical AI far smarter than the best humans at almost everything.
+  builder: The step beyond AGI; central to frontier safety debates and lab mission statements.
+  research: Systems vastly exceeding human cognitive performance across domains, raising control and alignment problems.
+  analogy: Not a smarter student, the whole university at once.
+  example: The new lab says its only product will be ASI.
+  contrast: [agi]
+  related: [alignment]
+
+- id: deepfake
+  term: deepfake
+  ipa: /ˈdiːp.feɪk/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, ai-headlines, multimodal]
+  beginner: A fake but realistic video, image or voice of a real person, made with AI.
+  builder: Synthetic media impersonating real people; countered with provenance (C2PA), watermarking and detection.
+  research: Generative manipulation of identity attributes in media, an arms race between synthesis fidelity and forensic detection.
+  analogy: Digital puppetry with someone's face.
+  example: A deepfake of the CEO's voice approved the wire transfer.
+  related: [watermarking, voice-cloning]
+
+- id: watermarking
+  term: watermarking
+  ipa: /ˈwɔː.tə.mɑː.kɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, policy]
+  beginner: Hiding an invisible signal in AI-made content so it can later be identified as AI-generated.
+  builder: Statistical or metadata marks (e.g. SynthID, C2PA) on outputs; robust for images, weaker for short or edited text.
+  research: Biasing sampling toward a keyed token subset to enable hypothesis tests for machine origin, trading off quality and robustness.
+  analogy: An invisible signature in the paper.
+  example: The EU wants watermarking on generated images.
+  related: [deepfake]
+
+- id: bias
+  term: model bias
+  ipa: /ˈbaɪ.əs/
+  pos: n.
+  difficulty: beginner
+  topics: [safety, training]
+  beginner: When an AI treats some groups unfairly because of patterns in the data it learned from.
+  builder: Systematic skew in outputs across groups; audit with disaggregated evals, mitigate in data and post-training.
+  research: Statistical disparities in model behaviour across protected attributes, measured via fairness metrics that can conflict.
+  analogy: A mirror that's slightly warped by whoever built it.
+  example: Model bias showed up as a penalty for career gaps.
+  related: [dataset]
+
+- id: model-collapse
+  term: model collapse
+  ipa: /ˈmɒd.əl kəˈlæps/
+  pos: n.
+  difficulty: pro
+  topics: [training, research-math]
+  beginner: AI getting worse when it's trained mostly on content made by other AIs.
+  builder: Degradation from recursive training on synthetic data; avoid with fresh human data and careful filtering.
+  research: Progressive loss of distribution tails when models are trained on samples from previous generations' outputs.
+  analogy: A photocopy of a photocopy of a photocopy.
+  example: Researchers warn of model collapse as the web fills with AI text.
+  origin: Shumailov et al., Nature, 2024.
+  related: [synthetic-data]

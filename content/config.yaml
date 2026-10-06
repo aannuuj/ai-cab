@@ -1,0 +1,2 @@
+# Bump `version` whenever content changes; the app downloads packs with a higher version.
+version: 1

@@ -1,0 +1,488 @@
+# Chips & infra, research math, multimodal, robotics, interpretability.
+
+- id: gpu
+  term: GPU
+  expansion: Graphics Processing Unit
+  ipa: /ˌdʒiː.piːˈjuː/
+  pos: n.
+  difficulty: beginner
+  topics: [infra, business, ai-headlines]
+  beginner: A chip that does thousands of calculations at once. The workhorse for training and running AI.
+  builder: Massively parallel accelerators (e.g. NVIDIA H100/B200) whose memory and interconnect bound model size and speed.
+  research: SIMT processors with high-bandwidth memory and tensor cores optimised for dense matrix multiplication.
+  analogy: A thousand cashiers instead of one very fast one.
+  example: The startup's biggest expense is GPU rental.
+  related: [tpu, compute, data-center]
+  contrast: [tpu]
+
+- id: tpu
+  term: TPU
+  expansion: Tensor Processing Unit
+  ipa: /ˌtiː.piːˈjuː/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra]
+  beginner: Google's own AI chip, built specifically for neural network math.
+  builder: Google's ASIC accelerators, rented via Google Cloud, linked in large pods for training and serving.
+  research: Systolic-array matrix units with high-bandwidth interconnect, optimised for bf16 tensor operations at pod scale.
+  analogy: A custom race car versus a fast sports car.
+  example: The model was trained on TPU pods.
+  contrast: [gpu]
+  related: [compute]
+
+- id: data-center
+  term: data center
+  ipa: /ˈdeɪ.tə ˈsen.tər/
+  pos: n.
+  difficulty: beginner
+  topics: [infra, business, ai-headlines]
+  beginner: A huge building full of computers where AI models are trained and run.
+  builder: Facilities housing accelerator clusters; power, cooling and interconnect now limit AI expansion as much as chips.
+  research: Warehouse-scale computers whose network topology and power envelope shape feasible training-run sizes.
+  analogy: The factory floor of the AI economy.
+  example: The new data center will draw as much power as a city.
+  related: [compute, gpu]
+  trending: 0.6
+
+- id: kv-cache
+  term: KV cache
+  ipa: /ˌkeɪˈviː kæʃ/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra, research-math]
+  beginner: A memory trick that lets a model avoid re-reading the whole conversation for every new word.
+  builder: Stored key/value tensors for past tokens; makes generation fast but eats GPU memory that grows with context length.
+  research: Cached attention keys and values enabling O(n) per-step decoding at O(n·layers·d) memory per sequence.
+  analogy: Keeping notes on what you've read instead of re-reading the book every page.
+  example: Long chats blow up the KV cache.
+  related: [attention, prompt-caching, paged-attention]
+
+- id: flash-attention
+  term: FlashAttention
+  ipa: /flæʃ əˈten.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra, research-math]
+  beginner: A faster way to compute attention that uses chip memory more cleverly.
+  builder: An IO-aware attention kernel that tiles the computation in fast SRAM; standard in training and serving stacks.
+  research: Exact attention via tiling and online softmax to avoid materialising the n×n matrix in HBM.
+  analogy: Cooking in small batches on the counter instead of running to the fridge for every ingredient.
+  example: FlashAttention made long-context training affordable.
+  origin: Dao et al., Stanford, 2022.
+  related: [attention, kv-cache]
+
+- id: paged-attention
+  term: PagedAttention
+  ipa: /peɪdʒd əˈten.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra]
+  beginner: A way of storing an AI's short-term memory in small pages so many users can share a GPU efficiently.
+  builder: KV-cache memory managed like OS virtual-memory pages (vLLM); cuts fragmentation and raises serving throughput.
+  research: Non-contiguous block allocation of KV caches with indirection tables, enabling sharing and near-zero waste.
+  analogy: Hotel rooms assigned as guests arrive, instead of reserving whole floors.
+  example: Switching to PagedAttention let us serve 3x more users.
+  origin: Kwon et al., vLLM, 2023.
+  related: [kv-cache, continuous-batching]
+
+- id: continuous-batching
+  term: continuous batching
+  ipa: /kənˈtɪn.ju.əs ˈbætʃ.ɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra]
+  beginner: Mixing many users' requests together on the fly so the chips are never idle.
+  builder: Iteration-level scheduling that adds and removes sequences each decode step instead of waiting for whole batches.
+  research: Dynamic batch composition at token granularity, maximising accelerator utilisation under variable-length requests.
+  analogy: A bus that lets people on and off at every stop.
+  example: Continuous batching cut our GPU bill in half.
+  related: [throughput, paged-attention]
+
+- id: speculative-decoding
+  term: speculative decoding
+  ipa: /ˈspek.jə.lə.tɪv diːˈkəʊ.dɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra, research-math]
+  beginner: Speeding up an AI by letting a small model guess ahead and the big model check the guesses.
+  builder: A draft model proposes several tokens; the target verifies them in one pass. Same output distribution, lower latency.
+  research: Rejection-sampling-based verification of draft tokens that preserves the target distribution exactly.
+  analogy: An intern drafts, the expert just approves.
+  example: Speculative decoding made responses twice as fast.
+  related: [latency, inference]
+
+- id: tensor-parallelism
+  term: tensor parallelism
+  ipa: /ˈten.sər ˈpær.ə.lel.ɪ.zəm/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra]
+  beginner: Splitting each layer of a giant model across several chips so they share the work.
+  builder: Sharding individual matrix multiplies across GPUs in a node; needs very fast interconnect such as NVLink.
+  research: Intra-layer model parallelism partitioning weight matrices, with all-reduce communication per layer.
+  analogy: Several chefs working on the same dish at once.
+  example: Tensor parallelism spreads the model over eight GPUs.
+  related: [pipeline-parallelism, fsdp]
+  contrast: [pipeline-parallelism]
+
+- id: pipeline-parallelism
+  term: pipeline parallelism
+  ipa: /ˈpaɪp.laɪn ˈpær.ə.lel.ɪ.zəm/
+  pos: n.
+  difficulty: intermediate
+  topics: [infra]
+  beginner: Giving different chips different layers of a model, like stations on an assembly line.
+  builder: Partitioning layers across devices and streaming micro-batches through; reduces memory per device, adds pipeline bubbles.
+  research: Inter-layer parallelism with micro-batch scheduling (GPipe, 1F1B) trading bubble overhead for memory.
+  analogy: A car factory assembly line.
+  example: Pipeline parallelism let the model span two nodes.
+  contrast: [tensor-parallelism]
+
+- id: fsdp
+  term: FSDP
+  expansion: Fully Sharded Data Parallel
+  ipa: /ˌef.es.diːˈpiː/
+  pos: n.
+  difficulty: pro
+  topics: [infra, training]
+  beginner: A training method that spreads a model's memory across many chips so bigger models fit.
+  builder: Shards parameters, gradients and optimiser state across data-parallel workers, gathering them just in time per layer.
+  research: ZeRO-3-style sharding of training state, reducing per-device memory at the cost of extra communication.
+  analogy: Everyone carries part of the luggage.
+  example: FSDP let us train a 30B model on our cluster.
+  related: [tensor-parallelism]
+
+- id: fp8
+  term: FP8
+  ipa: /ˌef.piːˈeɪt/
+  pos: n.
+  difficulty: pro
+  topics: [infra, research-math]
+  beginner: A very compact number format that makes AI chips run faster with little loss in quality.
+  builder: 8-bit floating point for training and inference on recent GPUs; nearly 2x throughput over bf16 with careful scaling.
+  research: E4M3/E5M2 formats with per-tensor or per-block scaling to keep activations and gradients in representable range.
+  analogy: Rounding prices to the nearest dollar to add up faster.
+  example: The run used FP8 for most matrix multiplies.
+  related: [quantization]
+
+- id: mixture-of-experts
+  term: mixture of experts
+  ipa: /ˈmɪks.tʃər əv ˈek.spɜːts/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math, infra]
+  beginner: A model built from many specialist parts, where only a few switch on for each word, saving effort.
+  builder: MoE layers route each token to a few expert FFNs; huge total parameters with modest per-token compute, but heavy memory.
+  research: Sparse conditional computation with a learned router selecting top-k experts per token, with load-balancing losses.
+  analogy: A hospital where each patient sees only the relevant specialists.
+  example: It's a mixture of experts with 600B parameters but only 37B active.
+  related: [parameter]
+
+- id: backpropagation
+  term: backpropagation
+  ipa: /ˌbæk.prɒp.əˈɡeɪ.ʃən/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math, training]
+  beginner: The method that works out how much each part of a neural network contributed to a mistake, so it can be adjusted.
+  builder: Reverse-mode autodiff computing gradients of the loss for every weight; frameworks like PyTorch do it automatically.
+  research: Efficient application of the chain rule through the computational graph, costing roughly 2x the forward pass.
+  analogy: Tracing back through a relay race to see who dropped the baton.
+  example: Backpropagation computes the gradient for all 70 billion weights.
+  origin: Popularised by Rumelhart, Hinton & Williams, 1986.
+  related: [gradient-descent, neural-network]
+
+- id: softmax
+  term: softmax
+  ipa: /ˈsɒft.mæks/
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: A math step that turns raw scores into probabilities that add up to 100%.
+  builder: Normalises logits into a probability distribution; used for next-token prediction and inside attention.
+  research: σ(z)ᵢ = e^{zᵢ} / Σⱼ e^{zⱼ}, a smooth argmax whose temperature controls entropy.
+  analogy: Turning vote counts into vote shares.
+  example: The final softmax gives each possible next token a probability.
+  related: [temperature, cross-entropy]
+
+- id: cross-entropy
+  term: cross-entropy
+  ipa: /ˌkrɒsˈen.trə.pi/
+  pos: n.
+  difficulty: pro
+  topics: [research-math, training]
+  beginner: The standard score for how surprised a model is by the right answer. Lower is better.
+  builder: The next-token training loss; its exponential is perplexity.
+  research: H(p, q) = −Σ p log q; minimising it equals maximum likelihood and minimising KL to the data distribution.
+  analogy: How shocked you are by the plot twist.
+  example: Cross-entropy kept falling as we added data.
+  related: [loss-function, perplexity, kl-divergence]
+
+- id: perplexity
+  term: perplexity
+  ipa: /pəˈplek.sə.ti/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math, evals]
+  beginner: A measure of how confused a language model is by some text. Lower means it predicts better.
+  builder: exp(cross-entropy); handy for comparing pre-training runs, weakly tied to how useful a chatbot feels.
+  research: The exponentiated average negative log-likelihood, the effective branching factor of the model's predictions.
+  analogy: How many words it's torn between at each step.
+  example: Perplexity dropped after we cleaned the data.
+  related: [cross-entropy]
+
+- id: kl-divergence
+  term: KL divergence
+  ipa: /ˌkeɪˈel daɪˈvɜː.dʒəns/
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: A measure of how different two probability patterns are.
+  builder: Used as a leash in RLHF so the tuned model doesn't drift too far from the original.
+  research: D_KL(P‖Q) = Σ P log(P/Q); asymmetric, non-negative, zero iff distributions match.
+  analogy: How surprised you'd be using one map to navigate the other's city.
+  example: The KL divergence penalty stopped the model from going off the rails.
+  related: [cross-entropy, rlhf]
+
+- id: positional-encoding
+  term: positional encoding
+  ipa: /pəˈzɪʃ.ən.əl ɪnˈkəʊ.dɪŋ/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math]
+  beginner: Extra information that tells a transformer the order of words, since it otherwise sees them all at once.
+  builder: Position signals added to token representations; RoPE is the modern default and limits how far context can stretch.
+  research: Injecting order into permutation-invariant attention via absolute, relative or rotary (RoPE) schemes.
+  analogy: Page numbers on loose sheets.
+  example: A new positional encoding let the model read million-token inputs.
+  related: [transformer, rope]
+
+- id: rope
+  term: RoPE
+  expansion: Rotary Position Embedding
+  ipa: /rəʊp/
+  pos: n.
+  difficulty: intermediate
+  topics: [research-math]
+  beginner: A clever way of encoding word positions by rotating numbers, used in most modern models.
+  builder: Rotates query/key vectors by position-dependent angles; context extension tricks (YaRN, NTK scaling) modify its frequencies.
+  research: Multiplicative rotation in 2D subspaces making attention scores depend on relative offset m−n.
+  analogy: Clock hands: the angle between them tells the distance.
+  example: They stretched RoPE to reach a longer context window.
+  origin: Su et al., 2021.
+  related: [positional-encoding]
+
+- id: double-descent
+  term: double descent
+  ipa: /ˈdʌb.əl dɪˈsent/
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: The surprising pattern where making a model bigger first hurts, then helps again.
+  builder: Test error peaks near the interpolation threshold, then falls with more parameters; part of why huge models generalise.
+  research: Non-monotonic risk curve in model size or epochs, contradicting the classical U-shaped bias–variance picture.
+  analogy: It gets worse before it gets better.
+  example: Double descent explains why bigger wasn't always worse.
+  related: [overfitting, generalization, grokking]
+
+- id: grokking
+  term: grokking
+  ipa: /ˈɡrɒk.ɪŋ/
+  pos: n.
+  difficulty: pro
+  topics: [research-math, interpretability]
+  beginner: When a model suddenly "gets it" long after it seemed to have just memorised the training examples.
+  builder: Delayed generalisation after near-zero training loss, observed on small algorithmic tasks with weight decay.
+  research: A phase transition from memorising to generalising circuits, interpretable via mechanistic analysis.
+  analogy: The moment long division finally clicks.
+  example: Training kept going and the model hit grokking at step 40,000.
+  origin: Power et al., OpenAI, 2022.
+  related: [double-descent, mechanistic-interpretability]
+
+- id: diffusion-model
+  term: diffusion model
+  ipa: /dɪˈfjuː.ʒən ˈmɒd.əl/
+  pos: n.
+  difficulty: beginner
+  topics: [multimodal, research-math]
+  beginner: An image AI that starts with random noise and gradually cleans it up into a picture.
+  builder: The generator behind most image and video models; denoises over many steps, guided by a text prompt.
+  research: Learning to reverse a Gaussian noising process via score matching, sampling by iterative denoising.
+  analogy: A sculptor removing marble until a statue appears.
+  example: A diffusion model made the album cover.
+  related: [generative-ai, flow-matching]
+
+- id: flow-matching
+  term: flow matching
+  ipa: /fləʊ ˈmætʃ.ɪŋ/
+  pos: n.
+  difficulty: pro
+  topics: [multimodal, research-math]
+  beginner: A newer, faster way to train image and video generators by learning smooth paths from noise to pictures.
+  builder: Trains a velocity field along straight paths from noise to data; fewer sampling steps than classic diffusion.
+  research: Regressing a time-dependent vector field generating a probability path between prior and data (continuous normalising flows).
+  analogy: Drawing the straightest road from scribble to picture.
+  example: The video model switched to flow matching.
+  related: [diffusion-model]
+
+- id: vision-language-model
+  term: VLM
+  expansion: Vision-Language Model
+  ipa: /ˌviː.elˈem/
+  pos: n.
+  difficulty: beginner
+  topics: [multimodal]
+  beginner: An AI that understands both pictures and text, so you can ask questions about an image.
+  builder: An LLM with a vision encoder; reads screenshots, charts, documents and photos.
+  research: Multimodal models aligning visual encoders with language decoders via projection or cross-attention.
+  analogy: A reader who can also look at the illustrations.
+  example: The VLM read the receipt and filled in the expense form.
+  related: [multimodal, computer-use]
+
+- id: voice-cloning
+  term: voice cloning
+  ipa: /vɔɪs ˈkləʊ.nɪŋ/
+  pos: n.
+  difficulty: beginner
+  topics: [multimodal, safety]
+  beginner: Using AI to copy someone's voice from a short recording.
+  builder: Few-shot speech synthesis conditioned on a speaker sample; useful for dubbing, abused for scams. Consent and watermarks matter.
+  research: Speaker-conditioned TTS generalising from seconds of reference audio via learned speaker embeddings.
+  analogy: A vocal photocopier.
+  example: Voice cloning scams target grandparents.
+  related: [deepfake]
+
+- id: world-model
+  term: world model
+  ipa: /wɜːld ˈmɒd.əl/
+  pos: n.
+  difficulty: pro
+  topics: [robotics, research-math]
+  beginner: An AI's internal simulation of how the world works, so it can imagine what happens next.
+  builder: Models that predict future observations given actions; used for robot planning and interactive video generation.
+  research: Learned dynamics models p(sₜ₊₁ | sₜ, aₜ) enabling planning or policy learning in imagination.
+  analogy: Running the move in your head before making it.
+  example: The robot used a world model to plan its grasp.
+  related: [robotics-foundation-model, sim-to-real]
+  trending: 0.6
+
+- id: sim-to-real
+  term: sim-to-real
+  ipa: /ˌsɪm.təˈrɪəl/
+  pos: n.
+  difficulty: pro
+  topics: [robotics]
+  beginner: Training robots in a computer simulation, then getting the skills to work in the real world.
+  builder: Transferring policies trained in physics simulators to hardware via domain randomisation and fine-tuning.
+  research: Bridging the reality gap between simulated and physical dynamics and observations.
+  analogy: Flight simulator hours before flying a real plane.
+  example: Sim-to-real let the robot hand learn in days, not years.
+  related: [world-model]
+
+- id: vla
+  term: VLA
+  expansion: Vision-Language-Action model
+  ipa: /ˌviː.elˈeɪ/
+  pos: n.
+  difficulty: pro
+  topics: [robotics, multimodal]
+  beginner: A robot brain that sees, understands instructions and decides how to move.
+  builder: Extends a VLM to output robot actions; one model handles "pick up the red cup" from camera to motor commands.
+  research: Policies mapping visual observations and language goals to action tokens, pre-trained on web data plus robot demos.
+  analogy: Eyes, ears and hands wired to the same brain.
+  example: The VLA folded laundry it had never seen.
+  related: [vision-language-model, robotics-foundation-model]
+
+- id: robotics-foundation-model
+  term: robot foundation model
+  ipa: /ˈrəʊ.bɒt faʊnˈdeɪ.ʃən ˈmɒd.əl/
+  pos: n.
+  difficulty: intermediate
+  topics: [robotics, ai-headlines]
+  beginner: One general AI that can control many kinds of robots and learn new tasks quickly.
+  builder: Large cross-embodiment policies trained on pooled robot data, then fine-tuned for specific arms or humanoids.
+  research: Generalist policies exploiting scale across embodiments and tasks, analogous to LLM pre-training.
+  analogy: A universal driving instructor for any vehicle.
+  example: The humanoid startup licensed a robot foundation model.
+  related: [vla, world-model]
+  trending: 0.7
+
+- id: humanoid
+  term: humanoid robot
+  ipa: /ˈhjuː.mə.nɔɪd ˈrəʊ.bɒt/
+  pos: n.
+  difficulty: beginner
+  topics: [robotics, ai-headlines]
+  beginner: A robot shaped like a person, with arms, legs and hands, so it can work in human spaces.
+  builder: Bipedal general-purpose robots betting that the human form fits existing workplaces; hardware cost and reliability are the hurdles.
+  research: Anthropomorphic platforms whose high-DoF control problems now lean on learned whole-body policies.
+  analogy: A worker built for a world designed for humans.
+  example: The factory is piloting a humanoid robot on the night shift.
+  related: [robotics-foundation-model]
+  trending: 0.7
+
+- id: mechanistic-interpretability
+  term: mechanistic interpretability
+  ipa: /ˌmek.əˈnɪs.tɪk ɪnˌtɜː.prɪ.təˈbɪl.ə.ti/
+  pos: n.
+  difficulty: pro
+  topics: [interpretability, safety]
+  beginner: Research that opens up AI models to understand exactly how they work inside.
+  builder: Reverse-engineering features and circuits inside networks, used to audit behaviour and debug safety issues.
+  research: Identifying human-interpretable features and causal circuits in activations, via probing, patching and dictionary learning.
+  analogy: Neuroscience for neural networks.
+  example: Mechanistic interpretability found the feature for "deception".
+  related: [sparse-autoencoder, superposition, steering]
+
+- id: superposition
+  term: superposition
+  ipa: /ˌsuː.pə.pəˈzɪʃ.ən/
+  pos: n.
+  difficulty: pro
+  topics: [interpretability, research-math]
+  beginner: When a model packs more ideas into its neurons than it has neurons, so each neuron means several things.
+  builder: Why single neurons are hard to interpret; features overlap and must be untangled with tools like sparse autoencoders.
+  research: Representing more sparse features than dimensions via nearly orthogonal directions, at the cost of interference.
+  analogy: Many radio stations sharing the same frequencies.
+  example: Superposition explains why one neuron fires for both cats and cars.
+  origin: Elhage et al., Anthropic, 2022.
+  related: [sparse-autoencoder]
+
+- id: sparse-autoencoder
+  term: sparse autoencoder
+  ipa: /spɑːs ˌɔː.təʊ.ɪnˈkəʊ.dər/
+  pos: n.
+  difficulty: pro
+  topics: [interpretability]
+  beginner: A tool that untangles a model's internal signals into separate, understandable concepts.
+  builder: Trained on activations to decompose them into a large dictionary of sparsely active, interpretable features.
+  research: Dictionary learning with an L1-sparsity objective recovering monosemantic directions from superposed representations.
+  analogy: Separating a smoothie back into its fruits.
+  example: The sparse autoencoder found a Golden Gate Bridge feature.
+  related: [superposition, steering]
+
+- id: steering
+  term: activation steering
+  ipa: /ˌæk.tɪˈveɪ.ʃən ˈstɪə.rɪŋ/
+  pos: n.
+  difficulty: pro
+  topics: [interpretability, safety]
+  beginner: Nudging an AI's behaviour by directly tweaking its internal signals instead of retraining it.
+  builder: Adding a feature direction to activations at inference to dial up or down a concept or behaviour.
+  research: Intervening on residual-stream activations along learned or contrastive directions to causally modulate outputs.
+  analogy: Turning a specific knob inside the brain.
+  example: Activation steering made the model obsessed with bridges.
+  related: [sparse-autoencoder, mechanistic-interpretability]
+
+- id: chain-of-thought-faithfulness
+  term: CoT faithfulness
+  ipa: /ˈfeɪθ.fəl.nəs/
+  pos: n.
+  difficulty: pro
+  topics: [interpretability, reasoning-models, safety]
+  beginner: Whether an AI's shown reasoning really reflects how it reached its answer.
+  builder: Reasoning traces can omit or rationalise the real cause of an answer; don't treat them as a reliable audit log.
+  research: The degree to which verbalised reasoning causally reflects the computation producing the output, measured via interventions.
+  analogy: Does the student's working match how they actually solved it?
+  example: CoT faithfulness tests found the model hid its use of a hint.
+  related: [chain-of-thought, mechanistic-interpretability]

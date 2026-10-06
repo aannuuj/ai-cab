@@ -1,0 +1,692 @@
+# From the curated word list — 🔴 Pro: transformer math, new architectures, distributed systems, alignment research.
+
+- id: self-attention
+  term: self-attention
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: How each word in a sentence looks at all the other words to understand its meaning.
+  builder: Each token builds query, key and value vectors; queries match keys to decide how much of each value to mix in.
+  research: Attention where Q = XW_Q, K = XW_K, V = XW_V all derive from the same sequence X.
+  analogy: Everyone at a table listening for the comments relevant to them.
+  example: Self-attention links "it" to "the server" in the sentence.
+  related: [attention, scaled-dot-product]
+
+- id: scaled-dot-product
+  term: scaled dot-product attention
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: The core maths formula a transformer uses to decide what to pay attention to.
+  builder: softmax(QKᵀ/√d)V; the √d scaling keeps scores from saturating the softmax.
+  research: Dot-product similarity scaled by 1/√d_k to stabilise variance, normalised with softmax over keys.
+  analogy: Scoring how well each key fits your question, then blending answers.
+  example: FlashAttention computes scaled dot-product attention without storing the full matrix.
+  related: [self-attention, softmax]
+
+- id: mha
+  term: multi-head attention
+  expansion: MHA
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: Running several attention processes side by side, each noticing different relationships.
+  builder: Splits the model dimension into heads with separate Q/K/V projections, then concatenates outputs.
+  research: Parallel attention in h subspaces, letting heads specialise (syntax, position, induction).
+  analogy: Several highlighters, each marking something different.
+  example: Multi-head attention lets one head track grammar and another track names.
+  related: [gqa, mqa, induction-heads]
+
+- id: gqa
+  term: GQA
+  expansion: Grouped-Query Attention
+  pos: n.
+  difficulty: pro
+  topics: [research-math, infra]
+  beginner: A middle ground where groups of attention heads share memory to run faster.
+  builder: Query heads share K/V within groups; most of MHA's quality with most of MQA's KV-cache savings.
+  research: Interpolation between MHA and MQA with G key-value heads, uptrainable from MHA checkpoints.
+  analogy: Study groups sharing one textbook per table.
+  example: Llama uses GQA to cut KV cache memory.
+  origin: Ainslie et al., 2023.
+  related: [mqa, mha, kv-cache]
+
+- id: encoder-decoder
+  term: encoder-decoder
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: A transformer design with one part that reads the input and another that writes the output.
+  builder: The original transformer layout, used by T5 and translation models; most chat LLMs are decoder-only.
+  research: Bidirectional encoder plus autoregressive decoder connected by cross-attention over encoder states.
+  analogy: A listener and a speaker working as a pair.
+  example: Translation models often use an encoder-decoder design.
+  related: [transformer, causal-lm]
+
+- id: causal-lm
+  term: causal language modeling
+  pos: n.
+  difficulty: pro
+  topics: [research-math, training]
+  beginner: Training an AI to guess the next word using only the words before it.
+  builder: The next-token prediction objective behind GPT-style models, enforced with a causal mask.
+  research: Maximising Σ log p(xₜ | x<t) under left-to-right factorisation.
+  analogy: Finishing someone's sentence.
+  example: Causal language modeling is how chat models are pre-trained.
+  related: [masked-lm, attention-mask]
+  contrast: [masked-lm]
+
+- id: masked-lm
+  term: masked language modeling
+  pos: n.
+  difficulty: pro
+  topics: [research-math, training]
+  beginner: Training an AI by hiding random words in a sentence and asking it to fill the gaps.
+  builder: BERT's objective; good for understanding and embeddings, not for generating text.
+  research: Denoising objective predicting masked tokens from bidirectional context.
+  analogy: A fill-in-the-blanks worksheet.
+  example: Masked language modeling made BERT great at search.
+  origin: Devlin et al. (BERT), 2018.
+  contrast: [causal-lm]
+
+- id: residual-connections
+  term: residual connections
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: Shortcuts that let information skip past layers, making very deep networks trainable.
+  builder: Each block adds its output to its input (x + f(x)); keeps gradients healthy across hundreds of layers.
+  research: Identity skip paths forming a residual stream that layers read from and write to additively.
+  analogy: An express lane past the traffic.
+  example: Residual connections let us train 100-layer models.
+  origin: He et al. (ResNet), 2015.
+  related: [layer-norm]
+
+- id: layer-norm
+  term: layer normalization
+  pos: n.
+  difficulty: pro
+  topics: [research-math, training]
+  beginner: A step that rescales numbers inside a model to keep training stable.
+  builder: Normalises each token's activations; Pre-LN (before each block) trains more stably than the original Post-LN.
+  research: Per-sample normalisation to zero mean and unit variance with learned gain and bias.
+  analogy: Adjusting the volume so no instrument drowns out the rest.
+  example: Switching to Pre-LN layer normalization stopped the loss spikes.
+  related: [rmsnorm, residual-connections]
+
+- id: rmsnorm
+  term: RMSNorm
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: A simpler, faster version of layer normalization used in most new models.
+  builder: Scales by root-mean-square only, with no mean subtraction or bias; cheaper and equally stable.
+  research: x / RMS(x) · g, dropping re-centring from LayerNorm.
+  analogy: Adjusting volume without re-tuning the instrument.
+  example: Llama replaced LayerNorm with RMSNorm.
+  origin: Zhang & Sennrich, 2019.
+  related: [layer-norm]
+
+- id: swiglu
+  term: SwiGLU
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: A modern math function inside model layers that helps them learn better.
+  builder: Gated feed-forward activation (Swish × linear gate) used in Llama, PaLM and most recent LLMs.
+  research: FFN(x) = (Swish(xW) ⊙ xV)W₂, a gated linear unit variant with better quality per FLOP.
+  analogy: A dimmer switch on each signal.
+  example: Swapping in SwiGLU improved perplexity.
+  origin: Shazeer, 2020.
+  related: [gelu]
+
+- id: gelu
+  term: GELU
+  expansion: Gaussian Error Linear Unit
+  pos: n.
+  difficulty: pro
+  topics: [research-math]
+  beginner: A smooth on/off function that decides how much signal passes through each neuron.
+  builder: The activation in BERT and GPT-2; smoother than ReLU, since largely replaced by SwiGLU.
+  research: x·Φ(x), weighting inputs by the Gaussian CDF.
+  analogy: A soft valve rather than a hard switch.
+  example: GPT-2 uses GELU activations.
+  related: [swiglu]
+
+- id: ssm
+  term: state space model
+  expansion: SSM
+  pos: n.
+  difficulty: pro
+  topics: [architectures, research-math]
+  beginner: An alternative to transformers that reads text like a stream, using memory that doesn't grow with length.
+  builder: Linear-time sequence models (S4, Mamba) with constant-size state; fast on long inputs, often hybridised with attention.
+  research: Discretised linear dynamical systems h' = Ah + Bx, y = Ch, computed as convolutions or scans.
+  analogy: Taking running notes instead of rereading the whole book.
+  example: The state space model handles million-token audio.
+  related: [mamba]
+
+- id: mamba
+  term: Mamba
+  ipa: /ˈmɑːm.bə/
+  pos: n.
+  difficulty: pro
+  topics: [architectures]
+  beginner: A fast AI architecture that rivals transformers on long text by remembering selectively.
+  builder: Selective SSM with input-dependent parameters and a hardware-aware scan; linear scaling, used in hybrids like Jamba.
+  research: SSM with data-dependent (B, C, Δ), enabling content-based selection while retaining recurrent inference.
+  analogy: A reader who decides what's worth remembering.
+  example: The hybrid model mixes Mamba layers with attention.
+  origin: Gu & Dao, 2023.
+  related: [ssm]
+
+- id: rin
+  term: recurrent interface networks
+  expansion: RIN
+  pos: n.
+  difficulty: pro
+  topics: [architectures, multimodal]
+  beginner: A design that routes heavy thinking through a small set of internal "latent" slots for efficient image generation.
+  builder: Splits computation between data tokens and a smaller latent set, reading and writing across them; efficient for diffusion.
+  research: Adaptive computation via latent tokens with cross-attention read/write to the interface, recurrently across diffusion steps.
+  analogy: A small committee summarising a huge crowd.
+  example: Recurrent interface networks generated high-res images efficiently.
+  origin: Jabri et al., 2022.
+  related: [diffusion-model]
+
+- id: liquid-nn
+  term: liquid neural networks
+  pos: n.
+  difficulty: pro
+  topics: [architectures, robotics]
+  beginner: Small, adaptable networks inspired by worm brains that keep adjusting to changing inputs.
+  builder: Continuous-time recurrent models with input-dependent time constants; compact and strong on control and time series.
+  research: Liquid time-constant networks modelled by ODEs whose dynamics vary with input.
+  analogy: Water reshaping to fit its container.
+  example: Liquid neural networks flew a drone with only a few neurons.
+  origin: Hasani et al., MIT, 2020.
+  related: [neural-ode]
+
+- id: mod
+  term: mixture of depths
+  expansion: MoD
+  pos: n.
+  difficulty: pro
+  topics: [architectures, research-math]
+  beginner: Letting easy words skip some layers so the model spends effort only where needed.
+  builder: A router picks which tokens get processed at each layer; others skip via the residual path, saving compute.
+  research: Per-layer top-k token routing for dynamic compute allocation under a fixed budget.
+  analogy: Express checkout for simple items.
+  example: Mixture of depths cut FLOPs by half with no loss.
+  origin: Raposo et al., DeepMind, 2024.
+  related: [mixture-of-experts]
+
+- id: sparse-attention
+  term: sparse attention
+  pos: n.
+  difficulty: pro
+  topics: [architectures, research-math]
+  beginner: Letting each word look at only some others, so very long texts are cheaper to process.
+  builder: Local windows, strided or learned patterns replace full attention to cut quadratic cost on long contexts.
+  research: Attention restricted to a sparse pattern of pairs, reducing O(n²) to near-linear complexity.
+  analogy: Reading only the paragraphs nearby plus the headlines.
+  example: Sparse attention made 1M-token context practical.
+  related: [attention]
+
+- id: dit
+  term: diffusion transformer
+  expansion: DiT
+  pos: n.
+  difficulty: pro
+  topics: [architectures, multimodal]
+  beginner: An image and video generator that uses a transformer as its engine.
+  builder: Replaces the U-Net in diffusion with a transformer over image patches; scales cleanly and powers top video models.
+  research: Latent diffusion with a transformer backbone over patchified latents, conditioned via adaptive layer norm.
+  analogy: Swapping the sculptor's tools for a power tool.
+  example: The video model is a diffusion transformer.
+  origin: Peebles & Xie, 2022.
+  related: [diffusion-model, flow-matching]
+
+- id: continuous-diffusion
+  term: continuous-time diffusion
+  pos: n.
+  difficulty: pro
+  topics: [architectures, research-math]
+  beginner: Diffusion models described as smooth flows over time instead of fixed steps.
+  builder: SDE/ODE framing that lets you pick step counts and fast solvers at sampling time.
+  research: Score-based generative modelling via forward SDEs with reverse-time SDE or probability-flow ODE sampling.
+  analogy: A film instead of a flipbook.
+  example: Continuous-time diffusion allows 4-step sampling.
+  origin: Song et al., 2021.
+  related: [diffusion-model, neural-ode]
+
+- id: vae
+  term: VAE
+  expansion: Variational Autoencoder
+  pos: n.
+  difficulty: pro
+  topics: [architectures, multimodal]
+  beginner: A model that squeezes images into a compact code and rebuilds them, used inside image generators.
+  builder: Encoder to latent distribution, decoder back; latent diffusion models run in a VAE's latent space.
+  research: Maximising the ELBO with a reparameterised Gaussian posterior and KL regulariser.
+  analogy: Zipping and unzipping a picture.
+  example: The VAE compresses each frame 8x before diffusion.
+  origin: Kingma & Welling, 2013.
+  related: [diffusion-model, gan]
+
+- id: gan
+  term: GAN
+  expansion: Generative Adversarial Network
+  pos: n.
+  difficulty: pro
+  topics: [architectures, multimodal]
+  beginner: Two AIs competing, one creating fakes and one spotting them, until the fakes look real.
+  builder: Generator vs discriminator training; fast sampling but unstable, mostly superseded by diffusion.
+  research: Minimax game min_G max_D between generator and discriminator approximating the data distribution.
+  analogy: A forger versus a detective.
+  example: The first deepfakes were made with a GAN.
+  origin: Goodfellow et al., 2014.
+  related: [deepfake, vae]
+
+- id: autoregressive-vision
+  term: autoregressive vision models
+  pos: n.
+  difficulty: pro
+  topics: [architectures, multimodal]
+  beginner: Image generators that create pictures piece by piece, like writing text one word at a time.
+  builder: Tokenise images and predict tokens sequentially; unifies image and text generation in one model.
+  research: Next-token (or next-scale) prediction over discrete visual tokens from a learned image tokenizer.
+  analogy: Painting a mosaic tile by tile.
+  example: The native image model is one of the autoregressive vision models.
+  related: [diffusion-model]
+
+- id: ebm
+  term: energy-based model
+  expansion: EBM
+  pos: n.
+  difficulty: pro
+  topics: [architectures, research-math]
+  beginner: A model that scores how plausible something is, low "energy" for likely, high for unlikely.
+  builder: Learns a scalar compatibility function; flexible but sampling and normalisation are expensive.
+  research: p(x) ∝ exp(−E(x)) with an intractable partition function, trained via contrastive or score methods.
+  analogy: Marbles settling in valleys.
+  example: An energy-based model ranks how realistic each scene is.
+  related: [diffusion-model]
+
+- id: neural-ode
+  term: neural ODE
+  pos: n.
+  difficulty: pro
+  topics: [architectures, research-math]
+  beginner: A network that models change continuously over time, using calculus.
+  builder: Layers become a learned differential equation solved by an ODE solver; memory-efficient, adaptive depth.
+  research: dh/dt = f(h, t; θ), integrated by numerical solvers with adjoint-based gradients.
+  analogy: A smooth ramp instead of stairs.
+  example: The neural ODE models patient vitals over time.
+  origin: Chen et al., 2018.
+  related: [liquid-nn]
+
+- id: deepspeed-zero
+  term: DeepSpeed ZeRO
+  pos: n.
+  difficulty: pro
+  topics: [infra, training]
+  beginner: Microsoft's tech for training huge models by spreading their memory across many GPUs.
+  builder: ZeRO-1 shards optimiser state, ZeRO-2 adds gradients, ZeRO-3 adds parameters.
+  research: Zero Redundancy Optimizer stages removing replicated training state in data parallelism.
+  analogy: Splitting a giant backpack's contents among hikers.
+  example: DeepSpeed ZeRO-3 let us train on smaller GPUs.
+  origin: Rajbhandari et al., Microsoft, 2019.
+  related: [fsdp]
+
+- id: megatron-lm
+  term: Megatron-LM
+  pos: n.
+  difficulty: pro
+  topics: [infra, training]
+  beginner: NVIDIA's framework for training giant language models across thousands of GPUs.
+  builder: Reference implementation of tensor, pipeline and sequence parallelism for large-scale training.
+  research: Model-parallel transformer training combining intra- and inter-layer partitioning.
+  analogy: Construction scaffolding for skyscraper-sized models.
+  example: The lab trained its model with Megatron-LM.
+  origin: Shoeybi et al., NVIDIA, 2019.
+  related: [tensor-parallelism, pipeline-parallelism]
+
+- id: triton
+  term: Triton
+  ipa: /ˈtraɪ.tən/
+  pos: n.
+  difficulty: pro
+  topics: [infra]
+  beginner: A programming language that makes it easier to write fast code for AI chips.
+  builder: Python-like DSL from OpenAI for writing GPU kernels without raw CUDA; powers torch.compile kernels.
+  research: Block-level GPU programming model with automatic tiling and memory-hierarchy management.
+  analogy: Power tools instead of hand tools for GPU code.
+  example: We wrote a custom Triton kernel for our attention variant.
+  related: [cuda-kernels]
+
+- id: cuda-kernels
+  term: CUDA kernel optimization
+  pos: n.
+  difficulty: pro
+  topics: [infra]
+  beginner: Hand-tuning the low-level code that runs on NVIDIA chips to squeeze out more speed.
+  builder: Fusing operations, tiling for shared memory and using tensor cores to approach peak FLOPs.
+  research: Optimising arithmetic intensity, memory coalescing and occupancy to move kernels toward the roofline.
+  analogy: Tuning a race car's engine.
+  example: CUDA kernel optimization doubled our training speed.
+  related: [triton, flash-attention]
+
+- id: flash-attention-3
+  term: FlashAttention-3
+  pos: n.
+  difficulty: pro
+  topics: [infra, research-math]
+  beginner: Newer, even faster versions of FlashAttention built for the latest GPUs.
+  builder: FA-2 improved parallelism and work partitioning; FA-3 uses Hopper async and FP8 for further speedups.
+  research: Warp-specialised, asynchronous pipelined attention kernels with low-precision support.
+  analogy: Version 3 of a faster engine.
+  example: FlashAttention-3 hits 75% of H100 peak.
+  origin: Dao et al., 2023–2024.
+  related: [flash-attention]
+
+- id: qat
+  term: QAT
+  expansion: Quantization-Aware Training
+  pos: n.
+  difficulty: pro
+  topics: [infra, training]
+  beginner: Training a model while pretending it's already compressed, so it stays accurate when it actually is.
+  builder: Simulate low-precision rounding during training; better quality than post-training quantization at 4 bits and below.
+  research: Fake-quantisation in the forward pass with straight-through gradient estimators.
+  analogy: Practising in the costume before the show.
+  example: QAT kept the 4-bit model almost as good as full precision.
+  related: [ptq, quantization]
+  contrast: [ptq]
+
+- id: ptq
+  term: PTQ
+  expansion: Post-Training Quantization
+  pos: n.
+  difficulty: pro
+  topics: [infra]
+  beginner: Compressing a finished model's numbers after training, without retraining it.
+  builder: Calibrate on a small dataset and round weights (GPTQ, AWQ); fast and cheap, some quality loss at low bits.
+  research: Quantisation solved as layer-wise reconstruction minimisation using calibration activations.
+  analogy: Shrinking a photo after it's taken.
+  example: PTQ got the model to 4 bits in an hour.
+  contrast: [qat]
+  related: [quantization]
+
+- id: splitwise
+  term: Splitwise
+  pos: n.
+  difficulty: pro
+  topics: [infra]
+  beginner: Running the "read the prompt" and "write the answer" phases on different machines to save cost.
+  builder: Phase-split serving placing prefill and decode on hardware suited to each.
+  research: Heterogeneous cluster scheduling exploiting prefill's compute-boundness and decode's memory-boundness.
+  analogy: Separate kitchens for prep and plating.
+  example: Splitwise cut serving costs by 20%.
+  origin: Patel et al., Microsoft, 2023.
+  related: [disaggregated-serving]
+
+- id: prefix-caching
+  term: prefix caching
+  pos: n.
+  difficulty: pro
+  topics: [infra]
+  beginner: Reusing work for repeated prompt beginnings across requests, inside the serving engine.
+  builder: Engine-level KV reuse (e.g. vLLM automatic prefix caching) for shared system prompts and documents.
+  research: Hash-indexed KV block sharing across sequences with common token prefixes.
+  analogy: Pre-made pizza bases.
+  example: Prefix caching made every request share the 10k-token system prompt.
+  related: [prompt-caching, kv-cache]
+
+- id: chunked-prefill
+  term: chunked prefill
+  pos: n.
+  difficulty: pro
+  topics: [infra]
+  beginner: Processing a long prompt in pieces so other users' answers don't stall.
+  builder: Split prefill into chunks interleaved with decode steps to smooth latency under load.
+  research: Co-scheduling prefill chunks with decode batches to balance utilisation and tail latency.
+  analogy: Serving short orders while a big one cooks.
+  example: Chunked prefill fixed our latency spikes.
+  related: [continuous-batching]
+
+- id: disaggregated-serving
+  term: disaggregated prefill and decode
+  pos: n.
+  difficulty: pro
+  topics: [infra]
+  beginner: Splitting AI serving into two specialised server pools, one reading prompts and one writing answers.
+  builder: Separate prefill and decode clusters, transferring KV caches between them; independent scaling and better SLOs.
+  research: Phase-disaggregated architecture with KV transfer, optimising goodput under TTFT/TPOT constraints.
+  analogy: A restaurant with separate prep and cooking teams.
+  example: Disaggregated prefill and decode improved our throughput 2x.
+  related: [splitwise, kv-cache]
+
+- id: kto
+  term: KTO
+  expansion: Kahneman-Tversky Optimization
+  pos: n.
+  difficulty: pro
+  topics: [training, research-math]
+  beginner: A preference-training method that only needs thumbs up or down, not side-by-side comparisons.
+  builder: Aligns with binary desirable/undesirable labels using a prospect-theory-inspired loss; easy to collect data for.
+  research: Human-aware loss modelling loss aversion from prospect theory over a reference point, without paired preferences.
+  analogy: Learning from likes and dislikes.
+  example: KTO used our product's thumbs-up data directly.
+  origin: Ethayarajh et al., 2024.
+  related: [dpo, orpo]
+
+- id: orpo
+  term: ORPO
+  expansion: Odds Ratio Preference Optimization
+  pos: n.
+  difficulty: pro
+  topics: [training, research-math]
+  beginner: A method that teaches instructions and preferences in one training step.
+  builder: Combines SFT with an odds-ratio penalty on rejected answers, with no reference model needed.
+  research: Monolithic preference alignment adding a log-odds-ratio term to the NLL objective.
+  analogy: Learning the rules and good taste in one class.
+  example: ORPO saved us a whole training stage.
+  origin: Hong et al., 2024.
+  related: [dpo, kto]
+
+- id: monosemanticity
+  term: monosemanticity
+  pos: n.
+  difficulty: pro
+  topics: [interpretability]
+  beginner: When one internal feature of a model means exactly one thing, versus many mixed meanings (polysemantic).
+  builder: Interpretability goal; sparse autoencoders turn polysemantic neurons into monosemantic features.
+  research: Features aligned to a single human-interpretable concept, contrasted with polysemantic neurons arising from superposition.
+  analogy: One label per jar instead of a mixed bag.
+  example: Monosemanticity research found a feature for "code bugs".
+  origin: Bricken et al., Anthropic, 2023.
+  related: [superposition, sparse-autoencoder]
+
+- id: superalignment
+  term: superalignment
+  pos: n.
+  difficulty: pro
+  topics: [safety]
+  beginner: The challenge of keeping AI that's smarter than us aligned with human goals.
+  builder: Research on supervising superhuman systems, e.g. weak-to-strong generalisation and scalable oversight.
+  research: Aligning systems whose capabilities exceed evaluators', where direct human supervision is unreliable.
+  analogy: Teaching someone who'll soon know more than you.
+  example: The superalignment team studied weak-to-strong supervision.
+  related: [alignment, asi]
+
+- id: representation-engineering
+  term: representation engineering
+  pos: n.
+  difficulty: pro
+  topics: [interpretability, safety]
+  beginner: Reading and editing an AI's internal "thoughts" to control traits like honesty.
+  builder: Find concept directions in activations (via contrast prompts) and add or subtract them to steer behaviour.
+  research: Top-down analysis of population-level representations enabling reading and control vectors.
+  analogy: Tuning a mood dial inside the brain.
+  example: Representation engineering made it more truthful.
+  origin: Zou et al., 2023.
+  related: [steering, probing]
+
+- id: probing
+  term: feature probing
+  pos: n.
+  difficulty: pro
+  topics: [interpretability]
+  beginner: Testing whether a model secretly knows something by training a tiny detector on its internals.
+  builder: Linear classifiers on hidden states reveal what information is encoded at each layer.
+  research: Supervised probes on activations measuring decodability, distinct from causal use.
+  analogy: A stethoscope for neural networks.
+  example: Feature probing showed it tracks the chessboard internally.
+  related: [representation-engineering]
+
+- id: induction-heads
+  term: induction heads
+  pos: n.
+  difficulty: pro
+  topics: [interpretability]
+  beginner: Attention parts that spot repeated patterns and predict what came next last time.
+  builder: Two-head circuits completing [A][B]…[A]→[B]; believed to drive much of in-context learning.
+  research: Composition of a previous-token head and a copying head, forming during a phase change in training.
+  analogy: Remembering how the rhyme went last verse.
+  example: Induction heads appear suddenly during training.
+  origin: Olsson et al., Anthropic, 2022.
+  related: [in-context-learning, circuit-analysis]
+
+- id: circuit-analysis
+  term: circuit analysis
+  pos: n.
+  difficulty: pro
+  topics: [interpretability]
+  beginner: Tracing the exact path of computation inside a model for a specific behaviour.
+  builder: Identify the minimal subgraph of heads and features responsible, via activation patching and attribution.
+  research: Causal identification of computational subgraphs implementing algorithms within trained networks.
+  analogy: Tracing wires in a circuit board.
+  example: Circuit analysis showed how it adds two-digit numbers.
+  related: [induction-heads, mechanistic-interpretability]
+
+- id: backdoor-attack
+  term: backdoor attack
+  pos: n.
+  difficulty: pro
+  topics: [safety]
+  beginner: Secretly planting a hidden trigger in an AI during training so it misbehaves on cue.
+  builder: Poisoned training data teaches trigger-conditional behaviour that survives normal evals.
+  research: Data or weight poisoning inducing targeted behaviour on trigger inputs while preserving clean performance.
+  analogy: A sleeper agent with a code word.
+  example: The backdoor attack activated when a certain year appeared.
+  related: [model-poisoning, red-teaming]
+
+- id: model-poisoning
+  term: model poisoning
+  pos: n.
+  difficulty: pro
+  topics: [safety, training]
+  beginner: Corrupting an AI by slipping bad data into what it learns from.
+  builder: Few poisoned documents in web-scale data can implant behaviours; vet sources and monitor for triggers.
+  research: Adversarial manipulation of training data or updates to degrade or control a learned model.
+  analogy: Spiking the well.
+  example: Just 250 documents were enough for model poisoning.
+  related: [backdoor-attack, data-scraping]
+
+- id: membership-inference
+  term: membership inference attack
+  pos: n.
+  difficulty: pro
+  topics: [safety, policy]
+  beginner: Figuring out whether a specific piece of data was used to train an AI.
+  builder: Privacy attack exploiting lower loss on training examples; relevant to copyright and personal data claims.
+  research: Hypothesis testing on model outputs or losses to infer training-set inclusion.
+  analogy: Checking if a student studied a particular page.
+  example: A membership inference attack revealed the book was in the training set.
+  related: [unlearning]
+
+- id: indirect-prompt-injection
+  term: indirect prompt injection
+  pos: n.
+  difficulty: pro
+  topics: [safety, agent-era]
+  beginner: Malicious instructions hidden in webpages or files that an AI reads while doing a task.
+  builder: The attacker never talks to the model; payloads ride in tool results, emails or docs. Isolate privileges and confirm risky actions.
+  research: Injection via third-party content in the context, exploiting the absence of instruction/data separation.
+  analogy: A booby-trapped letter in the mail pile.
+  example: Indirect prompt injection in a calendar invite hijacked the agent.
+  related: [prompt-injection]
+
+- id: unlearning
+  term: machine unlearning
+  pos: n.
+  difficulty: pro
+  topics: [safety, policy]
+  beginner: Making an AI forget specific data or knowledge without retraining from scratch.
+  builder: Targeted fine-tuning or editing to remove personal data or hazardous knowledge; verify it's truly gone.
+  research: Approximating the model that would result from training without the forget set.
+  analogy: Erasing one chapter from memory.
+  example: Machine unlearning removed the leaked customer records.
+  related: [concept-erasing, catastrophic-forgetting]
+
+- id: concept-erasing
+  term: concept erasure
+  pos: n.
+  difficulty: pro
+  topics: [safety, interpretability]
+  beginner: Removing a specific idea, like an artist's style, from what a model can produce.
+  builder: Edit representations or weights so a concept is no longer usable or decodable.
+  research: Projecting out concept subspaces (e.g. LEACE) so no linear classifier can recover them.
+  analogy: Blacking out a word in every book.
+  example: Concept erasure stopped the model imitating that artist.
+  related: [unlearning]
+
+- id: goodharts-law
+  term: Goodhart's law
+  pos: n.
+  difficulty: pro
+  topics: [safety, evals]
+  beginner: "When a measure becomes a target, it stops being a good measure."
+  builder: Optimising a proxy (benchmark, reward model) eventually breaks its link to what you actually want.
+  research: Proxy–objective divergence under optimisation pressure; the theory behind reward hacking.
+  analogy: Paying per line of code gets you long code.
+  example: Goodhart's law is why the bot learned to flatter users.
+  related: [reward-hacking]
+
+- id: soft-prompting
+  term: soft prompting
+  pos: n.
+  difficulty: pro
+  topics: [training, research-math]
+  beginner: Training a few invisible "prompt" vectors instead of the model to steer its behaviour.
+  builder: Learned continuous embeddings prepended to inputs (prompt / prefix tuning); tiny storage per task.
+  research: Optimising virtual token embeddings or per-layer prefix activations with frozen model weights.
+  analogy: A secret handshake the model learns to respond to.
+  example: Soft prompting gave us one tiny file per customer.
+  related: [peft]
+
+- id: adapters
+  term: adapters
+  pos: n.
+  difficulty: pro
+  topics: [training]
+  beginner: Small add-on layers plugged into a frozen model to teach it a new task.
+  builder: Bottleneck modules inserted between layers and trained alone; swappable per task.
+  research: Residual down-/up-projection blocks enabling parameter-efficient transfer.
+  analogy: Plug-in modules for a modular synth.
+  example: Each language gets its own adapters.
+  origin: Houlsby et al., 2019.
+  related: [peft, lora]
+
+- id: rank-decomposition
+  term: rank decomposition matrices
+  pos: n.
+  difficulty: pro
+  topics: [research-math, training]
+  beginner: Representing a big table of numbers as the product of two thin ones, the trick behind LoRA.
+  builder: ΔW ≈ BA with rank r keeps updates tiny; r trades capacity for memory.
+  research: Low-rank factorisation exploiting the low intrinsic dimension of fine-tuning updates.
+  analogy: Describing a picture with a few brush strokes.
+  example: LoRA trains rank decomposition matrices instead of full weights.
+  related: [lora]
