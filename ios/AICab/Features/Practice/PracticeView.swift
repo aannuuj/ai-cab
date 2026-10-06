@@ -13,6 +13,9 @@ struct PracticeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
+                    if !model.isPro {
+                        UnlockBanner(message: "Access all games, challenges, topics and themes.") { model.sheet = .paywall(.banner) }
+                    }
                     levelTestCard
                     deckSummary
                     dailyCard

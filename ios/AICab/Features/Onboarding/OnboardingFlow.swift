@@ -299,7 +299,7 @@ struct OnboardingFlow: View {
     private var themeStep: some View {
         DarkChoiceStep(title: "Which theme would you like to start with?", onContinue: advance) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
-                ForEach(FeedTheme.allCases) { option in
+                ForEach(FeedTheme.onboardingPicks) { option in
                     let locked = option.isPremium && !model.isPro
                     Button {
                         if !locked { answers.theme = option }
@@ -886,9 +886,10 @@ private struct ThemeTile: View {
     var body: some View {
         let colors = FeedColors.forTheme(theme)
         ZStack {
-            RoundedRectangle(cornerRadius: 24, style: .continuous).fill(colors.background)
+            FeedBackground(theme: theme)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             Text("Aa")
-                .font(.system(size: 34, weight: .bold, design: .serif))
+                .font(colors.font.display(size: 34))
                 .foregroundStyle(colors.primary)
             VStack {
                 HStack {

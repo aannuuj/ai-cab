@@ -104,8 +104,16 @@ public struct ReminderSettings: Codable, Hashable, Sendable {
     public static let perDayRange = 1...10
 }
 
+/// Word feed look. Raw values are persisted, so cases are only ever added.
 public enum FeedTheme: String, Codable, CaseIterable, Identifiable, Sendable {
     case cream, charcoal, sage, tide, ember
+    case dusk, mist, ocean, aurora, sand
+    case contrast, daylight
+    case rose, terminal
+    case harvest, moonlit, frost
+    case halftone, blossom
+    /// The user's own background colour and font (Pro).
+    case custom
 
     public var id: String { rawValue }
 
@@ -116,11 +124,117 @@ public enum FeedTheme: String, Codable, CaseIterable, Identifiable, Sendable {
         case .sage: "Library"
         case .tide: "Tide"
         case .ember: "Ember"
+        case .dusk: "Dusk"
+        case .mist: "Mist"
+        case .ocean: "Ocean"
+        case .aurora: "Aurora"
+        case .sand: "Sand"
+        case .contrast: "Contrast"
+        case .daylight: "Daylight"
+        case .rose: "Rose"
+        case .terminal: "Terminal"
+        case .harvest: "Harvest"
+        case .moonlit: "Moonlit"
+        case .frost: "Frost"
+        case .halftone: "Halftone sun"
+        case .blossom: "Blossom"
+        case .custom: "Your theme"
         }
     }
 
-    /// Paper and Night are free; the rest come with Pro.
-    public var isPremium: Bool { self != .cream && self != .charcoal }
+    public var category: ThemeCategory {
+        switch self {
+        case .cream, .charcoal, .rose, .terminal: .popular
+        case .sage, .tide, .ember, .dusk, .mist, .ocean, .aurora, .sand: .calm
+        case .contrast, .daylight: .highVisibility
+        case .harvest, .moonlit, .frost: .seasonal
+        case .halftone, .blossom: .illustration
+        case .custom: .custom
+        }
+    }
+
+    public var font: FeedFont {
+        switch self {
+        case .tide, .mist, .aurora, .frost: .sans
+        case .contrast, .daylight: .bold
+        case .rose: .rounded
+        case .terminal: .mono
+        case .blossom: .italic
+        default: .serif
+        }
+    }
+
+    /// A handful stay free so everyone can personalise.
+    public var isPremium: Bool { ![.cream, .charcoal, .sand, .contrast, .rose].contains(self) }
+
+    /// Shown during onboarding: a small, varied pick.
+    public static let onboardingPicks: [FeedTheme] = [.charcoal, .cream, .rose, .dusk, .ocean, .harvest]
+
+    /// Gallery themes (custom is reached through "Create").
+    public static var gallery: [FeedTheme] { allCases.filter { $0 != .custom } }
+}
+
+public enum ThemeCategory: String, CaseIterable, Identifiable, Sendable {
+    case popular, calm, seasonal, highVisibility, illustration, custom
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .popular: "Most popular"
+        case .calm: "Calm"
+        case .seasonal: "Seasonal"
+        case .highVisibility: "High visibility"
+        case .illustration: "Illustration"
+        case .custom: "Yours"
+        }
+    }
+
+    /// Gallery order.
+    public static let galleryOrder: [ThemeCategory] = [.calm, .seasonal, .illustration, .highVisibility, .popular]
+}
+
+/// Typeface family used for the word on a feed theme.
+public enum FeedFont: String, Codable, CaseIterable, Identifiable, Sendable {
+    case serif, sans, bold, rounded, mono, italic
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .serif: "Serif"
+        case .sans: "Sans"
+        case .bold: "Bold"
+        case .rounded: "Rounded"
+        case .mono: "Mono"
+        case .italic: "Italic"
+        }
+    }
+}
+
+/// "Create" theme: background colour and font.
+public struct CustomFeedTheme: Codable, Hashable, Sendable {
+    /// 0xRRGGBB.
+    public var background: Int
+    public var font: FeedFont
+
+    public init(background: Int = 0x2F3A4A, font: FeedFont = .serif) {
+        self.background = background
+        self.font = font
+    }
+
+    /// Relative luminance check so text flips to dark on light backgrounds.
+    public var isLight: Bool {
+        func channel(_ shift: Int) -> Double {
+            let c = Double((background >> shift) & 0xFF) / 255
+            return c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+        }
+        let luminance = 0.2126 * channel(16) + 0.7152 * channel(8) + 0.0722 * channel(0)
+        return luminance > 0.4
+    }
+
+    public static let swatches: [Int] = [0x2F3A4A, 0x1F2A24, 0x4A2F3A, 0x5B4636, 0x24324F,
+                                         0xE9DCC7, 0xDCE7E2, 0xF3D9D4, 0xE4E0F2, 0xF5F1E6]
 }
 
 /// Onboarding self-assessment ("How familiar are you with AI?").
@@ -311,6 +425,10 @@ public struct Preferences: Codable, Sendable {
     public var speechRate: Double?
     /// One-time coach marks already shown.
     public var seenTips: [String]?
+    /// Colours for the `.custom` feed theme.
+    public var customTheme: CustomFeedTheme?
+    /// Daily practice alarm (AlarmKit), minutes after midnight; nil = off.
+    public var alarmMinute: Int?
 
     public init() {}
 

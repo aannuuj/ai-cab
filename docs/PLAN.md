@@ -2,7 +2,7 @@
 
 > Status: **v1 implemented**. Phases 1–3 are built (see README.md). Open items: App Store Connect setup, illustrator-quality artwork, real-device QA.
 > Inspiration: *Vocabulary — Learn words daily* (Monkey Taps), App Store id1084540807.
-> Reference screenshots: `design/reference/vocabulary/` (01–10 app v1, 11–23 onboarding, 24–39 AI onboarding v2, 40–55 app v2: save toast, locked detail sections, share actions, Practice hub with Sprint/Rush/Perfection, flash cards and level test, profile tiles with Voices).
+> Reference screenshots: `design/reference/vocabulary/` (01–10 app v1, 11–23 onboarding, 24–39 AI onboarding v2, 40–55 app v2: save toast, locked detail sections, share actions, Practice hub with Sprint/Rush/Perfection, flash cards and level test, profile tiles with Voices; 56–67 app v3: theme gallery, profile Stats/Topics, widget guides, Alarm).
 > Goal: a calm, swipeable daily feed that teaches the language of AI (LLMs, agents, robotics, policy) at three depth levels, with widgets, notifications and a chapter "Journey" doing the habit work.
 
 The build runs in **3 phases** (§5):

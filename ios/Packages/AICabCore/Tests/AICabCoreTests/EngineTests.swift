@@ -364,3 +364,18 @@ final class ChallengeTests: XCTestCase {
         XCTAssertEqual(test.recommendedLevel(correctIds: ["a", "b", "d", "f"], quizRounds: rounds), .research)
     }
 }
+
+final class ThemeTests: XCTestCase {
+    func testCustomThemeLuminanceFlipsText() {
+        XCTAssertTrue(CustomFeedTheme(background: 0xF5F1E6).isLight)
+        XCTAssertFalse(CustomFeedTheme(background: 0x1F2A24).isLight)
+    }
+
+    func testGalleryHasFreeThemesInEveryCoreCategory() {
+        let free = FeedTheme.gallery.filter { !$0.isPremium }
+        XCTAssertTrue(free.contains(.cream))
+        XCTAssertTrue(free.contains(where: { $0.category == .highVisibility }))
+        XCTAssertFalse(FeedTheme.gallery.contains(.custom))
+        XCTAssertTrue(FeedTheme.custom.isPremium)
+    }
+}

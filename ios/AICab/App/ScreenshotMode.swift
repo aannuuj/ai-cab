@@ -7,7 +7,7 @@ enum ScreenshotMode {
     enum Screen: String {
         case onboarding, words, topics, journey, practice, profile, paywall, widget, term, share, quiz
         case tailor, streak, themes, icons
-        case toast, coach, challenge, flashcards, levelTest, voices
+        case toast, coach, challenge, flashcards, levelTest, voices, gallery, stats
     }
 
     static let current: Screen? = {

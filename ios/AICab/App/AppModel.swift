@@ -165,10 +165,10 @@ final class AppModel {
         case .term: model.sheet = .term("rag")
         case .share: model.sheet = .share("rag")
         case .toast: model.saveToast = SaveToast(termID: "context-engineering", destination: "Agent design review")
-        case .coach, .challenge, .flashcards, .levelTest, .voices: break
+        case .coach, .challenge, .flashcards, .levelTest, .voices, .gallery, .stats: break
         }
         if [.challenge, .flashcards, .levelTest].contains(screen) { model.selectedTab = .practice }
-        if screen == .voices { model.selectedTab = .profile }
+        if [.voices, .gallery, .stats].contains(screen) { model.selectedTab = .profile }
         return model
     }
 
@@ -646,6 +646,35 @@ final class AppModel {
             return
         }
         mutate { $0.preferences.feedTheme = theme }
+    }
+
+    /// Saves and applies a "Create" theme (Pro).
+    func setCustomTheme(_ custom: CustomFeedTheme) {
+        guard isPro else {
+            sheet = .paywall(.shareTheme)
+            return
+        }
+        mutate {
+            $0.preferences.customTheme = custom
+            $0.preferences.feedTheme = .custom
+        }
+    }
+
+    // MARK: - Practice alarm
+
+    var alarmMinute: Int? { state.preferences.alarmMinute }
+
+    /// Turns the daily practice alarm on (asking for AlarmKit permission) or off. Returns whether it's on.
+    @discardableResult
+    func setAlarm(minute: Int?) async -> Bool {
+        guard let minute else {
+            await PracticeAlarm.cancel()
+            mutate { $0.preferences.alarmMinute = nil }
+            return false
+        }
+        let scheduled = await PracticeAlarm.schedule(minute: minute, name: state.preferences.name)
+        mutate { $0.preferences.alarmMinute = scheduled ? minute : nil }
+        return scheduled
     }
 
     func setAppIcon(_ name: String?) {

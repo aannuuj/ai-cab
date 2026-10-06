@@ -31,6 +31,6 @@ shoot() {
 for step in welcome tailor name age weekly streak habits reminders icon theme insight familiarity weakSpots knownBuilder placement topics; do
   shoot "onboarding-$step" -screenshot onboarding -onboardingStep "$step"
 done
-for screen in words toast coach topics journey practice challenge flashcards levelTest profile voices paywall widget term share; do
+for screen in words toast coach topics journey practice challenge flashcards levelTest profile voices gallery stats paywall widget term share; do
   shoot "$screen" -screenshot "$screen"
 done

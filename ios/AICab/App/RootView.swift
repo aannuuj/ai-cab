@@ -46,7 +46,7 @@ struct RootView: View {
     /// Light status bar content only while reading on a light feed theme.
     private var colorScheme: ColorScheme {
         let lightFeed = model.preferences.hasOnboarded && model.selectedTab == .words && model.sheet == nil
-            && FeedColors.isLight(model.preferences.feedTheme)
+            && FeedColors.isLight(model.preferences.feedTheme, custom: model.preferences.customTheme)
         if !model.preferences.hasOnboarded { return .dark }
         return lightFeed ? .light : .dark
     }

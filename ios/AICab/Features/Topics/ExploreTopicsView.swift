@@ -124,15 +124,17 @@ private struct PremiumFooter: View {
 
 /// Teal "Unlock everything" banner.
 struct UnlockBanner: View {
+    var title = "Unlock everything"
+    var message = "Every topic, Research-level definitions, all Journey chapters and themes."
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Unlock everything")
+                    Text(title)
                         .font(.system(.title2, weight: .bold))
-                    Text("Every topic, Research-level definitions, all Journey chapters and themes.")
+                    Text(message)
                         .font(.subheadline)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)

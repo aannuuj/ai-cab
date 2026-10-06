@@ -11,11 +11,12 @@ struct WordsFeedView: View {
 
     static let saveTip = "save5"
 
-    private var colors: FeedColors { .forTheme(model.preferences.feedTheme) }
+    private var colors: FeedColors { .forTheme(model.preferences.feedTheme, custom: model.preferences.customTheme) }
 
     var body: some View {
         ZStack(alignment: .top) {
-            colors.background.ignoresSafeArea()
+            FeedBackground(theme: model.preferences.feedTheme, custom: model.preferences.customTheme)
+                .ignoresSafeArea()
 
             ScrollView(.vertical) {
                 LazyVStack(spacing: 0) {
@@ -162,7 +163,7 @@ struct TermPage: View {
                             .background(Capsule().fill(Palette.teal))
                     }
                     Text(term.term)
-                        .font(.wordDisplay)
+                        .font(colors.wordFont)
                         .foregroundStyle(colors.primary)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
