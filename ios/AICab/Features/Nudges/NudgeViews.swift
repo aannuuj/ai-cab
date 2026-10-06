@@ -17,7 +17,7 @@ struct WidgetInstallView: View {
     @State private var lockScreen = false
 
     private var sample: WidgetWord {
-        let term = model.feed.first ?? model.content.terms.first
+        let term = model.term("rag") ?? model.feed.first
         return term.map { WidgetWord(term: $0, level: model.level) } ?? WidgetSnapshot.placeholder.words[0]
     }
 

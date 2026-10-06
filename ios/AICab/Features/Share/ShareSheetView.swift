@@ -26,8 +26,16 @@ struct ShareSheetView: View {
                 Spacer()
             }
 
-            ShareCardView(term: term, level: model.level, theme: theme, showWatermark: showWatermark)
-                .aspectRatio(4 / 5, contentMode: .fit)
+            Group {
+                if let preview = renderUIImage() {
+                    Image(uiImage: preview)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    RoundedRectangle(cornerRadius: 30, style: .continuous).fill(theme.background)
+                        .aspectRatio(4 / 5, contentMode: .fit)
+                }
+            }
                 .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 30, style: .continuous).strokeBorder(Color.white.opacity(0.12)))
                 .shadow(color: .black.opacity(0.3), radius: 24, y: 12)
@@ -179,12 +187,15 @@ struct ShareCardView: View {
                     .minimumScaleFactor(0.5)
                     .lineLimit(2)
                 Rectangle().fill(theme.foreground.opacity(0.25)).frame(height: 1.5)
-                Text("\(term.pos) \(term.definition(at: level))")
+                Text("(\(term.pos)) \(term.definition(at: level))")
                     .font(.system(size: 21))
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(7)
+                    .minimumScaleFactor(0.7)
                 if let example = term.example {
                     Text("\u{201C}\(example)\u{201D}")
                         .font(.system(size: 16, design: .serif).italic())
+                        .lineLimit(3)
+                        .minimumScaleFactor(0.8)
                         .opacity(0.7)
                 }
                 if showWatermark {
@@ -201,5 +212,6 @@ struct ShareCardView: View {
             .foregroundStyle(theme.foreground)
             .padding(32)
         }
+        .frame(width: 360, height: 450)
     }
 }

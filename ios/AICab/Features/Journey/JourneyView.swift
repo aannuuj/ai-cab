@@ -142,15 +142,14 @@ private struct ChapterSection: View {
                 let width = proxy.size.width
                 ZStack {
                     decorations(width: width)
+                    ForEach(1..<LessonKind.allCases.count, id: \.self) { index in
+                        DashedConnector(from: point(index - 1, width: width), to: point(index, width: width))
+                    }
                     ForEach(Array(LessonKind.allCases.enumerated()), id: \.element) { index, lesson in
                         let status = model.lessonStatus(lesson, in: chapter)
                         let isCurrent = current?.chapter.number == chapter.number && current?.lesson == lesson
-                        let x = width / 2 + offsets[index] * width * 0.32
-                        let y = 70 + CGFloat(index) * 92
-                        if index > 0 {
-                            DashedConnector(from: CGPoint(x: width / 2 + offsets[index - 1] * width * 0.32, y: 70 + CGFloat(index - 1) * 92),
-                                            to: CGPoint(x: x, y: y))
-                        }
+                        let x = point(index, width: width).x
+                        let y = point(index, width: width).y
                         Button { onSelect(lesson) } label: {
                             IsoLessonTile(symbol: lesson.symbol, state: tileState(status, isCurrent: isCurrent), size: 150)
                         }
@@ -161,7 +160,7 @@ private struct ChapterSection: View {
                         .overlay {
                             if isCurrent {
                                 CurrentMarker(title: lesson.title)
-                                    .position(x: x, y: y - 64)
+                                    .position(x: x, y: y - 72)
                             }
                         }
                     }
@@ -171,6 +170,10 @@ private struct ChapterSection: View {
             .opacity(unlocked ? 1 : 0.55)
         }
         .padding(.horizontal, Metrics.gutter)
+    }
+
+    private func point(_ index: Int, width: CGFloat) -> CGPoint {
+        CGPoint(x: width / 2 + offsets[index] * width * 0.32, y: 70 + CGFloat(index) * 92)
     }
 
     @ViewBuilder

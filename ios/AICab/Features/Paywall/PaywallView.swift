@@ -19,7 +19,11 @@ struct PaywallView: View {
 
     private var purchases: PurchaseManager { model.purchases }
     private var selected: Product? { purchases.products.first { $0.id == selectedID } }
-    private var trialDays: Int? { purchases.trialDays(for: selected) }
+    /// Before products load (or offline), show the standard 3-day trial so the screen never looks broken.
+    private var trialDays: Int? {
+        if purchases.products.isEmpty { return selectedID == PurchaseManager.ProductID.yearly ? 3 : nil }
+        return purchases.trialDays(for: selected)
+    }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -130,14 +134,26 @@ struct PaywallView: View {
                 }
             }
             if purchases.products.isEmpty {
-                HStack {
-                    ProgressView().tint(Palette.textSecondary)
-                    Text(purchases.isLoading ? "Loading plans…" : "Plans unavailable. Check your connection.")
-                        .font(.subheadline).foregroundStyle(Palette.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
+                unavailableNotice
             }
         }
+    }
+
+    private var unavailableNotice: some View {
+        HStack(spacing: 8) {
+            if purchases.isLoading {
+                ProgressView().tint(Palette.textSecondary)
+                Text("Loading prices…")
+            } else {
+                Image(systemName: "wifi.exclamationmark")
+                Text("Couldn't reach the App Store.")
+                Button("Retry") { Task { await purchases.loadProducts() } }
+                    .foregroundStyle(Palette.teal)
+            }
+        }
+        .font(.subheadline)
+        .foregroundStyle(Palette.textSecondary)
+        .frame(maxWidth: .infinity)
     }
 
     private var footer: some View {
@@ -168,6 +184,8 @@ struct PaywallView: View {
                     .font(.subheadline)
                     .foregroundStyle(Palette.textSecondary)
                     .multilineTextAlignment(.center)
+            } else if purchases.products.isEmpty && !showAllPlans {
+                unavailableNotice
             }
             if let error = purchases.lastError {
                 Text(error).font(.footnote).foregroundStyle(Palette.coral)
@@ -199,7 +217,7 @@ struct PaywallView: View {
     // MARK: Logic
 
     private var ctaTitle: String {
-        guard let selected else { return "Continue" }
+        guard let selected else { return trialDays != nil ? "Start free trial" : "Continue" }
         if trialDays != nil { return "Try for \(purchases.zeroPrice(like: selected))" }
         return selected.type == .nonConsumable ? "Unlock forever" : "Continue"
     }

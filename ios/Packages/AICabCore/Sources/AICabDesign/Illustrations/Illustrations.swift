@@ -246,47 +246,19 @@ public struct NeuralTree: View {
             }
         }
         .overlay(alignment: .bottom) {
-            HStack(alignment: .bottom, spacing: 0) {
-                Reader(shirt: Color(hex: 0x56613A), facing: .left)
+            HStack(alignment: .bottom) {
+                IsoObject(symbol: "books.vertical.fill", palette: .coral, size: 92)
                 Spacer(minLength: 0)
-                Reader(shirt: Color(hex: 0xC49A6C), facing: .right, hair: Palette.coral)
+                IsoObject(symbol: "text.bubble.fill", palette: .teal, size: 78)
+                    .offset(y: -6)
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 18)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 4)
         }
         .scaleEffect(pulse ? 1.01 : 1)
         .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: pulse)
         .onAppear { pulse = true }
         .accessibilityHidden(true)
-    }
-
-    private struct Reader: View {
-        enum Facing { case left, right }
-        var shirt: Color
-        var facing: Facing
-        var hair: Color = Palette.ink
-
-        var body: some View {
-            HStack(alignment: .bottom, spacing: 4) {
-                if facing == .right { book }
-                VStack(spacing: 2) {
-                    Circle().fill(Color(hex: 0xE2B48C)).frame(width: 26, height: 26)
-                        .overlay(alignment: .top) { Capsule().fill(hair).frame(width: 28, height: 12).offset(y: -2) }
-                    RoundedRectangle(cornerRadius: 12, style: .continuous).fill(shirt).frame(width: 42, height: 48)
-                    Capsule().fill(Palette.ink).frame(width: 70, height: 14)
-                        .offset(x: facing == .left ? -18 : 18)
-                }
-                if facing == .left { book }
-            }
-        }
-
-        private var book: some View {
-            RoundedRectangle(cornerRadius: 3).fill(Palette.ivory)
-                .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Palette.ink, lineWidth: 1.5))
-                .frame(width: 26, height: 18)
-                .rotationEffect(.degrees(facing == .left ? -18 : 18))
-                .padding(.bottom, 54)
-        }
     }
 }
 
