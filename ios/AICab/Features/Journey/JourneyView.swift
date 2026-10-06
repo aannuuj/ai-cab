@@ -6,7 +6,8 @@ import AICabDesign
 struct JourneyView: View {
     @Environment(AppModel.self) private var model
     @State private var active: ActiveLesson?
-    @State private var visibleChapter: Int?
+    /// Units currently on screen (at least partly).
+    @State private var visibleChapters: Set<Int> = []
 
     struct ActiveLesson: Identifiable {
         let chapter: Chapter
@@ -25,7 +26,9 @@ struct JourneyView: View {
                                 open(lesson, in: chapter)
                             }
                             .id(chapter.number)
-                            .onAppear { visibleChapter = chapter.number }
+                            .onScrollVisibilityChange(threshold: 0.15) { visible in
+                                if visible { visibleChapters.insert(chapter.number) } else { visibleChapters.remove(chapter.number) }
+                            }
                         }
                     }
                     .padding(.top, 12)
@@ -43,7 +46,7 @@ struct JourneyView: View {
                 .overlay(alignment: .bottom) {
                     if let current = model.journeyCurrent {
                         Group {
-                            if visibleChapter == nil || visibleChapter == current.chapter.number {
+                            if visibleChapters.isEmpty || visibleChapters.contains(current.chapter.number) {
                                 PlayCard(chapter: current.chapter, lesson: current.lesson) {
                                     open(current.lesson, in: current.chapter)
                                 }
@@ -53,7 +56,7 @@ struct JourneyView: View {
                                     withAnimation(.snappy) { proxy.scrollTo(current.chapter.number, anchor: .top) }
                                 } label: {
                                     HStack(spacing: 10) {
-                                        Image(systemName: (visibleChapter ?? 0) > current.chapter.number ? "chevron.up" : "chevron.down")
+                                        Image(systemName: (visibleChapters.min() ?? 0) > current.chapter.number ? "chevron.up" : "chevron.down")
                                             .foregroundStyle(Palette.coral)
                                         Text("Back to unit \(current.chapter.number)")
                                             .font(.headline)
@@ -69,7 +72,7 @@ struct JourneyView: View {
                         }
                         .padding(.horizontal, Metrics.gutter)
                         .padding(.bottom, 10)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: visibleChapter)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: visibleChapters)
                     }
                 }
             }
