@@ -688,9 +688,9 @@ private struct PaceStep: View {
     }
 
     private let paces = [
-        Pace(goal: 2, title: "Easy", minutes: "about 1 minute a day", symbol: "tortoise.fill"),
-        Pace(goal: 5, title: "Steady", minutes: "about 3 minutes a day", symbol: "figure.walk"),
-        Pace(goal: 8, title: "Intense", minutes: "about 5 minutes a day", symbol: "hare.fill"),
+        Pace(goal: 2, title: "Easy", minutes: "~1 min a day", symbol: "tortoise.fill"),
+        Pace(goal: 5, title: "Steady", minutes: "~3 min a day", symbol: "figure.walk"),
+        Pace(goal: 8, title: "Intense", minutes: "~5 min a day", symbol: "hare.fill"),
     ]
 
     var body: some View {
@@ -726,11 +726,14 @@ private struct PaceStep: View {
                     .overlay(Circle().strokeBorder(Palette.outline, lineWidth: 2))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(pace.title).font(.system(.title3, design: .serif, weight: .bold))
-                    Text(pace.minutes).font(.subheadline).opacity(0.75)
+                    Text(pace.minutes).font(.subheadline).opacity(0.75).lineLimit(1)
                 }
                 Spacer(minLength: 0)
-                Text("\(pace.goal)").font(.system(size: 34, weight: .bold, design: .serif))
-                Text("terms\na day").font(.caption).multilineTextAlignment(.leading).opacity(0.75)
+                VStack(spacing: 0) {
+                    Text("\(pace.goal)").font(.system(size: 30, weight: .bold, design: .serif))
+                    Text("terms/day").font(.caption2.weight(.semibold)).opacity(0.75)
+                }
+                .fixedSize()
             }
             .foregroundStyle(picked ? Palette.ink : Palette.textPrimary)
             .padding(18)
