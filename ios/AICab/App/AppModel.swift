@@ -12,6 +12,8 @@ struct OnboardingAnswers {
     var weakSpots: Set<WeakSpot> = []
     var habitHelpers: Set<HabitHelper> = []
     var weeklyWords: Int?
+    /// Daily pace picked during onboarding (terms per day).
+    var dailyGoal: Int?
     var topicIds: [String] = []
     var theme: FeedTheme = .charcoal
     var appIcon: String?
@@ -731,7 +733,11 @@ final class AppModel {
             p.weakSpots = Array(answers.weakSpots)
             p.habitHelpers = Array(answers.habitHelpers)
             p.level = answers.placementLevel ?? answers.familiarity?.suggestedLevel ?? .beginner
-            if let weekly = answers.weeklyWords { p.dailyGoal = Preferences.dailyGoal(forWeeklyWords: weekly) }
+            if let goal = answers.dailyGoal {
+                p.dailyGoal = goal
+            } else if let weekly = answers.weeklyWords {
+                p.dailyGoal = Preferences.dailyGoal(forWeeklyWords: weekly)
+            }
             p.topicIds = answers.topicIds
             p.feedTheme = answers.theme.isPremium && !isPro ? .cream : answers.theme
             p.appIcon = answers.appIcon

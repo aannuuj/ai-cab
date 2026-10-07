@@ -386,7 +386,7 @@ public enum WeakSpot: String, Codable, CaseIterable, Identifiable, Sendable {
         case .meetings: "In meetings at work"
         case .building: "Building with AI tools"
         case .papers: "Reading research papers"
-        case .confident: "I always feel confident"
+        case .confident: "Honestly, none of them"
         }
     }
     public var topicIds: [String] {

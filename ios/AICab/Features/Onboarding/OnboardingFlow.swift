@@ -2,23 +2,23 @@ import SwiftUI
 import AICabCore
 import AICabDesign
 
-/// First-run flow, modelled on the reference app and adapted to AI vocabulary.
+/// First-run flow: who you are, what you already know, how deep and how often.
 ///
-/// welcome → tailor → name → age → gender → role → weekly goal → streak → habits → reminders →
-/// icon → theme → insight → familiarity → weak spots → placement test (3 rounds) → result →
-/// topics → widget → trial
+/// welcome → name → role → comfort → knowledge check (3 rounds) → starting depth →
+/// three-depths demo → tricky contexts → feed topics → daily pace → reminders → theme → widget → trial
 struct OnboardingFlow: View {
     @Environment(AppModel.self) private var model
 
     enum Step: Int, CaseIterable {
-        case welcome, tailor, name, age, gender, role, weekly, streak, habits, reminders
-        case icon, theme, insight, familiarity, weakSpots, knownBeginner, knownBuilder, knownResearch, placement
-        case topics, widget, paywall
+        case welcome, name, role, familiarity, knownBeginner, knownBuilder, knownResearch, placement
+        case depth, weakSpots, topics, pace, reminders, theme, widget, paywall
 
         var isSkippable: Bool {
-            [.name, .age, .gender, .role, .weekly, .habits, .familiarity, .weakSpots,
-             .knownBeginner, .knownBuilder, .knownResearch].contains(self)
+            [.name, .role, .familiarity, .weakSpots, .knownBeginner, .knownBuilder, .knownResearch].contains(self)
         }
+
+        /// Steps that show the progress bar (everything between welcome and the widget guide).
+        static var progressSteps: [Step] { allCases.filter { $0 != .welcome && $0 != .widget && $0 != .paywall } }
 
         var next: Step { Step(rawValue: rawValue + 1) ?? .paywall }
         var previous: Step? { Step(rawValue: rawValue - 1) }
@@ -29,7 +29,6 @@ struct OnboardingFlow: View {
     @State private var answers = OnboardingAnswers()
     @State private var nameDraft = ""
     @State private var reminders = ReminderSettings(isEnabled: true, perDay: 3)
-    @State private var appIcon: AppIconOption = AppIconOption.all[0]
     @State private var placementDone = false
     @FocusState private var nameFocused: Bool
 
@@ -64,47 +63,31 @@ struct OnboardingFlow: View {
     private var content: some View {
         switch step {
         case .welcome: welcome
-        case .tailor: tailor
         case .name: nameStep
-        case .age:
-            SingleChoice(title: "How old are you?", options: AgeRange.allCases, selection: answers.ageRange, label: \.title) {
-                answers.ageRange = $0
-                advance()
-            }
-        case .gender:
-            SingleChoice(title: "Which option represents you best?", options: Gender.allCases, selection: answers.gender, label: \.title) {
-                answers.gender = $0
-                advance()
-            }
         case .role:
-            SingleChoice(title: "What do you do?", subtitle: "We'll mix in words from your world.",
+            SingleChoice(title: "What brings you to AI?", subtitle: "Your feed leans toward the terms you'll actually hear.",
                          options: Role.allCases, selection: answers.role, label: \.title, symbol: \.symbol) {
                 answers.role = $0
                 advance()
             }
-        case .weekly: weeklyStep
-        case .streak: DarkStreakStep(onContinue: advance)
-        case .habits:
-            MultiChoice(title: "What would help make learning a daily habit?", options: HabitHelper.allCases,
-                        selection: $answers.habitHelpers, label: \.title, onContinue: advance)
-        case .reminders: remindersStep
-        case .icon: iconStep
-        case .theme: themeStep
-        case .insight: InsightStep(onContinue: advance)
         case .familiarity:
-            SingleChoice(title: "How familiar are you with AI?", subtitle: "Sets how deep definitions go. Switch any time.",
+            SingleChoice(title: "How comfortable are you with AI talk?", subtitle: "This sets how deep definitions start. Change it whenever.",
                          options: Familiarity.allCases, selection: answers.familiarity, label: \.title) {
                 answers.familiarity = $0
                 advance()
             }
-        case .weakSpots:
-            MultiChoice(title: "Where does AI jargon trip you up?", options: WeakSpot.allCases,
-                        selection: $answers.weakSpots, label: \.title, onContinue: advance)
         case .knownBeginner: knownStep(round: 0)
         case .knownBuilder: knownStep(round: 1)
         case .knownResearch: knownStep(round: 2)
         case .placement: placementStep
+        case .depth: DepthStep(level: placementLevel, onContinue: advance)
+        case .weakSpots:
+            MultiChoice(title: "Which conversations lose you?", options: WeakSpot.allCases,
+                        selection: $answers.weakSpots, label: \.title, onContinue: advance)
         case .topics: topicsStep
+        case .pace: PaceStep(selection: $answers.dailyGoal, onContinue: advance)
+        case .reminders: remindersStep
+        case .theme: themeStep
         case .widget: WidgetInstallView(mode: .onboarding) { advance() }
         case .paywall: PaywallView(source: .onboarding) { finish() }
         }
@@ -123,12 +106,15 @@ struct OnboardingFlow: View {
                     .frame(width: 44, height: 44)
             }
             .accessibilityLabel("Back")
-            Spacer()
+            StepProgress(current: Step.progressSteps.firstIndex(of: step) ?? 0, total: Step.progressSteps.count)
+                .padding(.horizontal, 8)
             if step.isSkippable {
                 Button("Skip") { skip() }
                     .font(.headline)
                     .foregroundStyle(Palette.textPrimary)
                     .frame(height: 44)
+            } else {
+                Color.clear.frame(width: 44, height: 44)
             }
         }
         .padding(.horizontal, 12)
@@ -141,25 +127,25 @@ struct OnboardingFlow: View {
         VStack(spacing: 18) {
             Spacer(minLength: 0)
             WelcomeArt()
-            Text("Speak fluent AI\nin 1 minute a day")
+            Text("Learn the language\nof AI")
                 .font(.system(size: 34, weight: .bold, design: .serif))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Palette.textPrimary)
-            Text("Learn \(model.content.terms.count)+ AI words, from \u{201C}token\u{201D} to \u{201C}test-time compute\u{201D}, with a daily habit that takes a minute.")
+            Text("Bite-size definitions at your depth, from \u{201C}token\u{201D} to \u{201C}test-time compute\u{201D}. One swipe at a time.")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Palette.textSecondary)
                 .padding(.horizontal, 8)
             Spacer(minLength: 0)
             HStack(alignment: .center) {
-                LaurelStat(value: "\(model.content.terms.count)+", caption: "AI words")
+                LaurelStat(value: "\(model.content.terms.count)+", caption: "AI terms")
                 Spacer()
                 LaurelStat(value: "3", caption: "depth levels", laurel: true)
                 Spacer()
                 LaurelStat(value: "\(model.chapters.count)", caption: "units")
             }
             .padding(.horizontal, 8)
-            Button("Get started") { advance() }
+            Button("Start learning") { advance() }
                 .buttonStyle(PrimaryButtonStyle(.teal))
             legal
         }
@@ -175,31 +161,10 @@ struct OnboardingFlow: View {
             .multilineTextAlignment(.center)
     }
 
-    private var tailor: some View {
-        VStack(spacing: 28) {
-            Spacer()
-            StairsIllustration()
-            Text("Tailor your word\nrecommendations")
-                .font(.system(size: 34, weight: .bold, design: .serif))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Palette.textPrimary)
-            Text("A few quick questions so your feed starts at the right level, on the topics you care about.")
-                .font(.body)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Palette.textSecondary)
-                .padding(.horizontal, 12)
-            Spacer()
-            Button("Continue") { advance() }
-                .buttonStyle(PrimaryButtonStyle(.teal))
-        }
-        .padding(.horizontal, Metrics.gutter)
-        .padding(.bottom, 8)
-    }
-
     private var nameStep: some View {
         VStack(spacing: 28) {
-            StepTitle("What should we call you?")
-            TextField("", text: $nameDraft, prompt: Text("Your first name").foregroundStyle(Palette.textTertiary))
+            StepTitle("What should AI-Cab call you?", subtitle: "Just a first name, kept on this phone.")
+            TextField("", text: $nameDraft, prompt: Text("First name").foregroundStyle(Palette.textTertiary))
                 .font(.title3)
                 .foregroundStyle(Palette.textPrimary)
                 .textContentType(.givenName)
@@ -222,20 +187,10 @@ struct OnboardingFlow: View {
         }
     }
 
-    private var weeklyStep: some View {
-        SingleChoice(title: "How many AI words do you want to learn per week?", options: [10, 30, 50],
-                     selection: answers.weeklyWords,
-                     label: { "\($0) words a week" },
-                     detail: { "about \(Preferences.dailyGoal(forWeeklyWords: $0)) a day" }) {
-            answers.weeklyWords = $0
-            advance()
-        }
-    }
-
     private var remindersStep: some View {
         let sample = model.term("rag") ?? model.content.terms.first
         return VStack(spacing: 20) {
-            StepTitle("Get AI words throughout the day", subtitle: "Allow notifications to get daily words.")
+            StepTitle("When should terms find you?", subtitle: "A gentle nudge with one term and what it means.")
             if let sample {
                 DarkNotificationPreview(title: sample.headline, message: sample.definition(at: answers.familiarity?.suggestedLevel ?? .beginner))
             }
@@ -263,14 +218,14 @@ struct OnboardingFlow: View {
             .background(TactileBackground(fill: Palette.surface, radius: 32))
             .padding(.bottom, Metrics.hardShadow)
             Spacer()
-            Button("Allow and save") {
+            Button("Turn on reminders") {
                 Task {
                     await model.updateReminders(reminders)
                     advance()
                 }
             }
             .buttonStyle(PrimaryButtonStyle(.teal))
-            Button("Not now") {
+            Button("Maybe later") {
                 Task {
                     var off = reminders
                     off.isEnabled = false
@@ -297,7 +252,7 @@ struct OnboardingFlow: View {
     }
 
     private var themeStep: some View {
-        DarkChoiceStep(title: "Which theme would you like to start with?", onContinue: advance) {
+        DarkChoiceStep(title: "Pick a look for your feed", onContinue: advance) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
                 ForEach(FeedTheme.onboardingPicks) { option in
                     let locked = option.isPremium && !model.isPro
@@ -313,45 +268,11 @@ struct OnboardingFlow: View {
         }
     }
 
-    private var iconStep: some View {
-        DarkChoiceStep(title: "Which icon style do you like the most?", onContinue: advance) {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 18), count: 3), spacing: 18) {
-                ForEach(AppIconOption.all) { option in
-                    Button { appIcon = option } label: {
-                        Image(option.previewAsset)
-                            .resizable()
-                            .aspectRatio(1, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                            .padding(6)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 26, style: .continuous)
-                                    .strokeBorder(appIcon == option ? Palette.textPrimary : .clear, lineWidth: 3)
-                            )
-                            .overlay(alignment: .topTrailing) {
-                                if appIcon == option {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.title3)
-                                        .foregroundStyle(Palette.ink, Palette.teal)
-                                        .symbolRenderingMode(.palette)
-                                        .offset(x: 4, y: -4)
-                                        .transition(.scale.combined(with: .opacity))
-                                }
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(option.title) icon")
-                    .accessibilityAddTraits(appIcon == option ? .isSelected : [])
-                }
-            }
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: appIcon)
-        }
-    }
-
     private func knownStep(round index: Int) -> some View {
         let round = PlacementTest().rounds(in: termIndex)[index]
         let terms = round.termIds.compactMap(model.term)
         return VStack(spacing: 0) {
-            StepTitle(round.title, subtitle: "Select all the ones you know")
+            StepTitle(round.title, subtitle: "Tap the ones you could explain to a friend")
             ScrollView {
                 VStack(spacing: 14) {
                     ForEach(terms) { term in
@@ -368,7 +289,7 @@ struct OnboardingFlow: View {
                 .padding(.bottom, 8)
             }
             .scrollIndicators(.hidden)
-            Button(terms.contains(where: { answers.knownTermIds.contains($0.id) }) ? "Continue" : "I don't know these yet") {
+            Button(terms.contains(where: { answers.knownTermIds.contains($0.id) }) ? "Continue" : "None of these yet") {
                 placementDone = true
                 advance()
             }
@@ -383,7 +304,7 @@ struct OnboardingFlow: View {
         let known = answers.knownTermIds.compactMap(model.term).sorted { $0.term < $1.term }
         return VStack(spacing: 22) {
             Spacer()
-            Eyebrow("Your starting level", color: Palette.teal)
+            Eyebrow("Your starting depth", color: Palette.teal)
             Text(level.title)
                 .font(.system(size: 52, weight: .bold, design: .serif))
                 .foregroundStyle(Palette.textPrimary)
@@ -392,8 +313,8 @@ struct OnboardingFlow: View {
                 .foregroundStyle(Palette.textSecondary)
             VStack(spacing: 14) {
                 Text(known.isEmpty
-                     ? "Perfect place to start. Every word will be new."
-                     : "You already know \(known.count) of these. We'll skip them and start where it gets interesting.")
+                     ? "A clean slate. Every term will be new, and we'll build up from the basics."
+                     : "You know \(known.count) already, so those stay out of your feed. We'll start just past them.")
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Palette.textPrimary)
@@ -422,7 +343,7 @@ struct OnboardingFlow: View {
 
     private var topicsStep: some View {
         VStack(spacing: 0) {
-            StepTitle("Your starting topics", subtitle: "Picked from your answers. Tap to change.")
+            StepTitle("Your feed, to start", subtitle: "Based on your answers. Tap to tweak.")
             ScrollView {
                 FlowLayout(spacing: 10) {
                     ForEach(model.topics) { topic in
@@ -451,7 +372,7 @@ struct OnboardingFlow: View {
                 .padding(.top, 24)
             }
             .scrollIndicators(.hidden)
-            Button(answers.topicIds.isEmpty ? "Surprise me" : "Continue") { advance() }
+            Button(answers.topicIds.isEmpty ? "Mix of everything" : "Continue") { advance() }
                 .buttonStyle(PrimaryButtonStyle(.teal))
         }
         .padding(.horizontal, Metrics.gutter)
@@ -491,14 +412,11 @@ struct OnboardingFlow: View {
     private func skip() {
         switch step {
         case .name: answers.name = nil
-        case .age: answers.ageRange = nil
-        case .gender: answers.gender = nil
         case .role: answers.role = nil
-        case .weekly: answers.weeklyWords = nil
         case .familiarity: answers.familiarity = nil
         case .knownBeginner, .knownBuilder, .knownResearch:
-            // Skipping the test jumps past the result screen.
-            go(to: .topics)
+            // Skipping the check jumps past its result screen.
+            go(to: .depth)
             return
         default: break
         }
@@ -517,15 +435,7 @@ struct OnboardingFlow: View {
     private func finish() {
         var final = answers
         final.placementLevel = placementDone ? placementLevel : nil
-        final.appIcon = appIcon.iconName
         model.completeOnboarding(final)
-        if appIcon.iconName != nil {
-            Task {
-                // Let the transition settle before iOS shows its "icon changed" alert.
-                try? await Task.sleep(for: .seconds(0.8))
-                await AppIconService.apply(appIcon.iconName)
-            }
-        }
     }
 
     private func minuteBinding(_ keyPath: WritableKeyPath<ReminderSettings, Int>) -> Binding<Date> {
@@ -665,126 +575,59 @@ private struct MultiChoice<Option: Hashable>: View {
     }
 }
 
-/// Dark streak commitment: halftone flame, two-letter day card, today ticked.
-private struct DarkStreakStep: View {
-    let onContinue: () -> Void
-    @State private var checked = false
-
-    private var days: [(label: String, isToday: Bool)] {
-        let calendar = Calendar.current
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEEEE"
-        return (0..<7).compactMap { offset in
-            guard let date = calendar.date(byAdding: .day, value: offset, to: Date()) else { return nil }
-            return (formatter.string(from: date), offset == 0)
-        }
-    }
+/// Thin progress bar across the top bar.
+private struct StepProgress: View {
+    let current: Int
+    let total: Int
 
     var body: some View {
-        VStack(spacing: 26) {
-            Spacer()
-            HalftoneFlame(count: checked ? 1 : 0, size: 210)
-            Text("Create a consistent daily learning routine")
-                .font(.system(size: 30, weight: .bold, design: .serif))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Palette.textPrimary)
-            VStack(spacing: 16) {
-                HStack(spacing: 0) {
-                    ForEach(Array(days.enumerated()), id: \.offset) { _, day in
-                        VStack(spacing: 10) {
-                            Text(day.label)
-                                .font(.system(.subheadline, weight: .semibold))
-                                .foregroundStyle(day.isToday ? Palette.textPrimary : Palette.textTertiary)
-                            ZStack {
-                                if day.isToday && checked {
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .font(.system(size: 40))
-                                        .foregroundStyle(Palette.ink, Palette.teal)
-                                        .symbolRenderingMode(.palette)
-                                        .transition(.scale.combined(with: .opacity))
-                                } else {
-                                    Circle().fill(Palette.textTertiary.opacity(0.7))
-                                }
-                            }
-                            .frame(width: 40, height: 40)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                Text("Build a streak, one day at a time")
-                    .font(.subheadline)
-                    .foregroundStyle(Palette.textPrimary)
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Palette.surface)
+                Capsule().fill(Palette.teal)
+                    .frame(width: max(8, proxy.size.width * CGFloat(current + 1) / CGFloat(max(total, 1))))
             }
-            .padding(.vertical, 20)
-            .padding(.horizontal, 10)
-            .tactileCard()
-            Spacer()
-            Button("Continue", action: onContinue)
-                .buttonStyle(PrimaryButtonStyle(.teal))
         }
-        .padding(.horizontal, Metrics.gutter)
-        .padding(.bottom, 4)
-        .animation(.spring(response: 0.5, dampingFraction: 0.6), value: checked)
-        .sensoryFeedback(.success, trigger: checked)
-        .task {
-            try? await Task.sleep(for: .seconds(0.6))
-            checked = true
-        }
+        .frame(height: 6)
+        .animation(.spring(response: 0.5, dampingFraction: 0.85), value: current)
+        .accessibilityElement()
+        .accessibilityLabel("Step \(current + 1) of \(total)")
     }
 }
 
-/// "Get deeper insight into each AI word": a live card that demos the depth switch.
-private struct InsightStep: View {
+/// "One term, three depths": the same term explained at each level, stacked.
+private struct DepthStep: View {
     @Environment(AppModel.self) private var model
+    let level: Level
     let onContinue: () -> Void
-    @State private var level: Level = .beginner
+    @State private var revealed = 0
 
     var body: some View {
         let term = model.term("rag") ?? model.content.terms[0]
-        let related = Array(term.related.compactMap(model.term).prefix(3))
-        VStack(spacing: 22) {
-            StepTitle("Get deeper insight into each AI word")
+        VStack(spacing: 18) {
+            StepTitle("One term, three depths", subtitle: "Every definition is written three ways. Start at yours, go deeper anytime.")
             ScrollView {
-                VStack(alignment: .center, spacing: 14) {
-                    Text(term.term)
-                        .font(.system(size: 38, weight: .bold, design: .serif))
-                        .foregroundStyle(Palette.textPrimary)
-                    if let expansion = term.expansion {
-                        Text(expansion).font(.system(.subheadline, design: .serif).italic()).foregroundStyle(Palette.textSecondary)
-                    }
-                    PronunciationPill(ipa: term.ipa, colors: .forTheme(.charcoal), isSpeaking: model.speech.speakingID == term.id) {
-                        model.speech.speak(term.term, id: term.id)
-                    }
-                    Picker("Depth", selection: $level) {
-                        ForEach(Level.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    Text("(\(term.pos)) \(term.definition(at: level))")
-                        .font(.body)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(Palette.textPrimary)
-                        .contentTransition(.opacity)
-                        .animation(.easeInOut, value: level)
-                        .frame(minHeight: 70)
-                    VStack(alignment: .leading, spacing: 10) {
-                        if let example = term.example {
-                            section("Example", example)
+                VStack(spacing: 12) {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(term.term)
+                            .font(.system(size: 34, weight: .bold, design: .serif))
+                            .foregroundStyle(Palette.textPrimary)
+                        if let expansion = term.expansion {
+                            Text(expansion)
+                                .font(.system(.footnote, design: .serif).italic())
+                                .foregroundStyle(Palette.textSecondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
                         }
-                        if !related.isEmpty {
-                            Text("Related").font(.subheadline).foregroundStyle(Palette.textSecondary)
-                            FlowLayout(spacing: 8) {
-                                ForEach(related) { Chip($0.term) }
-                            }
-                        }
-                        if let origin = term.origin {
-                            section("Origin", origin)
-                        }
+                        Spacer(minLength: 0)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    ForEach(Array(Level.allCases.enumerated()), id: \.element) { index, depth in
+                        depthCard(depth, term: term, isYours: depth == level)
+                            .opacity(index < revealed ? 1 : 0)
+                            .offset(y: index < revealed ? 0 : 16)
+                    }
                 }
-                .padding(22)
-                .tactileCard()
-                .padding(.horizontal, 4)
+                .padding(.top, 10)
                 .padding(.bottom, 8)
             }
             .scrollIndicators(.hidden)
@@ -794,18 +637,107 @@ private struct InsightStep: View {
         .padding(.horizontal, Metrics.gutter)
         .padding(.bottom, 4)
         .task {
-            for next in [Level.builder, .research, .beginner] {
-                try? await Task.sleep(for: .seconds(1.8))
-                withAnimation { level = next }
+            for step in 1...Level.allCases.count {
+                try? await Task.sleep(for: .milliseconds(320))
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { revealed = step }
             }
         }
     }
 
-    private func section(_ title: String, _ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.subheadline).foregroundStyle(Palette.textSecondary)
-            Text(text).font(.body).foregroundStyle(Palette.textPrimary).fixedSize(horizontal: false, vertical: true)
+    private func depthCard(_ depth: Level, term: Term, isYours: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(depth.title.uppercased())
+                    .font(.caption.weight(.heavy))
+                    .tracking(1.4)
+                    .foregroundStyle(isYours ? Palette.ink : Palette.teal)
+                Spacer()
+                if isYours {
+                    Text("YOUR START")
+                        .font(.caption2.weight(.heavy))
+                        .tracking(1.2)
+                        .foregroundStyle(Palette.teal)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Capsule().fill(Palette.ink))
+                } else if depth.isPremium {
+                    Text("PRO").font(.caption2.weight(.heavy)).tracking(1.2).foregroundStyle(Palette.gold)
+                }
+            }
+            Text(term.definition(at: depth))
+                .font(.body)
+                .foregroundStyle(isYours ? Palette.ink : Palette.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .tactileCard(fill: isYours ? Palette.teal : Palette.surface)
+    }
+}
+
+/// Daily pace: three tactile cards with how long each takes.
+private struct PaceStep: View {
+    @Binding var selection: Int?
+    let onContinue: () -> Void
+
+    private struct Pace: Identifiable {
+        let goal: Int
+        let title: String
+        let minutes: String
+        let symbol: String
+        var id: Int { goal }
+    }
+
+    private let paces = [
+        Pace(goal: 2, title: "Easy", minutes: "about 1 minute a day", symbol: "tortoise.fill"),
+        Pace(goal: 5, title: "Steady", minutes: "about 3 minutes a day", symbol: "figure.walk"),
+        Pace(goal: 8, title: "Intense", minutes: "about 5 minutes a day", symbol: "hare.fill"),
+    ]
+
+    var body: some View {
+        VStack(spacing: 22) {
+            StepTitle("Pick your pace", subtitle: "How many new terms to save each day. Hitting it keeps your streak alive.")
+            Spacer(minLength: 0)
+            VStack(spacing: 14) {
+                ForEach(paces) { pace in
+                    paceCard(pace, picked: (selection ?? 5) == pace.goal)
+                }
+            }
+            Spacer(minLength: 0)
+            Button("Continue") {
+                if selection == nil { selection = 5 }
+                onContinue()
+            }
+            .buttonStyle(PrimaryButtonStyle(.teal))
+        }
+        .padding(.horizontal, Metrics.gutter)
+        .padding(.bottom, 4)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: selection)
+        .sensoryFeedback(.selection, trigger: selection)
+    }
+
+    private func paceCard(_ pace: Pace, picked: Bool) -> some View {
+        Button { selection = pace.goal } label: {
+            HStack(spacing: 16) {
+                Image(systemName: pace.symbol)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(Palette.ink)
+                    .frame(width: 52, height: 52)
+                    .background(Circle().fill(picked ? Palette.cream : Palette.teal))
+                    .overlay(Circle().strokeBorder(Palette.outline, lineWidth: 2))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(pace.title).font(.system(.title3, design: .serif, weight: .bold))
+                    Text(pace.minutes).font(.subheadline).opacity(0.75)
+                }
+                Spacer(minLength: 0)
+                Text("\(pace.goal)").font(.system(size: 34, weight: .bold, design: .serif))
+                Text("terms\na day").font(.caption).multilineTextAlignment(.leading).opacity(0.75)
+            }
+            .foregroundStyle(picked ? Palette.ink : Palette.textPrimary)
+            .padding(18)
+        }
+        .buttonStyle(TactileButtonStyle(fill: picked ? Palette.teal : Palette.surface, radius: 28))
+        .accessibilityLabel("\(pace.title), \(pace.goal) terms a day, \(pace.minutes)")
+        .accessibilityAddTraits(picked ? .isSelected : [])
     }
 }
 

@@ -28,7 +28,7 @@ shoot() {
   echo "captured $name"
 }
 
-for step in welcome tailor name age weekly streak habits reminders icon theme insight familiarity weakSpots knownBuilder placement topics; do
+for step in welcome name role familiarity knownBuilder placement depth weakSpots topics pace reminders theme; do
   shoot "onboarding-$step" -screenshot onboarding -onboardingStep "$step"
 done
 for screen in words toast coach topics journey practice challenge flashcards levelTest profile voices gallery stats paywall widget term share; do
