@@ -472,6 +472,7 @@ private struct StepTitle: View {
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Palette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity)
