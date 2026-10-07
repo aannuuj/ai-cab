@@ -760,7 +760,7 @@ private struct DarkNotificationPreview: View {
                     Text("Now").font(.subheadline).foregroundStyle(Palette.textSecondary)
                 }
                 Text(title).font(.subheadline.weight(.semibold))
-                Text(message).font(.subheadline).lineLimit(2)
+                Text(message).font(.subheadline).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(Palette.textPrimary)
         }
